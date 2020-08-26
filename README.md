@@ -11,6 +11,16 @@ mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
 -DdataSource.rwserverName=database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
 -Dexec.mainClass="org.anonymous.boot.Program"
 
+ ## ------  OR -------
+ java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
+-DdataSource.user=postgres \
+-DdataSource.password=postgres \
+-DdataSource.databaseName=postgres \
+-DdataSource.portNumber=5432 \
+-DdataSource.roserverName=database-1.cluster-ro-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
+-DdataSource.rwserverName=database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
+-jar aurora-cli-1.0-SNAPSHOT.jar
+
 
 For Github Upload
 - sudo yum -y update      # Install the latest system updates.
