@@ -56,7 +56,7 @@ public class Program {
          * System.getProperty("dataSource.currentSchema"))).executeUpdate(); connection.commit();
          */
 
-        //new SecurityRepository(roConnectionProvider, rwConnectionProvider).runDDL(false);
+        // new SecurityRepository(roConnectionProvider, rwConnectionProvider).runDDL(false);
 
         LoadSecuritiesDataAndLookup loadSecurityAnndLookup = new LoadSecuritiesDataAndLookup(roConnectionProvider,
                 rwConnectionProvider);
