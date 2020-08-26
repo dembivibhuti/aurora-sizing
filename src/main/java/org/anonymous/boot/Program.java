@@ -47,7 +47,16 @@ public class Program {
         rwprops.setProperty("autoCommit", "false");
         rwConnectionProvider = new ConnectionProvider(rwprops);
 
-        // new SecurityRepository(roConnectionProvider, rwConnectionProvider).runDDL(true);
+        /*
+         * Execute the below code as required to Create / Re-create the configured Schema Connection connection =
+         * rwConnectionProvider.getConnection();
+         * rwConnectionProvider.getConnection().prepareStatement(String.format("drop schema %s cascade",
+         * System.getProperty("dataSource.currentSchema"))).executeUpdate();
+         * connection.prepareStatement(String.format("create schema %s",
+         * System.getProperty("dataSource.currentSchema"))).executeUpdate(); connection.commit();
+         */
+
+        new SecurityRepository(roConnectionProvider, rwConnectionProvider).runDDL(false);
 
         LoadSecuritiesDataAndLookup loadSecurityAnndLookup = new LoadSecuritiesDataAndLookup(roConnectionProvider,
                 rwConnectionProvider);
