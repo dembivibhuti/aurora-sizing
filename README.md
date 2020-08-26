@@ -13,15 +13,15 @@ mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
 
 
 For Github Upload
-sudo yum -y update      # Install the latest system updates.
-sudo yum -y install git # Install Git.
-git --version           # Confirm Git was installed.
+-sudo yum -y update      # Install the latest system updates.
+-sudo yum -y install git # Install Git.
+-git --version           # Confirm Git was installed.
 
-git config --global user.name "USER_NAME"
-git config --global user.email EMAIL_ADDRESS
+-git config --global user.name "USER_NAME"
+-git config --global user.email EMAIL_ADDRESS
 
-git clone https://github.com/somnath67643/aurora-sizing.git
-cd aurora-sizing
+-git clone https://github.com/somnath67643/aurora-sizing.git
+-cd aurora-sizing
 
 #git add --all # not required
 
