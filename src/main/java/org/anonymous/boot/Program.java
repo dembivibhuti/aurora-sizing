@@ -32,6 +32,7 @@ public class Program {
         roprops.setProperty("dataSource.databaseName", System.getProperty("dataSource.databaseName"));
         roprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
         roprops.setProperty("dataSource.serverName", System.getProperty("dataSource.roserverName"));
+        roprops.setProperty("dataSource.currentSchema", System.getProperty("dataSource.currentSchema"));
         roprops.setProperty("autoCommit", "false");
         roConnectionProvider = new ConnectionProvider(roprops);
 
@@ -42,6 +43,7 @@ public class Program {
         rwprops.setProperty("dataSource.databaseName", System.getProperty("dataSource.databaseName"));
         rwprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
         rwprops.setProperty("dataSource.serverName", System.getProperty("dataSource.rwserverName"));
+        rwprops.setProperty("dataSource.currentSchema", System.getProperty("dataSource.currentSchema"));
         rwprops.setProperty("autoCommit", "false");
         rwConnectionProvider = new ConnectionProvider(rwprops);
 
