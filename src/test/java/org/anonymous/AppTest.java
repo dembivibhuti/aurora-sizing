@@ -1,4 +1,4 @@
-package org.anonymous.khanrs;
+package org.anonymous;
 
 import static org.junit.Assert.assertTrue;
 
