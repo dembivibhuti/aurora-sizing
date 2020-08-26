@@ -23,7 +23,14 @@ For Github Upload
 - git clone https://github.com/somnath67643/aurora-sizing.git
 - cd aurora-sizing
 
-#git add --all # not required
+- git add --all # not required
+
+- git commit -m "Initial Commit"
+- git push
+
+
+
+
 
 
 
