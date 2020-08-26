@@ -1,6 +1,6 @@
 # aurora-sizing
 
-mvn clean formatter:format compile install
+mvn clean formatter:format compile package
 
 mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
 -DdataSource.user=postgres \
