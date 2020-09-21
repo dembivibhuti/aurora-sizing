@@ -1,0 +1,11 @@
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/pattern/LoadSecuritiesDataAndLookup.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/util/TimeKeeper.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/modules/SecurityRepository.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/boot/Program.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/unused/AuroraDriverManager.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/unused/SecurityRepository.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/connection/ConnectionProvider.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/unused/Connector.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/unused/QueryCLI.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/util/StopWatch.java
+/home/ec2-user/environment/aurora-sizing/src/main/java/org/anonymous/unused/AdminCLI.java
