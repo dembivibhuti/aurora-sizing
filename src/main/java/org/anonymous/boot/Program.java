@@ -4,10 +4,10 @@ import java.util.Properties;
 import org.anonymous.connection.ConnectionProvider;
 import java.sql.Connection;
 import java.sql.SQLException;
-import org.anonymous.module.SecurityRepository;
+import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
-import org.anonymous.pattern.LoadSecuritiesDataAndLookup;
+import org.anonymous.pattern.LoadObjectsDataAndLookup;
 
 public class Program {
 
@@ -47,22 +47,11 @@ public class Program {
         rwprops.setProperty("autoCommit", "false");
         rwConnectionProvider = new ConnectionProvider(rwprops);
 
-        /*
-         * Execute the below code as required to Create / Re-create the configured Schema Connection connection =
-         * rwConnectionProvider.getConnection();
-         * rwConnectionProvider.getConnection().prepareStatement(String.format("drop schema %s cascade",
-         * System.getProperty("dataSource.currentSchema"))).executeUpdate();
-         * connection.prepareStatement(String.format("create schema %s",
-         * System.getProperty("dataSource.currentSchema"))).executeUpdate(); connection.commit();
-         */
-
-        // new SecurityRepository(roConnectionProvider, rwConnectionProvider).runDDL(false);
-
-        LoadSecuritiesDataAndLookup loadSecurityAnndLookup = new LoadSecuritiesDataAndLookup(roConnectionProvider,
+        LoadObjectsDataAndLookup loadObjectsAndLookup = new LoadObjectsDataAndLookup(roConnectionProvider,
                 rwConnectionProvider);
-        loadSecurityAnndLookup.loadSecurityAndLookup(10, 1, 10); // numberOfLookupOps, lookupLimit
+        loadObjectsAndLookup.loadObjectsAndLookup(10, 1, 10); // numberOfLookupOps, lookupLimit
 
-        loadSecurityAnndLookup.close();
+        loadObjectsAndLookup.close();
         roConnectionProvider.close();
         rwConnectionProvider.close();
 

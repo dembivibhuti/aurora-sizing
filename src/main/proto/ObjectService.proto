@@ -1,0 +1,16 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package org.anonymous.grpc;
+
+message ObjectRequest {
+    string name = 1;
+    uint32 typeId = 2;
+}
+
+message ObjectResponse {
+    bool found = 1;
+}
+
+service ObjectService {
+    rpc exists(ObjectRequest) returns (ObjectResponse);
+}

@@ -20,13 +20,13 @@ import org.anonymous.util.TimeKeeper;
 import java.util.stream.Stream;
 import java.util.Collections;
 
-public class SecurityRepository implements AutoCloseable {
+public class ObjectRepository implements AutoCloseable {
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private ConnectionProvider roConnectionProvider;
     private ConnectionProvider rwConnectionProvider;
 
-    public SecurityRepository(ConnectionProvider roConnectionProvider, ConnectionProvider rwConnectionProvider) {
+    public ObjectRepository(ConnectionProvider roConnectionProvider, ConnectionProvider rwConnectionProvider) {
         this.roConnectionProvider = roConnectionProvider;
         this.rwConnectionProvider = rwConnectionProvider;
     }
@@ -36,12 +36,12 @@ public class SecurityRepository implements AutoCloseable {
         try (Connection connection = rwConnectionProvider.getConnection()) {
 
             if (dropAndCreate) {
-                connection.prepareStatement("drop table securities").executeUpdate();
+                connection.prepareStatement("drop table objects").executeUpdate();
                 connection.commit();
-                System.out.println(" dropped securities ");
+                System.out.println(" dropped objects ");
             }
 
-            String createTableSQL = "create table securities ( \n" + "name varchar NOT NULL, \n"
+            String createTableSQL = "create table objects ( \n" + "name varchar NOT NULL, \n"
                     + "typeId integer NOT NULL, \n" + "lastTransaction bigint NOT NULL, \n"
                     + "timeUpdated timestamp NOT NULL, \n" + "updateCount bigint NOT NULL, \n"
                     + "dateCreated integer NOT NULL, \n" + "dbIdUpdated integer NOT NULL, \n"
@@ -49,10 +49,10 @@ public class SecurityRepository implements AutoCloseable {
                     + "Primary Key ( name ) )";
 
             connection.prepareStatement(createTableSQL).executeUpdate();
-            System.out.println(" created securities table ");
+            System.out.println(" created objects table ");
             connection.commit();
 
-            connection.prepareStatement("create unique index securities_typeid_name on securities(typeId, name)")
+            connection.prepareStatement("create unique index object_typeid_name on objects(typeId, name)")
                     .executeUpdate();
             System.out.println(" created index by typeId and name ");
             connection.commit();
@@ -97,7 +97,7 @@ public class SecurityRepository implements AutoCloseable {
             TimeKeeper secInsertTimeKeeper) {
 
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
-                .prepareStatement("insert into securities values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                .prepareStatement("insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 
             byte[] sdbMem = getSizedByteArray(100);
             byte[] mem = getSizedByteArray(32000);
@@ -144,9 +144,8 @@ public class SecurityRepository implements AutoCloseable {
         CompletableFuture<List<String>> completableFuture = new CompletableFuture();
         List<String> secKeys = new ArrayList<>();
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
-        try (Connection connection = rwConnectionProvider.getConnection();
-                PreparedStatement lookupStmt = connection.prepareStatement(
-                        "select name from securities where lower(name) >= ? order by name asc LIMIT " + limit)) {
+        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
+                .prepareStatement("select name from objects where lower(name) >= ? order by name asc LIMIT " + limit)) {
 
             while (numberOfLookupOps > 0) {
                 numberOfLookupOps--;
@@ -184,8 +183,7 @@ public class SecurityRepository implements AutoCloseable {
                 List<String> secKeys = new ArrayList<>();
                 try (Connection connection = rwConnectionProvider.getConnection();
                         PreparedStatement lookupStmt = connection.prepareStatement(
-                                "select name from securities where lower(name) >= ? order by name asc LIMIT "
-                                        + limit)) {
+                                "select name from objects where lower(name) >= ? order by name asc LIMIT " + limit)) {
                     lookupStmt.setString(1, String.format("testSec-%d", randIntStream.next() % 1000));
                     ResultSet rs = lookupStmt.executeQuery();
 
@@ -211,7 +209,7 @@ public class SecurityRepository implements AutoCloseable {
 
             try (Connection connection = rwConnectionProvider.getConnection();
                     PreparedStatement lookupStmt = connection.prepareStatement(
-                            "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from securities where name = ?")) {
+                            "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where name = ?")) {
                 lookupStmt.setString(1, secKey);
                 ResultSet rs = lookupStmt.executeQuery();
 
@@ -243,7 +241,7 @@ public class SecurityRepository implements AutoCloseable {
         executorService.submit(() -> {
             long spanId = lookupTimeKeeper.start();
             String sql = String.format(
-                    "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from securities where name in (%s)",
+                    "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where name in (%s)",
                     String.join(",", Collections.nCopies(secKeys.size(), "?")));
 
             try (Connection connection = rwConnectionProvider.getConnection();
@@ -283,7 +281,7 @@ public class SecurityRepository implements AutoCloseable {
             long spanId = lookupTimeKeeper.start();
 
             try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                    .prepareStatement("select sdbDiskMem from securities where name = ?")) {
+                    .prepareStatement("select sdbDiskMem from objects where name = ?")) {
                 lookupStmt.setString(1, secKey);
                 ResultSet rs = lookupStmt.executeQuery();
 
@@ -308,7 +306,7 @@ public class SecurityRepository implements AutoCloseable {
         int size = secKeys.size();
         executorService.submit(() -> {
             long spanId = lookupTimeKeeper.start();
-            String sql = String.format("select sdbDiskMem from securities where name in (%s)",
+            String sql = String.format("select sdbDiskMem from objects where name in (%s)",
                     String.join(",", Collections.nCopies(size, "?")));
 
             try (Connection connection = rwConnectionProvider.getConnection();
@@ -347,7 +345,7 @@ public class SecurityRepository implements AutoCloseable {
             long spanId = lookupTimeKeeper.start();
 
             try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                    .prepareStatement("select mem from securities where name = ?")) {
+                    .prepareStatement("select mem from objects where name = ?")) {
                 lookupStmt.setString(1, secKey);
                 ResultSet rs = lookupStmt.executeQuery();
 
@@ -372,7 +370,7 @@ public class SecurityRepository implements AutoCloseable {
         int size = secKeys.size();
         executorService.submit(() -> {
             long spanId = lookupTimeKeeper.start();
-            String sql = String.format("select mem from securities where name in (%s)",
+            String sql = String.format("select mem from objects where name in (%s)",
                     String.join(",", Collections.nCopies(size, "?")));
 
             try (Connection connection = rwConnectionProvider.getConnection();
@@ -410,7 +408,7 @@ public class SecurityRepository implements AutoCloseable {
             long spanId = lookupTimeKeeper.start();
 
             try (Connection connection = rwConnectionProvider.getConnection();
-                    PreparedStatement lookupStmt = connection.prepareStatement("select count(name) from securities")) {
+                    PreparedStatement lookupStmt = connection.prepareStatement("select count(name) from objects")) {
                 ResultSet rs = lookupStmt.executeQuery();
                 Long x = null;
                 while (rs.next()) {
@@ -431,81 +429,5 @@ public class SecurityRepository implements AutoCloseable {
     public void close() {
         executorService.shutdown();
     }
-
-    /*
-     * 
-     * 
-     * 
-     * private static void randomLookUpByPrefix(int limit) { try { AuroraDriverManager driver = new
-     * AuroraDriverManager(); Connection connection = driver.getConnection("primary");
-     * 
-     * PreparedStatement lookupStmt =
-     * connection.prepareStatement("select name from securities where lower(name) >= ? order by name asc LIMIT " +
-     * limit); Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
-     * 
-     * while(true) { lookupStmt.setString(1, String.format("testSec-%d", randIntStream.next() % 1000 ));
-     * 
-     * long start = System.currentTimeMillis(); ResultSet rs = lookupStmt.executeQuery(); long matchCount = 0;
-     * while(rs.next()) { matchCount++; } long elapsedTime = (System.currentTimeMillis() - start); double avgTimePerRec
-     * = matchCount == 0 ? 0 : ((double)elapsedTime) / ((double)matchCount);
-     * System.out.println(" lookup :: matched records " + matchCount + " elapsed time " + elapsedTime + "(ms)" +
-     * " time per record " + avgTimePerRec + "(ms)");
-     * 
-     * Thread.sleep(4000); }
-     * 
-     * } catch (Exception ex) { ex.printStackTrace(); }
-     * 
-     * 
-     * }
-     * 
-     * private static void randomLookUpByTypeAndPrefix(int limit) { try { AuroraDriverManager driver = new
-     * AuroraDriverManager(); Connection connection = driver.getConnection("primary");
-     * 
-     * PreparedStatement lookupStmt = connection.
-     * prepareStatement("select name from securities where lower(name) >= ? and typeId = ? order by name asc LIMIT " +
-     * limit ); Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator(); while(true) {
-     * 
-     * lookupStmt.setString(1, String.format("testSec-%d", randIntStream.next() % 10 )); lookupStmt.setInt(2,
-     * TYPE_IDS.get(Math.abs(randIntStream.next() % 10)));
-     * 
-     * long start = System.currentTimeMillis(); ResultSet rs = lookupStmt.executeQuery(); long matchCount = 0;
-     * while(rs.next()) { matchCount++; } long elapsedTime = (System.currentTimeMillis() - start); double avgTimePerRec
-     * = matchCount == 0 ? 0 : ((double)elapsedTime) / ((double)matchCount);
-     * System.out.println(" lookup by type :: matched records " + matchCount + " elapsed time " + elapsedTime + "(ms)" +
-     * " time per record " + avgTimePerRec + "(ms)");
-     * 
-     * Thread.sleep(4000); }
-     * 
-     * } catch (Exception ex) { ex.printStackTrace(); }
-     * 
-     * 
-     * }
-     * 
-     * 
-     * private static void getSecurity() {
-     * 
-     * try {
-     * 
-     * AuroraDriverManager driver = new AuroraDriverManager(); Connection connection = driver.getConnection("primary");
-     * 
-     * Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator(); PreparedStatement lookupStmt =
-     * connection.prepareStatement("select name from securities where name = ?" ); lookupStmt.setFetchSize(10);
-     * while(true) {
-     * 
-     * lookupStmt.setString(1, SEC_NAMES.get(Math.abs(randIntStream.next() % 10))); System.out.println(lookupStmt); long
-     * start = System.currentTimeMillis(); ResultSet rs = lookupStmt.executeQuery(); long matchCount = 0;
-     * while(rs.next()) { ++matchCount; } long elapsedTime = (System.currentTimeMillis() - start); double avgTimePerRec
-     * = matchCount == 0 ? 0 : ((double)elapsedTime) / ((double)matchCount);
-     * System.out.println(" Get Security :: matched records " + matchCount + " elapsed time " + elapsedTime + "(ms)" +
-     * " time per record " + avgTimePerRec + "(ms)");
-     * 
-     * Thread.sleep(4000); }
-     * 
-     * 
-     * } catch (Exception ex) { ex.printStackTrace(); }
-     * 
-     * 
-     * }
-     */
 
 }
