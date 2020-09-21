@@ -1,5 +1,8 @@
 # aurora-sizing
 
+Install maven and jdk 8
+https://docs.aws.amazon.com/neptune/latest/userguide/iam-auth-connect-prerq.html
+
 mvn clean formatter:format compile package
 
 mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
