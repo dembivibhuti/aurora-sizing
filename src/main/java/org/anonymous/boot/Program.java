@@ -25,27 +25,33 @@ public class Program {
         // If the lookup fails, default to something like small to retry
         java.security.Security.setProperty("networkaddress.cache.negative.ttl", "3");
 
-        Properties roprops = new Properties();
-        roprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
-        roprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
-        roprops.setProperty("dataSource.password", System.getProperty("dataSource.password"));
-        roprops.setProperty("dataSource.databaseName", System.getProperty("dataSource.databaseName"));
-        roprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
-        roprops.setProperty("dataSource.serverName", System.getProperty("dataSource.roserverName"));
-        roprops.setProperty("dataSource.currentSchema", System.getProperty("dataSource.currentSchema"));
-        roprops.setProperty("autoCommit", "false");
-        roConnectionProvider = new ConnectionProvider(roprops);
+        if (null == System.getProperty("dataSourceClassName")) {
+            ConnectionProvider connectionProvider = new ConnectionProvider(); // h2
+            roConnectionProvider = connectionProvider;
+            rwConnectionProvider = connectionProvider;
+        } else {
+            Properties roprops = new Properties();
+            roprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
+            roprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
+            roprops.setProperty("dataSource.password", System.getProperty("dataSource.password"));
+            roprops.setProperty("dataSource.databaseName", System.getProperty("dataSource.databaseName"));
+            roprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
+            roprops.setProperty("dataSource.serverName", System.getProperty("dataSource.roserverName"));
+            roprops.setProperty("dataSource.currentSchema", System.getProperty("dataSource.currentSchema"));
+            roprops.setProperty("autoCommit", "false");
+            roConnectionProvider = new ConnectionProvider(roprops);
 
-        Properties rwprops = new Properties();
-        rwprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
-        rwprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
-        rwprops.setProperty("dataSource.password", System.getProperty("dataSource.password"));
-        rwprops.setProperty("dataSource.databaseName", System.getProperty("dataSource.databaseName"));
-        rwprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
-        rwprops.setProperty("dataSource.serverName", System.getProperty("dataSource.rwserverName"));
-        rwprops.setProperty("dataSource.currentSchema", System.getProperty("dataSource.currentSchema"));
-        rwprops.setProperty("autoCommit", "false");
-        rwConnectionProvider = new ConnectionProvider(rwprops);
+            Properties rwprops = new Properties();
+            rwprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
+            rwprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
+            rwprops.setProperty("dataSource.password", System.getProperty("dataSource.password"));
+            rwprops.setProperty("dataSource.databaseName", System.getProperty("dataSource.databaseName"));
+            rwprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
+            rwprops.setProperty("dataSource.serverName", System.getProperty("dataSource.rwserverName"));
+            rwprops.setProperty("dataSource.currentSchema", System.getProperty("dataSource.currentSchema"));
+            rwprops.setProperty("autoCommit", "false");
+            rwConnectionProvider = new ConnectionProvider(rwprops);
+        }
 
         LoadObjectsDataAndLookup loadObjectsAndLookup = new LoadObjectsDataAndLookup(roConnectionProvider,
                 rwConnectionProvider);
