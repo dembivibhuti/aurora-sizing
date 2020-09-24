@@ -1,0 +1,32 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgGetIndexDescriptor {
+	MessageType message_type = 1;
+	int32 descriptor_id = 2;
+}
+
+message SrvMsgGetIndexDescriptorResponse {
+	message MsgOnSuccess {
+		bool has_succeeded = 1;
+		string index_name = 2;
+		int32 total_byte_count = 3;
+		int32 part_count = 4;
+		string value_type_name = 5;
+		string data_type_name = 6;
+		int32 offset = 7;
+		int32 byte_width = 8;
+		int32 flags = 9;
+	}
+	message MsgOnFailure {
+		bool has_succeeded = 1;
+	}
+
+	oneof RequestResponse {
+		MsgOnSuccess msg_on_success = 2;
+		MsgOnFailure msg_on_faiure = 3;
+	}
+}
+

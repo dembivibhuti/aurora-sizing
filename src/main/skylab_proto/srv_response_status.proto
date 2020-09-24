@@ -1,0 +1,7 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+enum ResponseStatus {
+	SUCCESS = 0;
+	FAILURE = 1;
+}

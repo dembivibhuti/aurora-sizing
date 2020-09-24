@@ -1,0 +1,24 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgErrorLogGetPart {
+	int32 message_size = 1;
+	MessageType message_type = 2;
+	int32 postion = 3;
+	int32 bytes_to_read = 4;
+}
+
+message SrvMsgErrorLogGetPartResponse {
+	uint32 message_size = 1;
+	message ResponseOnSuccess {
+		int32 no_of_bytes = 1;
+		string text = 2;
+	}
+
+	oneof RequestResponse {
+		ResponseOnSuccess response_on_success = 2;
+		int32 fail_signal = 3;
+	}
+}

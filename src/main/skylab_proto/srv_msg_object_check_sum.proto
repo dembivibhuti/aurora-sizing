@@ -1,0 +1,20 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgObjectCheckSum {
+	int32 message_size = 1;
+	MessageType message_type = 2;
+	string security_name = 3;
+	bool send_true = 4;
+}
+
+message SrvMsgObjectCheckSumResponse {
+	uint32 message_size = 1;
+	int32 index_count = 2;
+	string security_databse = 3;
+	uint32 sd_crc = 4;
+	string descriptor_name = 5;
+	uint32 dn_crc = 6;
+}

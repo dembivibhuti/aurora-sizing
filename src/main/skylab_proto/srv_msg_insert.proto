@@ -1,0 +1,18 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+import "srv_sdb_disk.proto";
+import "srv_trans_msg_response.proto";
+
+message SrvMsgInsert {
+	int32 message_size = 1;
+	MessageType message_type = 2;
+	SDBDisk sdb_disk = 3;
+	int32 mem_size = 4;
+	bytes mem = 5;
+}
+
+message SrvMsgInsertResponse {
+	TransMsgResponse trans_msg_response = 1;
+}

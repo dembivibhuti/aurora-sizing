@@ -1,0 +1,43 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+import "srv_sdb_disk.proto";
+import "srv_trans_msg_response.proto";
+
+message SrvMsgIncremental {
+	MessageType message_type = 1;
+	SDBDisk sdb_disk = 2;
+
+	message PositionIncrementalV0 {
+		uint32 size_of_incremental_data = 1;
+		uint64 next_transaction_data = 2;
+		double quantity = 3;
+		uint32 trade_id = 4;
+		string quantity_unit = 5;
+		string book_name = 6;
+		uint64 expiration_data = 7;
+		uint32 trade_count = 8;
+	}
+
+	message PositionIncrementalV1 {
+		uint32 size_of_incremental_data = 1;
+		bytes op_id = 2;
+		string quantity_unit = 3;
+		string book_name = 4;
+		uint64 expiration_date = 5;
+		uint64 next_transaction_data = 6;
+		uint64 trade_id = 7;
+		double quantity = 8;
+		uint32 trade_count = 9;
+	}
+	oneof PositionIncrementals {
+		PositionIncrementalV0 posn_inc_v0 = 3;
+		PositionIncrementalV1 posn_inc_v1 = 4;
+	}
+	uint32 direction = 5;
+}
+
+message SrvMsgIncrementalResponse {
+	TransMsgResponse trans_msg_response = 1;
+}

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+message SrvMsgUndefined {
+	int32 client_id = 1;
+}
+
+message SrvMsgUndefinedResponse {
+	string response = 1;
+}

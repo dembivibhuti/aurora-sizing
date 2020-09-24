@@ -1,0 +1,9 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgIndexClose {
+	MessageType message_type = 1;
+	int32 request_version = 2;
+}

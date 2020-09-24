@@ -1,0 +1,43 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgTransGetMany {
+	MessageType message_type = 1;
+	uint32 req_txn = 2;
+	uint32 heart_beat_frequency = 3;
+	uint32 filter_db_id = 4;
+	uint32 filter_flags = 5;
+}
+
+message SrvMsgTransGetManyResponse {
+	uint32 message_size = 1;
+	int32 stream_message_indicator = 2;
+	int32 stream_message_type = 3;
+	int32 transaction_batch_size = 4;
+
+	message Transaction {
+		int32 txnid = 1;
+		int32 unknown1 = 2;
+		uint32 detail_parts = 3;
+		int32 unknown2 = 4;
+		uint32 sec_type = 5;
+		uint32 trans_type = 6;
+		uint32 db_id = 7;
+		uint32 time = 8;
+		string user_name = 9;
+		string app_name = 10;
+		string trans_name = 11;
+		uint32 source_trans_id = 12;
+		int32 network_address = 13;
+		int32 trans_flag = 14;
+		message Transpart {
+			int32 part_num = 1;
+			bytes trans_part = 2;
+		}
+		repeated Transpart transparts = 15;
+	}
+	repeated Transaction transactions = 5;
+}
+

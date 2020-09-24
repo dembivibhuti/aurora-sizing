@@ -1,0 +1,27 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+import "srv_error_message_type.proto";
+
+message SrvMsgGetUniqueId64 {
+	uint32 message_size = 1;
+	MessageType message_type = 2;
+	uint32 message_version = 3;
+	int32 count = 4;
+}
+
+message SrvMsgGetUniqueId64Response {
+	bool is_success = 1;
+	uint32 message_size = 2;
+
+	message MsgOnSuccess {
+		bytes unique_id_64 = 1;
+		uint32 count = 2;
+	}
+
+	oneof MessageResponse {
+		MsgOnSuccess msg_on_success = 3;
+		ErrorMessage error_message = 4;
+	}
+}

@@ -1,0 +1,38 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+import "srv_sdb_disk.proto";
+import "srv_error_message_type.proto";
+
+message SrvMsgGetManyByNameExt {
+	MessageType message_type = 1;
+	int32 message_version = 2;
+	int32 argument_flags = 3;
+	int32 max_trade_ids = 4;
+	uint32 count = 5;
+	repeated string security_name = 6;
+}
+
+message SrvMsgGetManyByNameExtResponse {
+	uint32 count = 1;
+	message ResponseMessage {
+		message MsgOnSuccess {
+			bool has_succeeded = 1;
+			SDBDisk sdb_disk = 2;
+			uint32 mem_size = 3;
+			bytes mem = 4;
+		}
+		message MsgOnFailure {
+			bool has_succeeded = 1;
+			ErrorMessage error_message = 2;
+			string error_text = 3;
+		}
+
+		oneof RequestResponse {
+			MsgOnSuccess msg_on_success = 2;
+			MsgOnFailure msg_on_failure = 3;
+		}
+	}
+	repeated ResponseMessage response_message = 2;
+}

@@ -1,0 +1,16 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+import "srv_trans_header.proto";
+import "srv_trans_msg_response.proto";
+
+message SrvMsgTransBegin {
+	int32 message_size = 1;
+	MessageType message_type = 2;
+	TransHeader trans_header = 3;
+}
+
+message SrvMsgTransBeginResponse {
+	TransMsgResponse trans_msg_response = 1;
+}

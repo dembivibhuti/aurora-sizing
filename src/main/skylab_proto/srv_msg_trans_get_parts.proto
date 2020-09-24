@@ -1,0 +1,21 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+import "srv_sdb_disk.proto";
+
+message SrvMsgTransGetParts {
+	uint32 message_size = 1;
+	MessageType message_type = 2;
+	uint32 transaction_id = 3;
+	uint32 next_part = 4;
+	int32 part_count = 5;
+}
+
+message SrvMsgTransGetPartsResponse {
+	uint32 message_size = 1;
+	int32 part_count = 2;
+	int32 encoded_next_part_number = 3;
+	int32 part_type = 4;
+	SDBDisk sdb_disk = 5;
+}

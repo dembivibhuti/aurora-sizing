@@ -1,0 +1,13 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgTransGetState {
+	MessageType message_type = 1;
+}
+
+message SrvMsgTransGetStateResponse {
+	uint32 message_size = 1;
+	uint32 last_transaction_id = 2;
+}

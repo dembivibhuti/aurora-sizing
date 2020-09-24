@@ -1,0 +1,14 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgShutdown {
+	int32 message_size = 1;
+	MessageType message_type = 2;
+	string shutdown = 3;
+}
+
+message SrvMsgShutdownResponse {
+	bool is_success = 1;
+}

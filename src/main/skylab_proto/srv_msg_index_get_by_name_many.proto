@@ -1,0 +1,33 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgIndexGetByNameMany {
+	MessageType message_type = 1;
+	int32 index_id = 2;
+	uint32 security_count = 3;
+	repeated string security_name = 4;
+}
+
+message SrvMsgIndexGetByNameManyResponse {
+	message RequestResponse {
+		message MsgOnSuccess {
+			int32 has_succeeded = 1;
+			uint32 reply_count = 2;
+			bytes security_found = 3;
+			bytes index_vt_values_binary = 4;
+		}
+
+		message MsgOnFailure {
+			int32 has_succeeded = 1;
+			int32 error_code = 2;
+			string error_message = 3;
+		}
+		oneof ResponseMessage {
+			MsgOnFailure msg_on_failure = 1;
+			MsgOnSuccess msg_on_success = 2;
+		}
+	}
+	repeated RequestResponse request_response = 1;
+}

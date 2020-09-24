@@ -1,0 +1,15 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgCollectClientStats {
+	int32 message_size = 1;
+	MessageType message_type = 2;
+	int32 durtion = 3;
+}
+
+message SrvMsgCollectClientStatsResponse {
+	uint32 message_size = 1;
+	int32 is_success = 2;
+}

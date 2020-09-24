@@ -1,0 +1,14 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+
+message SrvMsgGetUniqueId {
+	uint32 message_size = 1;
+	MessageType message_type = 2;
+}
+
+message SrvMsgGetUniqueIdResponse {
+	uint32 message_size = 1;
+	int32 unique_id = 2;
+}

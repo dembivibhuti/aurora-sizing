@@ -1,0 +1,23 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+import "srv_error_message_type.proto";
+
+message SrvMsgIndexDelete {
+	MessageType message_type = 1;
+	int32 index_id = 2;
+	string security_name = 3;
+	int32 ignore_errors = 4;
+}
+
+message SrvMsgIndexDeleteResponse {
+	message MsgOnFailure {
+		ErrorMessage error_message = 1;
+		string error_text = 2;
+	}
+	oneof RequestResponse {
+		bool has_succeeded = 1;
+		MsgOnFailure msg_on_failure = 2;
+	}
+}

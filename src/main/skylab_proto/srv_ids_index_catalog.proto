@@ -1,0 +1,18 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+message IdsIndexCatalog {
+	bytes version = 1;
+	string index_name = 2;
+	uint32 class_count = 3;
+	repeated uint32 spanned_classes = 4;
+
+	message IdsIndexAttribute {
+		string field_name = 1;
+		uint32 sorting_order = 2;
+	}
+
+	uint32 field_count = 5;
+	repeated IdsIndexAttribute attributes = 6;
+}
+

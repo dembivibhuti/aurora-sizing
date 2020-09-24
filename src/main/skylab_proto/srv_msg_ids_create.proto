@@ -1,0 +1,18 @@
+syntax = "proto3";
+package sec_srv_svc;
+
+import "srv_message_type.proto";
+import "srv_trans_msg_response.proto";
+import "srv_msg_ids_attribute.proto";
+
+message SrvMsgIdsCreate {
+	MessageType message_type = 1;
+	bytes version = 2;
+	uint32 class_id = 3;
+	uint32 field_count = 4;
+	repeated IdsAttribute attributes = 5;
+}
+
+message SrvMsgIdsCreateResponse {
+	TransMsgResponse trans_msg_response = 1;
+}
