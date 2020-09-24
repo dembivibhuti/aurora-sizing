@@ -38,6 +38,10 @@ public class Program {
             roprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
             roprops.setProperty("dataSource.serverName", System.getProperty("dataSource.roserverName"));
             roprops.setProperty("dataSource.currentSchema", System.getProperty("dataSource.currentSchema"));
+            if (System.getProperty("javax.net.ssl.trustStore") != null) {
+                roprops.setProperty("dataSource.sslmode", "verify-full");
+                roprops.setProperty("dataSource.sslfactory", "org.postgresql.ssl.DefaultJavaSSLFactory");
+            }
             roprops.setProperty("autoCommit", "false");
             roConnectionProvider = new ConnectionProvider(roprops);
 
@@ -49,6 +53,10 @@ public class Program {
             rwprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
             rwprops.setProperty("dataSource.serverName", System.getProperty("dataSource.rwserverName"));
             rwprops.setProperty("dataSource.currentSchema", System.getProperty("dataSource.currentSchema"));
+            if (System.getProperty("javax.net.ssl.trustStore") != null) {
+                rwprops.setProperty("dataSource.sslmode", "verify-full");
+                rwprops.setProperty("dataSource.sslfactory", "org.postgresql.ssl.DefaultJavaSSLFactory");
+            }
             rwprops.setProperty("autoCommit", "false");
             rwConnectionProvider = new ConnectionProvider(rwprops);
         }
