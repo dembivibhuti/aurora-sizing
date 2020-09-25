@@ -8,6 +8,7 @@ import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
 import org.anonymous.pattern.LoadObjectsDataAndLookup;
+import org.anonymous.connection.GetDBCredsByIAM;
 
 public class Program {
 
@@ -33,7 +34,20 @@ public class Program {
             Properties roprops = new Properties();
             roprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
             roprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
-            roprops.setProperty("dataSource.password", System.getProperty("dataSource.password"));
+
+            if (System.getProperty("dataSource.password") == null) {
+
+                String token = GetDBCredsByIAM.generateAuthToken(System.getProperty("rds.region"),
+                        System.getProperty("dataSource.roserverName"),
+                        Integer.parseInt(System.getProperty("dataSource.portNumber")),
+                        System.getProperty("dataSource.user"));
+                System.out.println("token = " + token);
+
+                roprops.setProperty("dataSource.password", token);
+            } else {
+                roprops.setProperty("dataSource.password", System.getProperty("dataSource.password"));
+            }
+
             roprops.setProperty("dataSource.databaseName", System.getProperty("dataSource.databaseName"));
             roprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
             roprops.setProperty("dataSource.serverName", System.getProperty("dataSource.roserverName"));
@@ -48,7 +62,16 @@ public class Program {
             Properties rwprops = new Properties();
             rwprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
             rwprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
-            rwprops.setProperty("dataSource.password", System.getProperty("dataSource.password"));
+            if (System.getProperty("dataSource.password") == null) {
+                rwprops.setProperty("dataSource.password",
+                        GetDBCredsByIAM.generateAuthToken(System.getProperty("rds.region"),
+                                System.getProperty("dataSource.rwserverName"),
+                                Integer.parseInt(System.getProperty("dataSource.portNumber")),
+                                System.getProperty("dataSource.user")));
+            } else {
+                rwprops.setProperty("dataSource.password", System.getProperty("dataSource.password"));
+            }
+
             rwprops.setProperty("dataSource.databaseName", System.getProperty("dataSource.databaseName"));
             rwprops.setProperty("dataSource.portNumber", System.getProperty("dataSource.portNumber"));
             rwprops.setProperty("dataSource.serverName", System.getProperty("dataSource.rwserverName"));

@@ -132,6 +132,63 @@ mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
 -Djavax.net.ssl.trustStorePassword=aurora-postgresql \
 -Dexec.mainClass="org.anonymous.boot.Program"
 
+// Go Client Build
+// To recompile grpc stubs
+make proto
+
+// Just build go
+make
+
+
+// IAM Authentication ( assuming IAM Authentication is turned on Aurora )
+// Create user in DB from psql
+// In case recreating then :  DROP ROLE mwuser
+
+CREATE USER mwuser WITH LOGIN; 
+GRANT rds_iam TO mwuser;
+
+//Ensure delete the 'credential' and other aws profile files, we dont want the SDK to get confused
+            
+mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
+-DdataSource.user=mwuser \
+-Drds.region=us-east-1 \
+-DdataSource.databaseName=postgres \
+-DdataSource.currentSchema=public \
+-DdataSource.portNumber=5432 \
+-DdataSource.roserverName=database-2.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
+-DdataSource.rwserverName=database-2.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
+-Djavax.net.ssl.trustStore=aurora-postgresql.jks \
+-Djavax.net.ssl.trustStorePassword=aurora-postgresql \
+-Dexec.mainClass="org.anonymous.boot.Program"
+
+// IAM Auth. testing with psql client
+
+export RDHOST="database-2.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com"
+
+Create AWS Profile
+aws configure --profile dbuser
+AWS Access Key ID [None]: xxxxxxxxxxxxx
+AWS Secret Access Key [None]: xxxxxxxxxxxxxxxxxx
+Default region name [None]: eu-west-1
+Default output format [None]: json
+
+
+export PGPASSWORD="$(aws --profile dbuser rds generate-db-auth-token \
+--hostname $RDSHOST \
+--port 5432 \
+--region us-east-1 \
+--username mwuser)"
+
+// in case u have deleted the default profile files, then the below would also work as it will fall back to the EC2 Service Role
+aws rds generate-db-auth-token \
+--hostname $RDSHOST \
+--port 5432 \
+--region us-east-1 \
+--username mwuser
+
+psql -h "$RDHOST" -p 5432 "dbname=postgres user=mwuser sslrootcert=rds-ca-2019-root.pem sslmode=verify-full"
+
+
 
 
 
