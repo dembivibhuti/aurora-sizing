@@ -10,6 +10,8 @@ import "cmd_lookup_by_type.proto";
 import "cmd_get_by_name.proto";
 import "cmd_get_many_by_name.proto";
 import "cmd_get_many_by_name_ext.proto";
+import "cmd_change_init_data.proto";
+import "cmd_change_init_data_ext.proto";
 
 service ObjService {
 	rpc connect(CmdConnect) returns (CmdConnectResponse);
@@ -19,4 +21,6 @@ service ObjService {
 	rpc get_object(CmdGetByName) returns (CmdGetByNameResponse);
 	rpc get_object_many_by_name(CmdGetManyByName) returns (CmdGetManyByNameResponse);
 	rpc get_object_many_by_name_ext(CmdGetManyByNameExt) returns (CmdGetManyByNameExtResponse);
+	rpc change_init_data(CmdChangeInitData) returns (CmdChangeInitDataResponse);
+	rpc change_init_data_ext(CmdChangeInitDataExt) returns (CmdChangeInitDataExtResponse);
 }

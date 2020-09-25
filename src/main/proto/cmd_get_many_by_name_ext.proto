@@ -27,7 +27,7 @@ message CmdGetManyByNameExtResponse {
 		}
 		message MsgOnFailure {
 			bool has_succeeded = 1;
-			ErrorMessage error_message = 2;
+			ErrorType error_type = 2;
 			string error_text = 3;
 		}
 		oneof RequestResponse {

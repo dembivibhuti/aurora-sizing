@@ -4,7 +4,7 @@ option java_multiple_files = true;
 option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
 package org.anonymous.grpc;
 
-enum ErrorMessage {
+enum ErrorType {
 	ERR_INVALID_ARGUMENTS = 0;
 	SDB_ERR_CONNECTION_LIMIT = 1;
 	SDB_ERR_AUTH_FAIL_NO_CREDENTIAL = 2;
