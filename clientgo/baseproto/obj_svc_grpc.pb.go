@@ -22,7 +22,8 @@ type ObjServiceClient interface {
 	LookupByName(ctx context.Context, in *CmdLookupByName, opts ...grpc.CallOption) (*CmdLookupByNameResponse, error)
 	LookupByType(ctx context.Context, in *CmdNameLookupByType, opts ...grpc.CallOption) (*CmdNameLookupByTypeResponse, error)
 	GetObject(ctx context.Context, in *CmdGetByName, opts ...grpc.CallOption) (*CmdGetByNameResponse, error)
-	GetObjectMany(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (*CmdGetManyByNameResponse, error)
+	GetObjectManyByName(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (*CmdGetManyByNameResponse, error)
+	GetObjectManyByNameExt(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetManyByNameExtResponse, error)
 }
 
 type objServiceClient struct {
@@ -98,13 +99,26 @@ func (c *objServiceClient) GetObject(ctx context.Context, in *CmdGetByName, opts
 	return out, nil
 }
 
-var objServiceGetObjectManyStreamDesc = &grpc.StreamDesc{
-	StreamName: "get_object_many",
+var objServiceGetObjectManyByNameStreamDesc = &grpc.StreamDesc{
+	StreamName: "get_object_many_by_name",
 }
 
-func (c *objServiceClient) GetObjectMany(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (*CmdGetManyByNameResponse, error) {
+func (c *objServiceClient) GetObjectManyByName(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (*CmdGetManyByNameResponse, error) {
 	out := new(CmdGetManyByNameResponse)
-	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_object_many", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_object_many_by_name", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+var objServiceGetObjectManyByNameExtStreamDesc = &grpc.StreamDesc{
+	StreamName: "get_object_many_by_name_ext",
+}
+
+func (c *objServiceClient) GetObjectManyByNameExt(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetManyByNameExtResponse, error) {
+	out := new(CmdGetManyByNameExtResponse)
+	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_object_many_by_name_ext", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -116,12 +130,13 @@ func (c *objServiceClient) GetObjectMany(ctx context.Context, in *CmdGetManyByNa
 // RegisterObjServiceService is called.  Any unassigned fields will result in the
 // handler for that method returning an Unimplemented error.
 type ObjServiceService struct {
-	Connect       func(context.Context, *CmdConnect) (*CmdConnectResponse, error)
-	ConnectExt    func(context.Context, *CmdConnectExt) (*CmdConnectExtResponse, error)
-	LookupByName  func(context.Context, *CmdLookupByName) (*CmdLookupByNameResponse, error)
-	LookupByType  func(context.Context, *CmdNameLookupByType) (*CmdNameLookupByTypeResponse, error)
-	GetObject     func(context.Context, *CmdGetByName) (*CmdGetByNameResponse, error)
-	GetObjectMany func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error)
+	Connect                func(context.Context, *CmdConnect) (*CmdConnectResponse, error)
+	ConnectExt             func(context.Context, *CmdConnectExt) (*CmdConnectExtResponse, error)
+	LookupByName           func(context.Context, *CmdLookupByName) (*CmdLookupByNameResponse, error)
+	LookupByType           func(context.Context, *CmdNameLookupByType) (*CmdNameLookupByTypeResponse, error)
+	GetObject              func(context.Context, *CmdGetByName) (*CmdGetByNameResponse, error)
+	GetObjectManyByName    func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error)
+	GetObjectManyByNameExt func(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponse, error)
 }
 
 func (s *ObjServiceService) connect(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -209,20 +224,37 @@ func (s *ObjServiceService) getObject(_ interface{}, ctx context.Context, dec fu
 	}
 	return interceptor(ctx, in, info, handler)
 }
-func (s *ObjServiceService) getObjectMany(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func (s *ObjServiceService) getObjectManyByName(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CmdGetManyByName)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return s.GetObjectMany(ctx, in)
+		return s.GetObjectManyByName(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectMany",
+		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectManyByName",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.GetObjectMany(ctx, req.(*CmdGetManyByName))
+		return s.GetObjectManyByName(ctx, req.(*CmdGetManyByName))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+func (s *ObjServiceService) getObjectManyByNameExt(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdGetManyByNameExt)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.GetObjectManyByNameExt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectManyByNameExt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.GetObjectManyByNameExt(ctx, req.(*CmdGetManyByNameExt))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -255,9 +287,14 @@ func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) 
 			return nil, status.Errorf(codes.Unimplemented, "method GetObject not implemented")
 		}
 	}
-	if srvCopy.GetObjectMany == nil {
-		srvCopy.GetObjectMany = func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method GetObjectMany not implemented")
+	if srvCopy.GetObjectManyByName == nil {
+		srvCopy.GetObjectManyByName = func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method GetObjectManyByName not implemented")
+		}
+	}
+	if srvCopy.GetObjectManyByNameExt == nil {
+		srvCopy.GetObjectManyByNameExt = func(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponse, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method GetObjectManyByNameExt not implemented")
 		}
 	}
 	sd := grpc.ServiceDesc{
@@ -284,8 +321,12 @@ func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) 
 				Handler:    srvCopy.getObject,
 			},
 			{
-				MethodName: "get_object_many",
-				Handler:    srvCopy.getObjectMany,
+				MethodName: "get_object_many_by_name",
+				Handler:    srvCopy.getObjectManyByName,
+			},
+			{
+				MethodName: "get_object_many_by_name_ext",
+				Handler:    srvCopy.getObjectManyByNameExt,
 			},
 		},
 		Streams:  []grpc.StreamDesc{},

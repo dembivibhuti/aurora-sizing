@@ -87,7 +87,7 @@ func (x *CmdLookupByName) GetGetType() GetType {
 	if x != nil {
 		return x.GetType
 	}
-	return GetType_SDB_GET_FIRST
+	return GetType_METADATA_GET_FIRST
 }
 
 func (x *CmdLookupByName) GetCount() int32 {
