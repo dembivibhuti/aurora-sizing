@@ -24,6 +24,8 @@ type ObjServiceClient interface {
 	GetObject(ctx context.Context, in *CmdGetByName, opts ...grpc.CallOption) (*CmdGetByNameResponse, error)
 	GetObjectManyByName(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (*CmdGetManyByNameResponse, error)
 	GetObjectManyByNameExt(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetManyByNameExtResponse, error)
+	ChangeInitData(ctx context.Context, in *CmdChangeInitData, opts ...grpc.CallOption) (*CmdChangeInitDataResponse, error)
+	ChangeInitDataExt(ctx context.Context, in *CmdChangeInitDataExt, opts ...grpc.CallOption) (*CmdChangeInitDataExtResponse, error)
 }
 
 type objServiceClient struct {
@@ -125,6 +127,32 @@ func (c *objServiceClient) GetObjectManyByNameExt(ctx context.Context, in *CmdGe
 	return out, nil
 }
 
+var objServiceChangeInitDataStreamDesc = &grpc.StreamDesc{
+	StreamName: "change_init_data",
+}
+
+func (c *objServiceClient) ChangeInitData(ctx context.Context, in *CmdChangeInitData, opts ...grpc.CallOption) (*CmdChangeInitDataResponse, error) {
+	out := new(CmdChangeInitDataResponse)
+	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/change_init_data", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+var objServiceChangeInitDataExtStreamDesc = &grpc.StreamDesc{
+	StreamName: "change_init_data_ext",
+}
+
+func (c *objServiceClient) ChangeInitDataExt(ctx context.Context, in *CmdChangeInitDataExt, opts ...grpc.CallOption) (*CmdChangeInitDataExtResponse, error) {
+	out := new(CmdChangeInitDataExtResponse)
+	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/change_init_data_ext", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ObjServiceService is the service API for ObjService service.
 // Fields should be assigned to their respective handler implementations only before
 // RegisterObjServiceService is called.  Any unassigned fields will result in the
@@ -137,6 +165,8 @@ type ObjServiceService struct {
 	GetObject              func(context.Context, *CmdGetByName) (*CmdGetByNameResponse, error)
 	GetObjectManyByName    func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error)
 	GetObjectManyByNameExt func(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponse, error)
+	ChangeInitData         func(context.Context, *CmdChangeInitData) (*CmdChangeInitDataResponse, error)
+	ChangeInitDataExt      func(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error)
 }
 
 func (s *ObjServiceService) connect(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -258,6 +288,40 @@ func (s *ObjServiceService) getObjectManyByNameExt(_ interface{}, ctx context.Co
 	}
 	return interceptor(ctx, in, info, handler)
 }
+func (s *ObjServiceService) changeInitData(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdChangeInitData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.ChangeInitData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/org.anonymous.grpc.ObjService/ChangeInitData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.ChangeInitData(ctx, req.(*CmdChangeInitData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+func (s *ObjServiceService) changeInitDataExt(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdChangeInitDataExt)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.ChangeInitDataExt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/org.anonymous.grpc.ObjService/ChangeInitDataExt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.ChangeInitDataExt(ctx, req.(*CmdChangeInitDataExt))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 // RegisterObjServiceService registers a service implementation with a gRPC server.
 func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) {
@@ -297,6 +361,16 @@ func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) 
 			return nil, status.Errorf(codes.Unimplemented, "method GetObjectManyByNameExt not implemented")
 		}
 	}
+	if srvCopy.ChangeInitData == nil {
+		srvCopy.ChangeInitData = func(context.Context, *CmdChangeInitData) (*CmdChangeInitDataResponse, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method ChangeInitData not implemented")
+		}
+	}
+	if srvCopy.ChangeInitDataExt == nil {
+		srvCopy.ChangeInitDataExt = func(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method ChangeInitDataExt not implemented")
+		}
+	}
 	sd := grpc.ServiceDesc{
 		ServiceName: "org.anonymous.grpc.ObjService",
 		Methods: []grpc.MethodDesc{
@@ -327,6 +401,14 @@ func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) 
 			{
 				MethodName: "get_object_many_by_name_ext",
 				Handler:    srvCopy.getObjectManyByNameExt,
+			},
+			{
+				MethodName: "change_init_data",
+				Handler:    srvCopy.changeInitData,
+			},
+			{
+				MethodName: "change_init_data_ext",
+				Handler:    srvCopy.changeInitDataExt,
 			},
 		},
 		Streams:  []grpc.StreamDesc{},
