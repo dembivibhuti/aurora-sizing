@@ -25,6 +25,7 @@ type SSClient interface {
 	LookupByType(prefix string, stype string, cmpType string) ([]string, error)
 	GetObject(sname string) (model.Object, error)
 	GetObjectMany(snames []string) ([]model.Object, error)
+	GetObjectManyExt(snames []string) ([]model.ObjectExt, error)
 }
 
 func NewSSClient(addr string, typ ClientType) SSClient {
