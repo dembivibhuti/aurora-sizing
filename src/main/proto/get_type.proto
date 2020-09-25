@@ -1,0 +1,16 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+enum GetType {
+	METADATA_GET_FIRST = 0;
+	METADATA_GET_LAST = 1;
+	METADATA_GET_EQUAL = 2;
+	METADATA_GET_LESS = 3;
+	METADATA_GET_LE = 4;
+	METADATA_GET_GREATER = 5;
+	METADATA_GET_GE = 6;
+	METADATA_GET_NEXT = 7;
+	METADATA_GET_PREV = 8;
+}

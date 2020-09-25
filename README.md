@@ -190,6 +190,14 @@ psql -h "$RDHOST" -p 5432 "dbname=postgres user=mwuser sslrootcert=rds-ca-2019-r
 
 
 
+// Go Client Build
+// To recompile grpc stubs
+make proto
+
+// Just build go
+make
+
+
 
 
 

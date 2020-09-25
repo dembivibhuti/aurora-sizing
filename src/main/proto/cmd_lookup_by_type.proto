@@ -1,0 +1,22 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+import "cmd_type.proto";
+import "get_type.proto";
+
+message CmdNameLookupByType {
+	int32 message_size = 1;
+	CmdType message_type = 2;
+	GetType get_type = 3;
+	int32 count = 4;
+	uint32 security_type = 5;
+	string security_name_prefix = 6;
+}
+
+message CmdNameLookupByTypeResponse {
+	uint32 message_size = 1;
+	int32 security_count = 2;
+	repeated string security_names = 3;
+}
