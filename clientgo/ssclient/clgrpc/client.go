@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/somnath67643/aurora-sizing/clientgo/baseproto"
+	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
 
 type SSClient struct {
@@ -59,8 +60,11 @@ func (s *SSClient) LookupByType(prefix string, stype string, cmpType string) ([]
 	return []string{}, nil
 }
 
-func (s *SSClient) GetObject(sname string) {
+func (s *SSClient) GetObject(sname string) (model.Object, error) {
+	return model.Object{}, nil
+
 }
 
-func (s *SSClient) GetObjectMany(snames []string) {
+func (s *SSClient) GetObjectMany(snames []string) ([]model.Object, error) {
+	return []model.Object{}, nil
 }

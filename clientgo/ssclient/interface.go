@@ -6,6 +6,7 @@ import (
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/clbstream"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/clgrpc"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/cltcp"
+	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
 
 type ClientType int
@@ -22,8 +23,8 @@ type SSClient interface {
 	UseService(dbname string, closure func()) error
 	LookupByName(prefix string, cmpType string) ([]string, error)
 	LookupByType(prefix string, stype string, cmpType string) ([]string, error)
-	GetObject(sname string)
-	GetObjectMany(snames []string)
+	GetObject(sname string) (model.Object, error)
+	GetObjectMany(snames []string) ([]model.Object, error)
 }
 
 func NewSSClient(addr string, typ ClientType) SSClient {
