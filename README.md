@@ -133,6 +133,14 @@ mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
 -Dexec.mainClass="org.anonymous.boot.Program"
 
 
+// Go Client Build
+// To recompile grpc stubs
+make proto
+
+// Just build go
+make
+
+
 
 
 
