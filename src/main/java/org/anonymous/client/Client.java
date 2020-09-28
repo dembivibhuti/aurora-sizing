@@ -1,11 +1,11 @@
 package org.anonymous.client;
 
-import org.anonymous.grpc.ObjectRequest;
-import org.anonymous.grpc.ObjectResponse;
-import org.anonymous.grpc.ObjectServiceGrpc;
-
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import org.anonymous.grpc.CmdGetByName;
+import org.anonymous.grpc.CmdGetByNameResponse;
+import org.anonymous.grpc.CmdType;
+import org.anonymous.grpc.ObjServiceGrpc;
 
 public class Client {
     public static void main(String[] args) throws InterruptedException {
@@ -13,9 +13,9 @@ public class Client {
                 .forAddress(System.getProperty("host"), Integer.parseInt(System.getProperty("port"))).usePlaintext()
                 .build();
 
-        ObjectServiceGrpc.ObjectServiceBlockingStub stub = ObjectServiceGrpc.newBlockingStub(channel);
+        ObjServiceGrpc.ObjServiceBlockingStub stub= ObjServiceGrpc.newBlockingStub(channel);
 
-        ObjectResponse response = stub.exists(ObjectRequest.newBuilder().setName("phantom").setTypeId(212).build());
+        CmdGetByNameResponse response = stub.getObject(CmdGetByName.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-10-0").build());
 
         System.out.println("Response received from server:\n" + response);
 

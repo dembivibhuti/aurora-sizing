@@ -1,24 +1,19 @@
 package org.anonymous.module;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
-import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.SplittableRandom;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.CompletableFuture;
 import org.anonymous.connection.ConnectionProvider;
-import java.util.stream.IntStream;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import java.util.Collections;
 
 public class ObjectRepository implements AutoCloseable {
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
@@ -100,13 +95,15 @@ public class ObjectRepository implements AutoCloseable {
                 .prepareStatement("insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 
             byte[] sdbMem = getSizedByteArray(100);
-            byte[] mem = getSizedByteArray(32000);
+            byte[] mem = getSizedByteArray(10);
+            mem[0] = 10;
+            mem[1] = 20;
 
             Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
             for (int i = 0; i < numberOfRecsPerThread; i++) {
 
                 int randTypeId = randIntStream.next();
-                String name = String.format("testSec-%d-%d", randIntStream.next(), i);
+                String name = String.format("testSec-10-%d", i);
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
@@ -133,7 +130,7 @@ public class ObjectRepository implements AutoCloseable {
     }
 
     private byte[] getSizedByteArray(int size) {
-        String string = "asdf";
+        String string = "";
         byte[] result = new byte[size];
         System.arraycopy(string.getBytes(), 0, result, size - string.length(), string.length());
         return result;
@@ -402,7 +399,22 @@ public class ObjectRepository implements AutoCloseable {
         return completableFuture;
     }
 
-    public CompletableFuture<Long> countRecs(TimeKeeper lookupTimeKeeper) {
+    public byte[] getMemBySecurityKey(String secKey, TimeKeeper timeKeeper) {
+        byte[] arrayContainsMem = new byte[0];
+        try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
+                .prepareStatement("select mem from objects where name = ?")) {
+            lookupStmt.setString(1, secKey);
+            ResultSet rs = lookupStmt.executeQuery();
+            while (rs.next()) {
+                arrayContainsMem = rs.getBytes("mem");
+            }
+            rs.close();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return arrayContainsMem;
+    }
+        public CompletableFuture<Long> countRecs(TimeKeeper lookupTimeKeeper) {
         CompletableFuture<Long> completableFuture = new CompletableFuture();
         executorService.submit(() -> {
             long spanId = lookupTimeKeeper.start();
