@@ -30,8 +30,9 @@ public class GrpcServer {
             Server server = ServerBuilder.forPort(port)
                     .addService(new ObjServiceImpl(objectRepositiory)).build();
 
-            server.start();
             LOGGER.info("Listening on {}", port);
+            server.start();
+
             server.awaitTermination();
         } catch (Exception e) {
             LOGGER.error("unexpected error", e);

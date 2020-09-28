@@ -1,26 +1,26 @@
 package org.anonymous.module;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
-import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.SplittableRandom;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.CompletableFuture;
 import org.anonymous.connection.ConnectionProvider;
-import java.util.stream.IntStream;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import java.util.Collections;
 
 public class ObjectRepository implements AutoCloseable {
+
+    private static Logger LOGGER= LoggerFactory.getLogger(ObjectRepository.class);
+
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private ConnectionProvider roConnectionProvider;
@@ -49,12 +49,12 @@ public class ObjectRepository implements AutoCloseable {
                     + "Primary Key ( name ) )";
 
             connection.prepareStatement(createTableSQL).executeUpdate();
-            System.out.println(" created objects table ");
+            LOGGER.info(" created objects table ");
             connection.commit();
 
             connection.prepareStatement("create unique index object_typeid_name on objects(typeId, name)")
                     .executeUpdate();
-            System.out.println(" created index by typeId and name ");
+            LOGGER.info(" created index by typeId and name ");
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
