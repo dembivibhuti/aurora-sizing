@@ -22,12 +22,17 @@ func main() {
 
 func ssMain(scl ssclient.SSClient) {
 	scl.UseService("tdmsqa_nyc_bm_lta3", func() {
-		res, err := scl.LookupByName("test", model.GET_EQUAL, 100000)
+		res, err := scl.LookupByName("test", model.GET_EQUAL, 10)
 		if err != nil {
 			log.Fatal(err)
 		}
+		secnames := []string{}
 		for k := range res {
-			fmt.Println(k)
+			secnames = append(secnames, k)
+		}
+		mch, err := scl.GetObjectMany(secnames)
+		for k := range mch {
+			fmt.Println("SecLen: ", len(k.Mem))
 		}
 	})
 }
