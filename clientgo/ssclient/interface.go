@@ -19,8 +19,8 @@ type SSClient interface {
 	Close()
 	Init()
 	UseService(dbname string, closure func()) error
-	LookupByName(prefix string, cmpType string, nr int32) (<-chan string, error)
-	LookupByType(prefix string, stype string, cmpType string, nr int32) (<-chan string, error)
+	LookupByName(prefix string, cmpType model.CmpType, nr int32) (<-chan string, error)
+	LookupByType(prefix string, stype string, cmpType model.CmpType, nr int32) (<-chan string, error)
 	GetObject(sname string) (model.Object, error)
 	GetObjectMany(snames []string) (<-chan *model.Object, error)
 	GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, error)

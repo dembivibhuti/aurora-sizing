@@ -22,5 +22,5 @@ message CmdNameLookupByTypeResponse {
 }
 
 message CmdNameLookupByTypeResponseStream {
-	string security_names = 1;
+	string security_name = 1;
 }

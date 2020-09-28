@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient"
+	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
 
 var (
@@ -20,7 +22,12 @@ func main() {
 
 func ssMain(scl ssclient.SSClient) {
 	scl.UseService("tdmsqa_nyc_bm_lta3", func() {
-		fmt.Println("In closure")
-
+		res, err := scl.LookupByName("test", model.GET_EQUAL, 10)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for k := range res {
+			fmt.Println(k)
+		}
 	})
 }

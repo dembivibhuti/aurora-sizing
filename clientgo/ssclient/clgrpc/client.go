@@ -52,12 +52,47 @@ func (s *SSClient) UseService(dbname string, closure func()) error {
 	return nil
 }
 
-func (s *SSClient) LookupByName(prefix string, cmpType string, nr int32) (<-chan string, error) {
-	return nil, nil
+func (s *SSClient) LookupByName(prefix string, cmpType model.CmpType, nr int32) (<-chan string, error) {
+	ctx := context.Background()
+	strmCl, err := s.client.LookupByNameStream(ctx, &pb.CmdLookupByName{
+		Count:              nr,
+		SecurityNamePrefix: prefix,
+	})
+	if err != nil {
+		return nil, err
+	}
+	ch := make(chan string)
+	go func() {
+		for {
+			resp, err := strmCl.Recv()
+			if err != nil { // also takes care of io.EOF
+				break
+			}
+			ch <- resp.SecurityName
+		}
+		close(ch)
+	}()
+	return ch, nil
 }
 
-func (s *SSClient) LookupByType(prefix string, stype string, cmpType string, nr int32) (<-chan string, error) {
-	return nil, nil
+func (s *SSClient) LookupByType(prefix string, stype string, cmpType model.CmpType, nr int32) (<-chan string, error) {
+	ctx := context.Background()
+	strmCl, err := s.client.LookupByTypeStream(ctx, &pb.CmdNameLookupByType{})
+	if err != nil {
+		return nil, err
+	}
+	ch := make(chan string)
+	go func() {
+		for {
+			resp, err := strmCl.Recv()
+			if err != nil {
+				break
+			}
+			ch <- resp.SecurityName
+		}
+		close(ch)
+	}()
+	return ch, nil
 }
 
 func (s *SSClient) GetObject(sname string) (model.Object, error) {

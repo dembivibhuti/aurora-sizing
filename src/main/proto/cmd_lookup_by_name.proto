@@ -21,5 +21,5 @@ message CmdLookupByNameResponse {
 }
 
 message CmdLookupByNameResponseStream {
-	string security_names = 1;
+	string security_name = 1;
 }

@@ -24,7 +24,8 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterObjServiceService(grpcServer, &pb.ObjServiceService{
-		Connect: connect,
+		Connect:            connect,
+		LookupByNameStream: lookupByNameStream,
 	})
 	grpcServer.Serve(lis)
 }
@@ -37,4 +38,16 @@ func connect(ctx context.Context, in *pb.CmdConnect) (*pb.CmdConnectResponse, er
 		FeatureFlag: 333,
 	}
 	return resp, nil
+}
+
+func lookupByNameStream(in *pb.CmdLookupByName, stream pb.ObjService_LookupByNameStreamServer) error {
+	for i := 0; i < int(in.Count); i++ {
+		resp := &pb.CmdLookupByNameResponseStream{
+			SecurityName: fmt.Sprintf("%s_%d", in.SecurityNamePrefix, i),
+		}
+		if err := stream.Send(resp); err != nil {
+			return err
+		}
+	}
+	return nil
 }

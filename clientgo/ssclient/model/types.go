@@ -1,5 +1,19 @@
 package model
 
+type CmpType int
+
+const (
+	GET_FIRST CmpType = iota
+	GET_LAST
+	GET_EQUAL
+	GET_LESS
+	GET_LE
+	GET_GREATER
+	GET_GE
+	GET_NEXT
+	GET_PREV
+)
+
 type Metadata struct {
 	SecurityName string
 	SecurityType int32
