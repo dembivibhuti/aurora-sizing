@@ -27,7 +27,7 @@ type ObjServiceClient interface {
 	GetObjectManyByName(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (*CmdGetManyByNameResponse, error)
 	GetObjectManyByNameStream(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (ObjService_GetObjectManyByNameStreamClient, error)
 	GetObjectManyByNameExt(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetManyByNameExtResponse, error)
-	GetObjectManyByNameExtStream(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetManyByNameExtResponseStream, error)
+	GetObjectManyByNameExtStream(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (ObjService_GetObjectManyByNameExtStreamClient, error)
 	ChangeInitData(ctx context.Context, in *CmdChangeInitData, opts ...grpc.CallOption) (*CmdChangeInitDataResponse, error)
 	ChangeInitDataExt(ctx context.Context, in *CmdChangeInitDataExt, opts ...grpc.CallOption) (*CmdChangeInitDataExtResponse, error)
 }
@@ -243,16 +243,40 @@ func (c *objServiceClient) GetObjectManyByNameExt(ctx context.Context, in *CmdGe
 }
 
 var objServiceGetObjectManyByNameExtStreamStreamDesc = &grpc.StreamDesc{
-	StreamName: "get_object_many_by_name_ext_stream",
+	StreamName:    "get_object_many_by_name_ext_stream",
+	ServerStreams: true,
 }
 
-func (c *objServiceClient) GetObjectManyByNameExtStream(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetManyByNameExtResponseStream, error) {
-	out := new(CmdGetManyByNameExtResponseStream)
-	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_object_many_by_name_ext_stream", in, out, opts...)
+func (c *objServiceClient) GetObjectManyByNameExtStream(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (ObjService_GetObjectManyByNameExtStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, objServiceGetObjectManyByNameExtStreamStreamDesc, "/org.anonymous.grpc.ObjService/get_object_many_by_name_ext_stream", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &objServiceGetObjectManyByNameExtStreamClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ObjService_GetObjectManyByNameExtStreamClient interface {
+	Recv() (*CmdGetManyByNameExtResponseStream, error)
+	grpc.ClientStream
+}
+
+type objServiceGetObjectManyByNameExtStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *objServiceGetObjectManyByNameExtStreamClient) Recv() (*CmdGetManyByNameExtResponseStream, error) {
+	m := new(CmdGetManyByNameExtResponseStream)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 var objServiceChangeInitDataStreamDesc = &grpc.StreamDesc{
@@ -296,7 +320,7 @@ type ObjServiceService struct {
 	GetObjectManyByName          func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error)
 	GetObjectManyByNameStream    func(*CmdGetManyByName, ObjService_GetObjectManyByNameStreamServer) error
 	GetObjectManyByNameExt       func(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponse, error)
-	GetObjectManyByNameExtStream func(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponseStream, error)
+	GetObjectManyByNameExtStream func(*CmdGetManyByNameExt, ObjService_GetObjectManyByNameExtStreamServer) error
 	ChangeInitData               func(context.Context, *CmdChangeInitData) (*CmdChangeInitDataResponse, error)
 	ChangeInitDataExt            func(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error)
 }
@@ -441,22 +465,12 @@ func (s *ObjServiceService) getObjectManyByNameExt(_ interface{}, ctx context.Co
 	}
 	return interceptor(ctx, in, info, handler)
 }
-func (s *ObjServiceService) getObjectManyByNameExtStream(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdGetManyByNameExt)
-	if err := dec(in); err != nil {
-		return nil, err
+func (s *ObjServiceService) getObjectManyByNameExtStream(_ interface{}, stream grpc.ServerStream) error {
+	m := new(CmdGetManyByNameExt)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return s.GetObjectManyByNameExtStream(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectManyByNameExtStream",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.GetObjectManyByNameExtStream(ctx, req.(*CmdGetManyByNameExt))
-	}
-	return interceptor(ctx, in, info, handler)
+	return s.GetObjectManyByNameExtStream(m, &objServiceGetObjectManyByNameExtStreamServer{stream})
 }
 func (s *ObjServiceService) changeInitData(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CmdChangeInitData)
@@ -532,6 +546,19 @@ func (x *objServiceGetObjectManyByNameStreamServer) Send(m *CmdGetManyByNameResp
 	return x.ServerStream.SendMsg(m)
 }
 
+type ObjService_GetObjectManyByNameExtStreamServer interface {
+	Send(*CmdGetManyByNameExtResponseStream) error
+	grpc.ServerStream
+}
+
+type objServiceGetObjectManyByNameExtStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *objServiceGetObjectManyByNameExtStreamServer) Send(m *CmdGetManyByNameExtResponseStream) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // RegisterObjServiceService registers a service implementation with a gRPC server.
 func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) {
 	srvCopy := *srv
@@ -586,8 +613,8 @@ func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) 
 		}
 	}
 	if srvCopy.GetObjectManyByNameExtStream == nil {
-		srvCopy.GetObjectManyByNameExtStream = func(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponseStream, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method GetObjectManyByNameExtStream not implemented")
+		srvCopy.GetObjectManyByNameExtStream = func(*CmdGetManyByNameExt, ObjService_GetObjectManyByNameExtStreamServer) error {
+			return status.Errorf(codes.Unimplemented, "method GetObjectManyByNameExtStream not implemented")
 		}
 	}
 	if srvCopy.ChangeInitData == nil {
@@ -632,10 +659,6 @@ func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) 
 				Handler:    srvCopy.getObjectManyByNameExt,
 			},
 			{
-				MethodName: "get_object_many_by_name_ext_stream",
-				Handler:    srvCopy.getObjectManyByNameExtStream,
-			},
-			{
 				MethodName: "change_init_data",
 				Handler:    srvCopy.changeInitData,
 			},
@@ -658,6 +681,11 @@ func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) 
 			{
 				StreamName:    "get_object_many_by_name_stream",
 				Handler:       srvCopy.getObjectManyByNameStream,
+				ServerStreams: true,
+			},
+			{
+				StreamName:    "get_object_many_by_name_ext_stream",
+				Handler:       srvCopy.getObjectManyByNameExtStream,
 				ServerStreams: true,
 			},
 		},
