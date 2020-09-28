@@ -110,7 +110,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
-                insertRec.setInt(2, randTypeId);
+                insertRec.setInt(2, 0); //originally randTypeId
                 insertRec.setLong(3, i);
                 insertRec.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
                 insertRec.setLong(5, 0);
@@ -200,6 +200,48 @@ public class ObjectRepository implements AutoCloseable {
             });
         }
         return Stream.of(all);
+    }
+    public List<String> lookup(String name, int limit, TimeKeeper lookupTimeKeeper){
+        List<String> secKeys = new ArrayList<>();
+        Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
+        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
+                .prepareStatement("select name from objects where lower(name) >= ? order by name asc LIMIT " + limit)) {
+
+                long spanId = lookupTimeKeeper.start();
+                lookupStmt.setString(1, name);
+                ResultSet rs = lookupStmt.executeQuery();
+
+                while (rs.next()) {
+                    secKeys.add(rs.getString(1));
+                }
+                rs.close();
+                lookupTimeKeeper.stop(spanId);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return secKeys;
+    }
+
+    public List<String> lookupById(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper){
+        List<String> secKeys = new ArrayList<>();
+        Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
+        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
+                .prepareStatement("select name from objects where lower(name) >= ? and typeId = ? order by name asc LIMIT " + limit)) {
+
+            long spanId = lookupTimeKeeper.start();
+            lookupStmt.setString(1, name);
+            lookupStmt.setInt(2, typeId);
+            ResultSet rs = lookupStmt.executeQuery();
+
+            while (rs.next()) {
+                secKeys.add(rs.getString(1));
+            }
+            rs.close();
+            lookupTimeKeeper.stop(spanId);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return secKeys;
     }
 
     public CompletableFuture<Void> getSDBByKey(String secKey, TimeKeeper lookupTimeKeeper) {
