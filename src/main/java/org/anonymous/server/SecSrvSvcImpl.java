@@ -15,7 +15,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.Properties;
 
 public class SecSrvSvcImpl extends SecSrvSvcGrpc.SecSrvSvcImplBase {
     @Override
@@ -51,7 +50,7 @@ public class SecSrvSvcImpl extends SecSrvSvcGrpc.SecSrvSvcImplBase {
                     SrvMsgGetManyByNameResponse.RequestResponse requestResponse = SrvMsgGetManyByNameResponse.RequestResponse.newBuilder().setMsgOnSuccess(msgOnSuccess).build();
                     responseBuilder.addRequestResponse(requestResponse);
                 }
-                System.out.println("tr: " + totalRows);
+//                System.out.println("tr: " + totalRows);
                 responseBuilder.setSecurityCount(totalRows);
                 response = responseBuilder.build();
             } catch (SQLException throwables) {
