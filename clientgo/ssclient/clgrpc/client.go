@@ -57,6 +57,7 @@ func (s *SSClient) LookupByName(prefix string, cmpType model.CmpType, nr int32) 
 	strmCl, err := s.client.LookupByNameStream(ctx, &pb.CmdLookupByName{
 		Count:              nr,
 		SecurityNamePrefix: prefix,
+		GetType:            convertCmpTypeToGrpcGetType(cmpType),
 	})
 	if err != nil {
 		return nil, err
@@ -75,9 +76,14 @@ func (s *SSClient) LookupByName(prefix string, cmpType model.CmpType, nr int32) 
 	return ch, nil
 }
 
-func (s *SSClient) LookupByType(prefix string, stype string, cmpType model.CmpType, nr int32) (<-chan string, error) {
+func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpType, nr int32) (<-chan string, error) {
 	ctx := context.Background()
-	strmCl, err := s.client.LookupByTypeStream(ctx, &pb.CmdNameLookupByType{})
+	strmCl, err := s.client.LookupByTypeStream(ctx, &pb.CmdNameLookupByType{
+		GetType:            convertCmpTypeToGrpcGetType(cmpType),
+		Count:              nr,
+		SecurityType:       stype,
+		SecurityNamePrefix: prefix,
+	})
 	if err != nil {
 		return nil, err
 	}
