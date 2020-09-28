@@ -106,7 +106,8 @@ public class ObjectRepository implements AutoCloseable {
             for (int i = 0; i < numberOfRecsPerThread; i++) {
 
                 int randTypeId = randIntStream.next();
-                String name = String.format("testSec-%d-%d", randIntStream.next(), i);
+                String name = "testSec-1418335106-0";
+                System.out.println("name is: "+name);
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
@@ -246,6 +247,7 @@ public class ObjectRepository implements AutoCloseable {
 
             try (Connection connection = rwConnectionProvider.getConnection();
                     PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
+                System.out.println("hiiiii");
                 for (int i = 0; i < secKeys.size(); i++) {
                     lookupStmt.setString(i + 1, secKeys.get(i));
                 }
@@ -254,6 +256,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 Object x = null;
                 while (rs.next()) {
+                    System.out.println("yayyy");
                     x = rs.getString("name");
                     x = rs.getInt("typeId");
                     x = rs.getLong("lastTransaction");

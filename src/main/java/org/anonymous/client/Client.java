@@ -1,11 +1,12 @@
 package org.anonymous.client;
 
-import org.anonymous.grpc.ObjectRequest;
-import org.anonymous.grpc.ObjectResponse;
-import org.anonymous.grpc.ObjectServiceGrpc;
+import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.grpc.*;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import org.anonymous.module.ObjectRepository;
+import org.anonymous.util.TimeKeeper;
 
 public class Client {
     public static void main(String[] args) throws InterruptedException {
@@ -13,9 +14,17 @@ public class Client {
                 .forAddress(System.getProperty("host"), Integer.parseInt(System.getProperty("port"))).usePlaintext()
                 .build();
 
-        ObjectServiceGrpc.ObjectServiceBlockingStub stub = ObjectServiceGrpc.newBlockingStub(channel);
+//        ObjectServiceGrpc.ObjectServiceBlockingStub stub = ObjectServiceGrpc.newBlockingStub(channel);
 
-        ObjectResponse response = stub.exists(ObjectRequest.newBuilder().setName("phantom").setTypeId(212).build());
+        ConnectionProvider connectionProvider = new ConnectionProvider();
+        new ObjectRepository(null, connectionProvider).runDDL(false);
+        new ObjectRepository(null, connectionProvider).load(1, 1 , new TimeKeeper());
+
+//        SecSrvSvcGrpc.SecSrvSvcBlockingStub stub = SecSrvSvcGrpc.newBlockingStub(channel);
+
+        ObjServiceGrpc.ObjServiceBlockingStub stub = ObjServiceGrpc.newBlockingStub(channel);
+
+        CmdGetManyByNameResponse response = stub.getObjectManyByName(CmdGetManyByName.newBuilder().addSecurityName("testSec-1418335106-0").build());
 
         System.out.println("Response received from server:\n" + response);
 
