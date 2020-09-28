@@ -4,12 +4,16 @@ import java.io.IOException;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import org.anonymous.client.Client;
 import org.anonymous.connection.ConnectionProvider;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.TimeKeeper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GrpcServer {
-    public static void main(String[] args) throws IOException, InterruptedException {
+    static Logger logger = LoggerFactory.getLogger(Client.class);
+    public static void main(String[] args) {
         try (ConnectionProvider connectionProvider = new ConnectionProvider()) {
             ObjectRepository objectRepositiory = new ObjectRepository(connectionProvider, connectionProvider);
             objectRepositiory.runDDL(false);
@@ -20,9 +24,9 @@ public class GrpcServer {
                     .addService(new ObjectServiceImpl()).addService(new ObjServiceImpl(connectionProvider)).build();
 
 
-            System.out.println("Starting server...");
+            logger.info("Starting server...");
             server.start();
-            System.out.println("Server started!");
+            logger.info("Server started!");
             server.awaitTermination();
         } catch (Exception e) {
             e.printStackTrace();
