@@ -30,3 +30,18 @@ message CmdGetManyByNameResponse {
 	}
 	repeated RequestResponse request_response = 3;
 }
+
+message CmdGetManyByNameResponseStream {
+		message MsgOnSuccess {
+			int32 result_code = 1;
+			bytes mem = 2;
+		}
+		message MsgOnFailure {
+			int32 result_code = 1;
+		}
+
+		oneof MessageResponse {
+			MsgOnFailure msg_on_failure = 1;
+			MsgOnSuccess msg_on_success = 2;
+		}
+}

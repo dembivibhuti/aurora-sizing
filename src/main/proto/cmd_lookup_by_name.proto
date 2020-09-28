@@ -19,3 +19,7 @@ message CmdLookupByNameResponse {
 	int32 security_count = 2;
 	repeated string security_names = 3;
 }
+
+message CmdLookupByNameResponseStream {
+	string security_names = 1;
+}
