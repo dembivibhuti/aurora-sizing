@@ -2,6 +2,7 @@ package clgrpc
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"google.golang.org/grpc"
@@ -101,15 +102,80 @@ func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpTy
 	return ch, nil
 }
 
-func (s *SSClient) GetObject(sname string) (model.Object, error) {
-	return model.Object{}, nil
+func (s *SSClient) GetObject(sname string) (*model.Object, error) {
+	ctx := context.Background()
+	resp, err := s.client.GetObject(ctx, &pb.CmdGetByName{SecurityName: sname})
+	if err != nil {
+		return nil, err
+	}
+	var obj *model.Object
+	switch v := resp.Response.(type) {
+	case *pb.CmdGetByNameResponse_ErrorType:
+		return nil, fmt.Errorf("Could not get Object")
 
+	case *pb.CmdGetByNameResponse_Security:
+		obj = &model.Object{Mem: v.Security}
+	}
+
+	return obj, nil
 }
 
 func (s *SSClient) GetObjectMany(snames []string) (<-chan *model.Object, error) {
-	return nil, nil
+	ctx := context.Background()
+	strmCl, err := s.client.GetObjectManyByNameStream(ctx, &pb.CmdGetManyByName{
+		SecurityCount: int32(len(snames)),
+		SecurityNames: snames,
+	})
+	if err != nil {
+		return nil, err
+	}
+	ch := make(chan *model.Object)
+	go func() {
+		for {
+			resp, err := strmCl.Recv()
+			if err != nil {
+				break
+			}
+			v := resp.GetMsgOnSuccess()
+			if v == nil {
+				continue
+			}
+			ch <- &model.Object{Mem: v.Mem}
+		}
+		close(ch)
+	}()
+	return ch, nil
 }
 
 func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, error) {
-	return nil, nil
+	ctx := context.Background()
+	strmCl, err := s.client.GetObjectManyByNameExtStream(ctx, &pb.CmdGetManyByNameExt{
+		Count:         uint32(len(snames)),
+		SecurityNames: snames,
+	})
+	if err != nil {
+		return nil, err
+	}
+	ch := make(chan *model.ObjectExt)
+	go func() {
+		for {
+			resp, err := strmCl.Recv()
+			if err != nil {
+				break
+			}
+			v := resp.GetMsgOnSuccess()
+			if v == nil {
+				continue
+			}
+
+			obj := &model.ObjectExt{
+				Mem:      v.GetMem(),
+				Metadata: nil,
+			}
+			ch <- obj
+		}
+		close(ch)
+
+	}()
+	return ch, nil
 }

@@ -22,7 +22,7 @@ func main() {
 
 func ssMain(scl ssclient.SSClient) {
 	scl.UseService("tdmsqa_nyc_bm_lta3", func() {
-		res, err := scl.LookupByName("test", model.GET_EQUAL, 10)
+		res, err := scl.LookupByName("test", model.GET_EQUAL, 100000)
 		if err != nil {
 			log.Fatal(err)
 		}

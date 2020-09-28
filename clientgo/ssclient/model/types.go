@@ -30,6 +30,6 @@ type Object struct {
 }
 
 type ObjectExt struct {
-	MetaData Metadata
+	Metadata *Metadata
 	Mem      []byte
 }
