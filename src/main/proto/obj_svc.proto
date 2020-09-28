@@ -3,8 +3,28 @@ option java_multiple_files = true;
 option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
 package org.anonymous.grpc;
 
+import "cmd_connect.proto";
+import "cmd_connect_ext.proto";
+import "cmd_lookup_by_name.proto";
+import "cmd_lookup_by_type.proto";
+import "cmd_get_by_name.proto";
 import "cmd_get_many_by_name.proto";
+import "cmd_get_many_by_name_ext.proto";
+import "cmd_change_init_data.proto";
+import "cmd_change_init_data_ext.proto";
 
 service ObjService {
+	rpc connect(CmdConnect) returns (CmdConnectResponse);
+	rpc connect_ext(CmdConnectExt) returns (CmdConnectExtResponse);
+	rpc lookup_by_name(CmdLookupByName) returns (CmdLookupByNameResponse);
+	rpc lookup_by_name_stream(CmdLookupByName) returns (stream CmdLookupByNameResponseStream);
+	rpc lookup_by_type(CmdNameLookupByType) returns (CmdNameLookupByTypeResponse);
+	rpc lookup_by_type_stream(CmdNameLookupByType) returns (stream CmdNameLookupByTypeResponseStream);
+	rpc get_object(CmdGetByName) returns (CmdGetByNameResponse);
 	rpc get_object_many_by_name(CmdGetManyByName) returns (CmdGetManyByNameResponse);
+	rpc get_object_many_by_name_stream(CmdGetManyByName) returns (stream CmdGetManyByNameResponseStream);
+	rpc get_object_many_by_name_ext(CmdGetManyByNameExt) returns (CmdGetManyByNameExtResponse);
+	rpc get_object_many_by_name_ext_stream(CmdGetManyByNameExt) returns (CmdGetManyByNameExtResponseStream);
+	rpc change_init_data(CmdChangeInitData) returns (CmdChangeInitDataResponse);
+	rpc change_init_data_ext(CmdChangeInitDataExt) returns (CmdChangeInitDataExtResponse);
 }

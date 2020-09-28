@@ -35,4 +35,23 @@ message CmdGetManyByNameExtResponse {
 			MsgOnFailure msg_on_failure = 3;
 		}
 	}
+	repeated ResponseMessage resp = 2;
+}
+
+message CmdGetManyByNameExtResponseStream {
+	message MsgOnSuccess {
+		bool has_succeeded = 1;
+		Metadata metadata = 2;
+		uint32 mem_size = 3;
+		bytes mem = 4;
+	}
+	message MsgOnFailure {
+		bool has_succeeded = 1;
+		ErrorType error_type = 2;
+		string error_text = 3;
+	}
+	oneof RequestResponse {
+		MsgOnSuccess msg_on_success = 2;
+		MsgOnFailure msg_on_failure = 3;
+	}
 }

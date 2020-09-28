@@ -175,6 +175,53 @@ func (x *CmdNameLookupByTypeResponse) GetSecurityNames() []string {
 	return nil
 }
 
+type CmdNameLookupByTypeResponseStream struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SecurityName string `protobuf:"bytes,1,opt,name=security_name,json=securityName,proto3" json:"security_name,omitempty"`
+}
+
+func (x *CmdNameLookupByTypeResponseStream) Reset() {
+	*x = CmdNameLookupByTypeResponseStream{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_lookup_by_type_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CmdNameLookupByTypeResponseStream) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CmdNameLookupByTypeResponseStream) ProtoMessage() {}
+
+func (x *CmdNameLookupByTypeResponseStream) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_lookup_by_type_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CmdNameLookupByTypeResponseStream.ProtoReflect.Descriptor instead.
+func (*CmdNameLookupByTypeResponseStream) Descriptor() ([]byte, []int) {
+	return file_cmd_lookup_by_type_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CmdNameLookupByTypeResponseStream) GetSecurityName() string {
+	if x != nil {
+		return x.SecurityName
+	}
+	return ""
+}
+
 var File_cmd_lookup_by_type_proto protoreflect.FileDescriptor
 
 var file_cmd_lookup_by_type_proto_rawDesc = []byte{
@@ -209,12 +256,16 @@ var file_cmd_lookup_by_type_proto_rawDesc = []byte{
 	0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0d, 0x73, 0x65, 0x63, 0x75, 0x72,
 	0x69, 0x74, 0x79, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x25, 0x0a, 0x0e, 0x73, 0x65, 0x63, 0x75,
 	0x72, 0x69, 0x74, 0x79, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09,
-	0x52, 0x0d, 0x73, 0x65, 0x63, 0x75, 0x72, 0x69, 0x74, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x42,
-	0x3c, 0x50, 0x01, 0x5a, 0x38, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x73, 0x6f, 0x6d, 0x6e, 0x61, 0x74, 0x68, 0x36, 0x37, 0x36, 0x34, 0x33, 0x2f, 0x61, 0x75, 0x72,
-	0x6f, 0x72, 0x61, 0x2d, 0x73, 0x69, 0x7a, 0x69, 0x6e, 0x67, 0x2f, 0x63, 0x6c, 0x69, 0x65, 0x6e,
-	0x74, 0x67, 0x6f, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x0d, 0x73, 0x65, 0x63, 0x75, 0x72, 0x69, 0x74, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x22,
+	0x48, 0x0a, 0x21, 0x43, 0x6d, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x4c, 0x6f, 0x6f, 0x6b, 0x75, 0x70,
+	0x42, 0x79, 0x54, 0x79, 0x70, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74,
+	0x72, 0x65, 0x61, 0x6d, 0x12, 0x23, 0x0a, 0x0d, 0x73, 0x65, 0x63, 0x75, 0x72, 0x69, 0x74, 0x79,
+	0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x73, 0x65, 0x63,
+	0x75, 0x72, 0x69, 0x74, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x42, 0x3c, 0x50, 0x01, 0x5a, 0x38, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x73, 0x6f, 0x6d, 0x6e, 0x61, 0x74,
+	0x68, 0x36, 0x37, 0x36, 0x34, 0x33, 0x2f, 0x61, 0x75, 0x72, 0x6f, 0x72, 0x61, 0x2d, 0x73, 0x69,
+	0x7a, 0x69, 0x6e, 0x67, 0x2f, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x67, 0x6f, 0x2f, 0x62, 0x61,
+	0x73, 0x65, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -229,16 +280,17 @@ func file_cmd_lookup_by_type_proto_rawDescGZIP() []byte {
 	return file_cmd_lookup_by_type_proto_rawDescData
 }
 
-var file_cmd_lookup_by_type_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_cmd_lookup_by_type_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_cmd_lookup_by_type_proto_goTypes = []interface{}{
-	(*CmdNameLookupByType)(nil),         // 0: org.anonymous.grpc.CmdNameLookupByType
-	(*CmdNameLookupByTypeResponse)(nil), // 1: org.anonymous.grpc.CmdNameLookupByTypeResponse
-	(CmdType)(0),                        // 2: org.anonymous.grpc.CmdType
-	(GetType)(0),                        // 3: org.anonymous.grpc.GetType
+	(*CmdNameLookupByType)(nil),               // 0: org.anonymous.grpc.CmdNameLookupByType
+	(*CmdNameLookupByTypeResponse)(nil),       // 1: org.anonymous.grpc.CmdNameLookupByTypeResponse
+	(*CmdNameLookupByTypeResponseStream)(nil), // 2: org.anonymous.grpc.CmdNameLookupByTypeResponseStream
+	(CmdType)(0), // 3: org.anonymous.grpc.CmdType
+	(GetType)(0), // 4: org.anonymous.grpc.GetType
 }
 var file_cmd_lookup_by_type_proto_depIdxs = []int32{
-	2, // 0: org.anonymous.grpc.CmdNameLookupByType.message_type:type_name -> org.anonymous.grpc.CmdType
-	3, // 1: org.anonymous.grpc.CmdNameLookupByType.get_type:type_name -> org.anonymous.grpc.GetType
+	3, // 0: org.anonymous.grpc.CmdNameLookupByType.message_type:type_name -> org.anonymous.grpc.CmdType
+	4, // 1: org.anonymous.grpc.CmdNameLookupByType.get_type:type_name -> org.anonymous.grpc.GetType
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -278,6 +330,18 @@ func file_cmd_lookup_by_type_proto_init() {
 				return nil
 			}
 		}
+		file_cmd_lookup_by_type_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CmdNameLookupByTypeResponseStream); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -285,7 +349,7 @@ func file_cmd_lookup_by_type_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_lookup_by_type_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
