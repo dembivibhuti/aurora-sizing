@@ -25,7 +25,6 @@ public class Client {
         new ObjectRepository(null, connectionProvider).load(1, 1 , new TimeKeeper());
 
         ObjServiceGrpc.ObjServiceBlockingStub stub = ObjServiceGrpc.newBlockingStub(channel);
-
         CmdGetManyByNameResponse response = stub.getObjectManyByName(CmdGetManyByName.newBuilder().addSecurityName("testSec-1418335106-0").build());
 
         logger.info("Response received from server:\n" + response);
