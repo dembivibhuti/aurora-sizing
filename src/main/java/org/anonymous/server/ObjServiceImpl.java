@@ -70,7 +70,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void lookupByTypeStream(CmdNameLookupByType request, StreamObserver<CmdNameLookupByTypeResponseStream> responseObserver) {
-        // super.lookupByTypeStream(request, responseObserver);
+        LOGGER.info("got request in lookupByTypeStream()");
     }
 
     @Override

@@ -197,6 +197,9 @@ make proto
 // Just build go
 make
 
+//Make image
+make image
+
 // To expand the EBS Disk Size 
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/recognize-expanded-volume-linux.html
 
