@@ -1,4 +1,4 @@
-testclient: proto
+testclient:
 	go build -o testclient -v ./client/
 
 
