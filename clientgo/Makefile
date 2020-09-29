@@ -13,6 +13,6 @@ clean:
 
 image: proto clean
 	@echo "Cross-Compiling explicitly for linux"
-	env GOOS=linux GOARCH=amd64 go build -o testclient -v ./client
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -v -tags netgo -ldflags '-extldflags "-static"' -o testclient ./client
 	docker build -t mfrw/client:0.1 .
 	rm testclient
