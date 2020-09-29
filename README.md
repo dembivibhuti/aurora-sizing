@@ -190,5 +190,16 @@ psql -h "$RDHOST" -p 5432 "dbname=postgres user=mwuser sslrootcert=rds-ca-2019-r
 
 
 
+// Go Client Build
+// To recompile grpc stubs
+make proto
+
+// Just build go
+make
+
+// To expand the EBS Disk Size 
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/recognize-expanded-volume-linux.html
+
+
 
 
