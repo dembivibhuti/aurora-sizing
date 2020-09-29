@@ -22,6 +22,14 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     }
 
     @Override
+    public void connect(org.anonymous.grpc.CmdConnect request,
+                        io.grpc.stub.StreamObserver<org.anonymous.grpc.CmdConnectResponse> responseObserver) {
+        LOGGER.info("got request connect()");
+        responseObserver.onNext(CmdConnectResponse.newBuilder().setMsgSize(1).setVerAndRev(-1).setFeatureFlag(1).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void lookupByName(CmdLookupByName request, StreamObserver<CmdLookupByNameResponse> responseObserver) {
         final TimeKeeper timekeeper = new TimeKeeper();
 
