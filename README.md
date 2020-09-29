@@ -14,7 +14,7 @@ mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
 -DdataSource.currentSchema=public \
 -DdataSource.portNumber=5432 \
 -DdataSource.rwserverName=database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
--Dexec.mainClass="org.anonymous.boot.SchemaUtil"
+-Dexec.mainClass="org.anonymous.setup.SchemaUtil"
 
 Run the DB Client
 mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
