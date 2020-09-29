@@ -2,10 +2,8 @@ package org.anonymous.module;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
-import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.SplittableRandom;
@@ -13,8 +11,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
+
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ProtocolStringList;
 import org.anonymous.connection.ConnectionProvider;
 import java.util.stream.IntStream;
+
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
 import java.util.stream.Stream;
@@ -427,6 +429,29 @@ public class ObjectRepository implements AutoCloseable {
             }
         });
         return completableFuture;
+    }
+    public List<ByteString> getManyMemByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
+        List<ByteString> secMem = new ArrayList<>();
+        String sql = String.format(
+                "select mem from objects where name in (%s)",
+                String.join(",", Collections.nCopies(securityNameList.size(), "?")));
+
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
+            long spanId = getManyTimeKeeper.start();
+            for (int i = 0; i < securityNameList.toArray().length; i++) {
+                getManyStmt.setString(i + 1, securityNameList.get(i));
+            }
+            ResultSet rs = getManyStmt.executeQuery();
+            while(rs.next()){
+                secMem.add(ByteString.copyFrom(rs.getBytes("mem")));
+            }
+            rs.close();
+            getManyTimeKeeper.stop(spanId);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return secMem;
     }
 
     public void close() {

@@ -17,11 +17,11 @@ public class GrpcServer {
         try (ConnectionProvider connectionProvider = new ConnectionProvider()) {
             ObjectRepository objectRepositiory = new ObjectRepository(connectionProvider, connectionProvider);
             objectRepositiory.runDDL(false);
-            objectRepositiory.load(1, 1 , new TimeKeeper()).join();
-
+            TimeKeeper timekeeper = new TimeKeeper();
+            objectRepositiory.load(1, 1 , timekeeper).join();
 
             Server server = ServerBuilder.forPort(Integer.parseInt(System.getProperty("port")))
-                    .addService(new ObjectServiceImpl()).addService(new ObjServiceImpl(connectionProvider)).build();
+                    .addService(new ObjectServiceImpl()).addService(new ObjServiceImpl(objectRepositiory)).build();
 
 
             logger.info("Starting server...");
