@@ -10,3 +10,9 @@ testserver:
 	go build -o testserver -v ./server/
 clean:
 	rm -rf testclient testserver
+
+image: proto clean
+	@echo "Cross-Compiling explicitly for linux"
+	env GOOS=linux GOARCH=amd64 go build -o testclient -v ./client
+	docker build -t mfrw/client:0.1 .
+	rm testclient
