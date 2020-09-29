@@ -405,6 +405,22 @@ public class ObjectRepository implements AutoCloseable {
         return completableFuture;
     }
 
+    public Optional<byte[]> getMemByKeyInBytes(final String secKey, final TimeKeeper timeKeeper) {
+        byte[] arrayContainsMem = null;
+        try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
+                .prepareStatement("select mem from objects where name = ?")) {
+            lookupStmt.setString(1, secKey);
+            ResultSet rs = lookupStmt.executeQuery();
+            while (rs.next()) {
+                arrayContainsMem = rs.getBytes("mem");
+            }
+            rs.close();
+        } catch (SQLException throwables) {
+            LOGGER.error("error in getMemByKey()", throwables);
+        }
+        return Optional.ofNullable(arrayContainsMem);
+    }
+
     public CompletableFuture<Void> getMemsByKeys(List<String> secKeys, TimeKeeper lookupTimeKeeper) {
         CompletableFuture<Void> completableFuture = new CompletableFuture();
         int size = secKeys.size();

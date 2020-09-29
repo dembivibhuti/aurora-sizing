@@ -1,5 +1,6 @@
 package org.anonymous.server;
 
+import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import org.anonymous.grpc.*;
 import org.anonymous.grpc.ObjServiceGrpc.ObjServiceImplBase;
@@ -7,6 +8,8 @@ import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 public class ObjServiceImpl extends ObjServiceImplBase {
 
@@ -35,7 +38,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            LOGGER.info("Caught Exception", e);
+            LOGGER.info("Caught Exception in lookupByName()", e);
         }
     }
 
@@ -61,12 +64,33 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            LOGGER.info("Caught Exception", e);
+            LOGGER.info("Caught Exception in lookupByType()", e);
         }
     }
 
     @Override
     public void lookupByTypeStream(CmdNameLookupByType request, StreamObserver<CmdNameLookupByTypeResponseStream> responseObserver) {
         // super.lookupByTypeStream(request, responseObserver);
+    }
+
+    @Override
+    public void getObject(CmdGetByName request, StreamObserver<CmdGetByNameResponse> responseObserver) {
+        TimeKeeper timeKeeper = new TimeKeeper();
+        try {
+            CmdGetByNameResponse response;
+
+            Optional<byte[]> arrayContainsMem = objectRepositiory.getMemByKeyInBytes(request.getSecurityName(), timeKeeper);
+            if (arrayContainsMem.isPresent()) {
+                response = CmdGetByNameResponse.newBuilder().setSecurity(ByteString.copyFrom(arrayContainsMem.get())).build();
+            } else {
+                LOGGER.error("Security Doesn't exist");
+                response = CmdGetByNameResponse.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
+            }
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.info("Caught Exception in getObject()", e);
+        }
     }
 }
