@@ -32,10 +32,6 @@ public class GetDBCredsByIAM {
      */
 
     public static String generateAuthToken(String region, String hostName, int port, String username) {
-        System.out.println(region);
-        System.out.println(port);
-        System.out.println(hostName);
-        System.out.println(username);
 
         RdsIamAuthTokenGenerator generator = RdsIamAuthTokenGenerator.builder()
                 .credentials(new DefaultAWSCredentialsProviderChain()).region(region).build();
@@ -44,12 +40,6 @@ public class GetDBCredsByIAM {
                 GetIamAuthTokenRequest.builder().hostname(hostName).port(port).userName(username).build());
 
         return authToken;
-    }
-
-    public static void main(String[] args) {
-        System.out.println(generateAuthToken("us-east-1", "database-2.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com",
-                5432, "mwuser"));
-
     }
 
 }

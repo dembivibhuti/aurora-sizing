@@ -22,7 +22,7 @@ public class ConnectionProvider implements AutoCloseable {
         Properties props = new Properties();
         props.setProperty("driverClassName", "org.h2.Driver");
         props.setProperty("jdbcUrl",
-                "jdbc:h2:mem:saral;INIT=CREATE SCHEMA IF NOT EXISTS SARAL\\;SET SCHEMA SARAL\\;SET MODE PostgreSQL;"); // Mem
+                "jdbc:h2:mem:saral;INIT=CREATE SCHEMA IF NOT EXISTS OBJECTS_SCHEMA\\;SET SCHEMA OBJECTS_SCHEMA\\;SET MODE PostgreSQL;"); // Mem
                                                                                                                        // Mode
         props.setProperty("username", "sa");
         props.setProperty("password", "sa");
