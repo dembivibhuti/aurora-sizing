@@ -1,26 +1,26 @@
 package org.anonymous.module;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
-import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.SplittableRandom;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.CompletableFuture;
 import org.anonymous.connection.ConnectionProvider;
-import java.util.stream.IntStream;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import java.util.Collections;
 
 public class ObjectRepository implements AutoCloseable {
+
+    private static Logger LOGGER= LoggerFactory.getLogger(ObjectRepository.class);
+
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private ConnectionProvider roConnectionProvider;
@@ -49,12 +49,12 @@ public class ObjectRepository implements AutoCloseable {
                     + "Primary Key ( name ) )";
 
             connection.prepareStatement(createTableSQL).executeUpdate();
-            System.out.println(" created objects table ");
+            LOGGER.info(" created objects table ");
             connection.commit();
 
             connection.prepareStatement("create unique index object_typeid_name on objects(typeId, name)")
                     .executeUpdate();
-            System.out.println(" created index by typeId and name ");
+            LOGGER.info(" created index by typeId and name ");
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -110,7 +110,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
-                insertRec.setInt(2, randTypeId);
+                insertRec.setInt(2, 0); //originally randTypeId
                 insertRec.setLong(3, i);
                 insertRec.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
                 insertRec.setLong(5, 0);
@@ -200,6 +200,46 @@ public class ObjectRepository implements AutoCloseable {
             });
         }
         return Stream.of(all);
+    }
+    public List<String> lookup(String name, int limit, TimeKeeper lookupTimeKeeper){
+        List<String> secKeys = new ArrayList<>();
+        try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
+                .prepareStatement("select name from objects where lower(name) >= ? order by name asc LIMIT " + limit)) {
+
+                long spanId = lookupTimeKeeper.start();
+                lookupStmt.setString(1, name);
+                ResultSet rs = lookupStmt.executeQuery();
+
+                while (rs.next()) {
+                    secKeys.add(rs.getString(1));
+                }
+                rs.close();
+                lookupTimeKeeper.stop(spanId);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return secKeys;
+    }
+
+    public List<String> lookupById(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper){
+        List<String> secKeys = new ArrayList<>();
+        try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
+                .prepareStatement("select name from objects where lower(name) >= ? and typeId = ? order by name asc LIMIT " + limit)) {
+
+            long spanId = lookupTimeKeeper.start();
+            lookupStmt.setString(1, name);
+            lookupStmt.setInt(2, typeId);
+            ResultSet rs = lookupStmt.executeQuery();
+
+            while (rs.next()) {
+                secKeys.add(rs.getString(1));
+            }
+            rs.close();
+            lookupTimeKeeper.stop(spanId);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return secKeys;
     }
 
     public CompletableFuture<Void> getSDBByKey(String secKey, TimeKeeper lookupTimeKeeper) {
@@ -363,6 +403,22 @@ public class ObjectRepository implements AutoCloseable {
             }
         });
         return completableFuture;
+    }
+
+    public Optional<byte[]> getMemByKeyInBytes(final String secKey, final TimeKeeper timeKeeper) {
+        byte[] arrayContainsMem = null;
+        try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
+                .prepareStatement("select mem from objects where name = ?")) {
+            lookupStmt.setString(1, secKey);
+            ResultSet rs = lookupStmt.executeQuery();
+            while (rs.next()) {
+                arrayContainsMem = rs.getBytes("mem");
+            }
+            rs.close();
+        } catch (SQLException throwables) {
+            LOGGER.error("error in getMemByKey()", throwables);
+        }
+        return Optional.ofNullable(arrayContainsMem);
     }
 
     public CompletableFuture<Void> getMemsByKeys(List<String> secKeys, TimeKeeper lookupTimeKeeper) {

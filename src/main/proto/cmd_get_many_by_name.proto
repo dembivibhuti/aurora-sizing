@@ -8,7 +8,7 @@ import "cmd_type.proto";
 message CmdGetManyByName {
 	CmdType message_type = 1;
 	int32 security_count = 2;
-	repeated string security_name = 3;
+	repeated string security_names = 3;
 }
 
 message CmdGetManyByNameResponse {
@@ -29,4 +29,20 @@ message CmdGetManyByNameResponse {
 		}
 	}
 	repeated RequestResponse request_response = 3;
+}
+
+message CmdGetManyByNameResponseStream {
+
+		message MsgOnSuccess {
+			int32 result_code = 1;
+			bytes mem = 2;
+		}
+		message MsgOnFailure {
+			int32 result_code = 1;
+		}
+
+		oneof MessageResponse {
+			MsgOnFailure msg_on_failure = 1;
+			MsgOnSuccess msg_on_success = 2;
+		}
 }

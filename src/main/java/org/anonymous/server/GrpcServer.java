@@ -1,19 +1,43 @@
 package org.anonymous.server;
 
-import java.io.IOException;
-
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.module.ObjectRepository;
+import org.anonymous.util.TimeKeeper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.anonymous.connection.ConnectionProvider.isInMemDB;
 
 public class GrpcServer {
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Server server = ServerBuilder.forPort(Integer.parseInt(System.getProperty("port")))
-                .addService(new ObjectServiceImpl()).addService(new ObjServiceImpl()).build();
-        ;
 
-        System.out.println("Starting server...");
-        server.start();
-        System.out.println("Server started!");
-        server.awaitTermination();
+    private static Logger LOGGER= LoggerFactory.getLogger(GrpcServer.class);
+
+    public static void main(String[] args) {
+        try (ConnectionProvider.Holder holder = ConnectionProvider.create()) {
+
+            ObjectRepository objectRepositiory = new ObjectRepository(holder.roConnectionProvider, holder.rwConnectionProvider);
+
+
+            if ( isInMemDB()) {
+                objectRepositiory.runDDL(false);
+                TimeKeeper timekeeper = new TimeKeeper();
+                objectRepositiory.load(6, 6, timekeeper).join();
+            }
+
+            int port = Integer.parseInt(System.getProperty("port"));
+            Server server = ServerBuilder.forPort(port)
+                    .addService(new ObjServiceImpl(objectRepositiory)).build();
+
+            LOGGER.info("Listening on {}", port);
+            server.start();
+
+            server.awaitTermination();
+        } catch (Exception e) {
+            LOGGER.error("unexpected error", e);
+        }
     }
+
+
 }

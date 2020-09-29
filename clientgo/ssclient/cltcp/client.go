@@ -47,10 +47,10 @@ func (s *SSClient) GetObject(sname string) (model.Object, error) {
 
 }
 
-func (s *SSClient) GetObjectMany(snames []string) ([]model.Object, error) {
-	return []model.Object{}, nil
+func (s *SSClient) GetObjectMany(snames []string) (<-chan *model.Object, error) {
+	return nil, nil
 }
 
-func (s *SSClient) GetObjectManyExt(snames []string) ([]model.ObjectExt, error) {
-	return []model.ObjectExt{}, nil
+func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, error) {
+	return nil, nil
 }
