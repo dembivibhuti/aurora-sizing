@@ -44,7 +44,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void lookupByNameStream(CmdLookupByName request, StreamObserver<CmdLookupByNameResponseStream> responseObserver) {
-        //super.lookupByNameStream(request, responseObserver);
+        LOGGER.info("got request in lookupByNameStream()");
     }
 
     @Override
