@@ -1,4 +1,4 @@
-FROM scratch
+FROM alpine
 WORKDIR /
 COPY testclient .
-ENTRYPOINT ["/testclient"]
+CMD ["/testclient", "-h"]
