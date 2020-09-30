@@ -200,6 +200,9 @@ make
 //Make image
 make image
 
+// Run the container 
+docker run --net=host -it mfrw/client:0.1 /testclient -sa 172.31.118.6:8080
+
 // To expand the EBS Disk Size 
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/recognize-expanded-volume-linux.html
 
