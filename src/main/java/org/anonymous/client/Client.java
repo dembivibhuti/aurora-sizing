@@ -20,15 +20,21 @@ public class Client {
 
         ObjServiceGrpc.ObjServiceBlockingStub stub = ObjServiceGrpc.newBlockingStub(channel);
         connect(stub);
-        stub.withWaitForReady();
-        lookupByName(stub);
-        stub.withWaitForReady();
-        lookupByType(stub);
-        stub.withWaitForReady();
-        lookupByNameStream(stub);
-        stub.withWaitForReady();
-        lookupByTypeStream(stub);
+//        stub.withWaitForReady();
+//        lookupByName(stub);
+//        stub.withWaitForReady();
+//        lookupByType(stub);
+//        stub.withWaitForReady();
+//        lookupByNameStream(stub);
+//        stub.withWaitForReady();
+//        lookupByTypeStream(stub);
+//        channel.shutdown();
+        //added for testing purpose
+        CmdGetByNameExtResponse response = stub.getObjectExt(CmdGetByNameExt.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-10-0").build());
+
+        System.out.println("Response received from server:\n" + response);
         channel.shutdown();
+
     }
 
     private static void connect(ObjServiceGrpc.ObjServiceBlockingStub stub) {
