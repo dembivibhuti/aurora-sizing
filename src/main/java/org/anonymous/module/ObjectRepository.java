@@ -17,6 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static org.anonymous.sql.Store.*;
+
 public class ObjectRepository implements AutoCloseable {
 
     private static Logger LOGGER= LoggerFactory.getLogger(ObjectRepository.class);
@@ -36,23 +38,17 @@ public class ObjectRepository implements AutoCloseable {
         try (Connection connection = rwConnectionProvider.getConnection()) {
 
             if (dropAndCreate) {
-                connection.prepareStatement("drop table objects").executeUpdate();
+                connection.prepareStatement(DROP_TABLE).executeUpdate();
                 connection.commit();
                 System.out.println(" dropped objects ");
             }
 
-            String createTableSQL = "create table objects ( \n" + "name varchar NOT NULL, \n"
-                    + "typeId integer NOT NULL, \n" + "lastTransaction bigint NOT NULL, \n"
-                    + "timeUpdated timestamp NOT NULL, \n" + "updateCount bigint NOT NULL, \n"
-                    + "dateCreated integer NOT NULL, \n" + "dbIdUpdated integer NOT NULL, \n"
-                    + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL, \n"
-                    + "Primary Key ( name ) )";
 
-            connection.prepareStatement(createTableSQL).executeUpdate();
+            connection.prepareStatement(CREATE_TABLE).executeUpdate();
             LOGGER.info(" created objects table ");
             connection.commit();
 
-            connection.prepareStatement("create unique index object_typeid_name on objects(typeId, name)")
+            connection.prepareStatement(CREATE_RECORD_INDEX_BY_TYPEID_NAME)
                     .executeUpdate();
             LOGGER.info(" created index by typeId and name ");
             connection.commit();
@@ -97,7 +93,7 @@ public class ObjectRepository implements AutoCloseable {
             TimeKeeper secInsertTimeKeeper) {
 
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
-                .prepareStatement("insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                .prepareStatement(INSERT_RECORDS)) {
 
             byte[] sdbMem = getSizedByteArray(100);
             byte[] mem = getSizedByteArray(32000);
@@ -145,13 +141,14 @@ public class ObjectRepository implements AutoCloseable {
         List<String> secKeys = new ArrayList<>();
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement("select name from objects where lower(name) >= ? order by name asc LIMIT " + limit)) {
+                .prepareStatement(GET_RECORD_BY_LOWER_NAME)) {
 
             while (numberOfLookupOps > 0) {
                 numberOfLookupOps--;
 
                 long spanId = lookupTimeKeeper.start();
                 lookupStmt.setString(1, String.format("testSec-%d", randIntStream.next() % 1000));
+                lookupStmt.setInt(2, limit);
                 ResultSet rs = lookupStmt.executeQuery();
 
                 while (rs.next()) {
@@ -183,8 +180,9 @@ public class ObjectRepository implements AutoCloseable {
                 List<String> secKeys = new ArrayList<>();
                 try (Connection connection = rwConnectionProvider.getConnection();
                         PreparedStatement lookupStmt = connection.prepareStatement(
-                                "select name from objects where lower(name) >= ? order by name asc LIMIT " + limit)) {
+                                GET_RECORD_BY_LOWER_NAME)) {
                     lookupStmt.setString(1, String.format("testSec-%d", randIntStream.next() % 1000));
+                    lookupStmt.setInt(2, limit);
                     ResultSet rs = lookupStmt.executeQuery();
 
                     while (rs.next()) {
@@ -204,10 +202,11 @@ public class ObjectRepository implements AutoCloseable {
     public List<String> lookup(String name, int limit, TimeKeeper lookupTimeKeeper){
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement("select name from objects where lower(name) >= ? order by name asc LIMIT " + limit)) {
+                .prepareStatement(GET_RECORD_BY_LOWER_NAME)) {
 
                 long spanId = lookupTimeKeeper.start();
                 lookupStmt.setString(1, name);
+                lookupStmt.setInt(2, limit);
                 ResultSet rs = lookupStmt.executeQuery();
 
                 while (rs.next()) {
@@ -224,11 +223,12 @@ public class ObjectRepository implements AutoCloseable {
     public List<String> lookupById(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper){
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement("select name from objects where lower(name) >= ? and typeId = ? order by name asc LIMIT " + limit)) {
+                .prepareStatement(GET_RECORD_BY_LOWER_NAME_TYPEID)) {
 
             long spanId = lookupTimeKeeper.start();
             lookupStmt.setString(1, name);
             lookupStmt.setInt(2, typeId);
+            lookupStmt.setInt(3, limit);
             ResultSet rs = lookupStmt.executeQuery();
 
             while (rs.next()) {
@@ -249,7 +249,7 @@ public class ObjectRepository implements AutoCloseable {
 
             try (Connection connection = rwConnectionProvider.getConnection();
                     PreparedStatement lookupStmt = connection.prepareStatement(
-                            "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where name = ?")) {
+                            GET_RECORDS)) {
                 lookupStmt.setString(1, secKey);
                 ResultSet rs = lookupStmt.executeQuery();
 
@@ -281,7 +281,7 @@ public class ObjectRepository implements AutoCloseable {
         executorService.submit(() -> {
             long spanId = lookupTimeKeeper.start();
             String sql = String.format(
-                    "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where name in (%s)",
+                    GET_MANY_RECORDS,
                     String.join(",", Collections.nCopies(secKeys.size(), "?")));
 
             try (Connection connection = rwConnectionProvider.getConnection();
@@ -321,7 +321,7 @@ public class ObjectRepository implements AutoCloseable {
             long spanId = lookupTimeKeeper.start();
 
             try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                    .prepareStatement("select sdbDiskMem from objects where name = ?")) {
+                    .prepareStatement(GET_SDB_MEM)) {
                 lookupStmt.setString(1, secKey);
                 ResultSet rs = lookupStmt.executeQuery();
 
@@ -346,7 +346,7 @@ public class ObjectRepository implements AutoCloseable {
         int size = secKeys.size();
         executorService.submit(() -> {
             long spanId = lookupTimeKeeper.start();
-            String sql = String.format("select sdbDiskMem from objects where name in (%s)",
+            String sql = String.format(GET_MANY_SDB_RECORDS,
                     String.join(",", Collections.nCopies(size, "?")));
 
             try (Connection connection = rwConnectionProvider.getConnection();
@@ -385,7 +385,7 @@ public class ObjectRepository implements AutoCloseable {
             long spanId = lookupTimeKeeper.start();
 
             try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                    .prepareStatement("select mem from objects where name = ?")) {
+                    .prepareStatement(GET_MEM)) {
                 lookupStmt.setString(1, secKey);
                 ResultSet rs = lookupStmt.executeQuery();
 
@@ -408,7 +408,7 @@ public class ObjectRepository implements AutoCloseable {
     public Optional<byte[]> getMemByKeyInBytes(final String secKey, final TimeKeeper timeKeeper) {
         byte[] arrayContainsMem = null;
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement("select mem from objects where name = ?")) {
+                .prepareStatement(GET_MEM)) {
             lookupStmt.setString(1, secKey);
             ResultSet rs = lookupStmt.executeQuery();
             while (rs.next()) {
@@ -426,7 +426,7 @@ public class ObjectRepository implements AutoCloseable {
         int size = secKeys.size();
         executorService.submit(() -> {
             long spanId = lookupTimeKeeper.start();
-            String sql = String.format("select mem from objects where name in (%s)",
+            String sql = String.format(GET_MANY_MEM_RECORDS,
                     String.join(",", Collections.nCopies(size, "?")));
 
             try (Connection connection = rwConnectionProvider.getConnection();
@@ -464,7 +464,7 @@ public class ObjectRepository implements AutoCloseable {
             long spanId = lookupTimeKeeper.start();
 
             try (Connection connection = rwConnectionProvider.getConnection();
-                    PreparedStatement lookupStmt = connection.prepareStatement("select count(name) from objects")) {
+                    PreparedStatement lookupStmt = connection.prepareStatement(COUNT_RECORDS)) {
                 ResultSet rs = lookupStmt.executeQuery();
                 Long x = null;
                 while (rs.next()) {
