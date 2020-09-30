@@ -3,6 +3,7 @@ package clgrpc
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 
 	"google.golang.org/grpc"
@@ -19,7 +20,7 @@ type SSClient struct {
 func mustGetConn(addr string) *grpc.ClientConn {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
-	opts = append(opts, grpc.WithBlock())
+	//	opts = append(opts, grpc.WithBlock())
 	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		log.Fatal(err)
@@ -67,7 +68,11 @@ func (s *SSClient) LookupByName(prefix string, cmpType model.CmpType, nr int32) 
 	go func() {
 		for {
 			resp, err := strmCl.Recv()
-			if err != nil { // also takes care of io.EOF
+			if err == io.EOF { // also takes care of io.EOF
+				break
+			}
+			if err != nil {
+				log.Println(err)
 				break
 			}
 			ch <- resp.SecurityName
@@ -92,7 +97,11 @@ func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpTy
 	go func() {
 		for {
 			resp, err := strmCl.Recv()
+			if err == io.EOF {
+				break
+			}
 			if err != nil {
+				log.Println(err)
 				break
 			}
 			ch <- resp.SecurityName
@@ -133,7 +142,11 @@ func (s *SSClient) GetObjectMany(snames []string) (<-chan *model.Object, error) 
 	go func() {
 		for {
 			resp, err := strmCl.Recv()
+			if err == io.EOF {
+				break
+			}
 			if err != nil {
+				log.Println(err)
 				break
 			}
 			v := resp.GetMsgOnSuccess()
@@ -160,7 +173,11 @@ func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, e
 	go func() {
 		for {
 			resp, err := strmCl.Recv()
+			if err == io.EOF {
+				break
+			}
 			if err != nil {
+				log.Println(err)
 				break
 			}
 			v := resp.GetMsgOnSuccess()
