@@ -13,12 +13,11 @@ import java.util.Optional;
 
 public class ObjServiceImpl extends ObjServiceImplBase {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ObjServiceImpl.class);
     private static ObjectRepository objectRepositiory;
 
-    private static Logger LOGGER = LoggerFactory.getLogger(ObjServiceImpl.class);
-
     ObjServiceImpl(ObjectRepository objectRepositiory) {
-        this.objectRepositiory = objectRepositiory;
+        ObjServiceImpl.objectRepositiory = objectRepositiory;
     }
 
     @Override
@@ -31,8 +30,8 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void lookupByName(CmdLookupByName request, StreamObserver<CmdLookupByNameResponse> responseObserver) {
+        LOGGER.info("got request lookupByName()");
         final TimeKeeper timekeeper = new TimeKeeper();
-
         try {
             int limit = request.getCount();
             String prefix = "";
@@ -52,11 +51,26 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void lookupByNameStream(CmdLookupByName request, StreamObserver<CmdLookupByNameResponseStream> responseObserver) {
-        LOGGER.info("got request in lookupByNameStream()");
+        LOGGER.info("got request lookupByNameStream()");
+        final TimeKeeper timekeeper = new TimeKeeper();
+        try {
+            int limit = request.getCount();
+            String prefix = "";
+            if (request.getSecurityNamePrefix() != null) {
+                prefix = request.getSecurityNamePrefix();
+            }
+            CmdLookupByNameResponseStream.Builder responseBuilder = CmdLookupByNameResponseStream.newBuilder();
+            objectRepositiory.lookup(prefix, limit, timekeeper).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            LOGGER.info("Caught Exception in lookupByNameStream()", e);
+        }
     }
 
     @Override
     public void lookupByType(CmdNameLookupByType request, StreamObserver<CmdNameLookupByTypeResponse> responseObserver) {
+        LOGGER.info("got request lookupByType()");
         final TimeKeeper timekeeper = new TimeKeeper();
         try {
             int limit = request.getCount();
@@ -78,11 +92,27 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void lookupByTypeStream(CmdNameLookupByType request, StreamObserver<CmdNameLookupByTypeResponseStream> responseObserver) {
-        LOGGER.info("got request in lookupByTypeStream()");
+        LOGGER.info("got request lookupByTypeStream()");
+        final TimeKeeper timekeeper = new TimeKeeper();
+        try {
+            int limit = request.getCount();
+            String prefix = "";
+            if (request.getSecurityNamePrefix() != null) {
+                prefix = request.getSecurityNamePrefix();
+            }
+            int typeid = request.getGetType().getNumber();
+            CmdNameLookupByTypeResponseStream.Builder responseBuilder = CmdNameLookupByTypeResponseStream.newBuilder();
+            objectRepositiory.lookupById(prefix, typeid, limit, timekeeper).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            LOGGER.info("Caught Exception in lookupByTypeStream()", e);
+        }
     }
 
     @Override
     public void getObject(CmdGetByName request, StreamObserver<CmdGetByNameResponse> responseObserver) {
+        LOGGER.info("got request getObject()");
         TimeKeeper timeKeeper = new TimeKeeper();
         try {
             CmdGetByNameResponse response;
@@ -91,7 +121,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             if (arrayContainsMem.isPresent()) {
                 response = CmdGetByNameResponse.newBuilder().setSecurity(ByteString.copyFrom(arrayContainsMem.get())).build();
             } else {
-                LOGGER.error("Security Doesn't exist");
+                LOGGER.error("Object Doesn't exist");
                 response = CmdGetByNameResponse.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
             }
 

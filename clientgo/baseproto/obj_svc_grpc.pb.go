@@ -24,6 +24,7 @@ type ObjServiceClient interface {
 	LookupByType(ctx context.Context, in *CmdNameLookupByType, opts ...grpc.CallOption) (*CmdNameLookupByTypeResponse, error)
 	LookupByTypeStream(ctx context.Context, in *CmdNameLookupByType, opts ...grpc.CallOption) (ObjService_LookupByTypeStreamClient, error)
 	GetObject(ctx context.Context, in *CmdGetByName, opts ...grpc.CallOption) (*CmdGetByNameResponse, error)
+	GetObjectExt(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetByNameExtResponse, error)
 	GetObjectManyByName(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (*CmdGetManyByNameResponse, error)
 	GetObjectManyByNameStream(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (ObjService_GetObjectManyByNameStreamClient, error)
 	GetObjectManyByNameExt(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetManyByNameExtResponse, error)
@@ -179,6 +180,19 @@ func (c *objServiceClient) GetObject(ctx context.Context, in *CmdGetByName, opts
 	return out, nil
 }
 
+var objServiceGetObjectExtStreamDesc = &grpc.StreamDesc{
+	StreamName: "get_object_ext",
+}
+
+func (c *objServiceClient) GetObjectExt(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetByNameExtResponse, error) {
+	out := new(CmdGetByNameExtResponse)
+	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_object_ext", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 var objServiceGetObjectManyByNameStreamDesc = &grpc.StreamDesc{
 	StreamName: "get_object_many_by_name",
 }
@@ -317,6 +331,7 @@ type ObjServiceService struct {
 	LookupByType                 func(context.Context, *CmdNameLookupByType) (*CmdNameLookupByTypeResponse, error)
 	LookupByTypeStream           func(*CmdNameLookupByType, ObjService_LookupByTypeStreamServer) error
 	GetObject                    func(context.Context, *CmdGetByName) (*CmdGetByNameResponse, error)
+	GetObjectExt                 func(context.Context, *CmdGetManyByNameExt) (*CmdGetByNameExtResponse, error)
 	GetObjectManyByName          func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error)
 	GetObjectManyByNameStream    func(*CmdGetManyByName, ObjService_GetObjectManyByNameStreamServer) error
 	GetObjectManyByNameExt       func(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponse, error)
@@ -421,6 +436,23 @@ func (s *ObjServiceService) getObject(_ interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return s.GetObject(ctx, req.(*CmdGetByName))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+func (s *ObjServiceService) getObjectExt(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdGetManyByNameExt)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.GetObjectExt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectExt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.GetObjectExt(ctx, req.(*CmdGetManyByNameExt))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -597,6 +629,11 @@ func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) 
 			return nil, status.Errorf(codes.Unimplemented, "method GetObject not implemented")
 		}
 	}
+	if srvCopy.GetObjectExt == nil {
+		srvCopy.GetObjectExt = func(context.Context, *CmdGetManyByNameExt) (*CmdGetByNameExtResponse, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method GetObjectExt not implemented")
+		}
+	}
 	if srvCopy.GetObjectManyByName == nil {
 		srvCopy.GetObjectManyByName = func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error) {
 			return nil, status.Errorf(codes.Unimplemented, "method GetObjectManyByName not implemented")
@@ -649,6 +686,10 @@ func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) 
 			{
 				MethodName: "get_object",
 				Handler:    srvCopy.getObject,
+			},
+			{
+				MethodName: "get_object_ext",
+				Handler:    srvCopy.getObjectExt,
 			},
 			{
 				MethodName: "get_object_many_by_name",
