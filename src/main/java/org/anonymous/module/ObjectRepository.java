@@ -1,6 +1,9 @@
 package org.anonymous.module;
 
+import com.google.protobuf.ByteString;
 import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.grpc.CmdGetByNameExtResponse;
+import org.anonymous.grpc.Metadata;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
@@ -102,17 +105,17 @@ public class ObjectRepository implements AutoCloseable {
             for (int i = 0; i < numberOfRecsPerThread; i++) {
 
                 int randTypeId = randIntStream.next();
-                String name = String.format("testSec-%d-%d", randIntStream.next(), i);
+                String name = String.format("testSec-10-%d", i); //changed for testing purpose
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
-                insertRec.setInt(2, 0); //originally randTypeId
-                insertRec.setLong(3, i);
+                insertRec.setInt(2, 1); //originally randTypeId
+                insertRec.setLong(3, 2);
                 insertRec.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
-                insertRec.setLong(5, 0);
-                insertRec.setInt(6, 0);
-                insertRec.setInt(7, 0);
-                insertRec.setInt(8, 0);
+                insertRec.setLong(5, 3);
+                insertRec.setInt(6, 4);
+                insertRec.setInt(7, 5);
+                insertRec.setInt(8, 6);
                 insertRec.setBytes(9, sdbMem);
                 insertRec.setBytes(10, mem);
                 insertRec.executeUpdate();
@@ -276,6 +279,35 @@ public class ObjectRepository implements AutoCloseable {
         return completableFuture;
     }
 
+    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getSDBRecordsByKey(final String secKey, final TimeKeeper lookupTimeKeeper) {
+        CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement lookupStmt = connection.prepareStatement(
+                     GET_ALL_RECORDS)) {
+            lookupStmt.setString(1, secKey);
+            ResultSet rs = lookupStmt.executeQuery();
+
+            while (rs.next()) {
+                msgOnSuccess = CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
+                        setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem"))).
+                        setMetadata(Metadata.newBuilder().
+                                setSecurityName(rs.getString("name")).
+                                setSecurityType(rs.getInt("typeId")).
+                                setLastTxnId(rs.getLong("lastTransaction")).
+                                setUpdateCount(rs.getLong("updateCount")).
+                                setDateCreated(rs.getInt("dateCreated")).
+                                setDbIdUpdated(rs.getInt("dbIdUpdated")).
+                                setVersionInfo(rs.getInt("versionInfo")).
+                                setTimeUpdate(rs.getTimestamp("timeUpdated").getTime())).
+                        build();
+            }
+            rs.close();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return Optional.ofNullable(msgOnSuccess);
+    }
     public CompletableFuture<Void> getManySDBByKeys(List<String> secKeys, TimeKeeper lookupTimeKeeper) {
         CompletableFuture<Void> completableFuture = new CompletableFuture();
         executorService.submit(() -> {
