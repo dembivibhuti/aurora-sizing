@@ -41,6 +41,20 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         } catch (Exception e) {
             LOGGER.info("Caught Exception in getObjectManyByName()", e);
         }
+    }
 
+    public void getObjectManyByNameStream(CmdGetManyByName request, StreamObserver<CmdGetManyByNameResponseStream> responseObserver) {
+        final TimeKeeper timekeeper = new TimeKeeper();
+        try{
+            List<ByteString> secMemList = objectRepository.getManyMemByName(request.getSecurityNameList(), timekeeper);
+            for (ByteString mem:secMemList) {
+                CmdGetManyByNameResponseStream.MsgOnSuccess msgOnSuccess = CmdGetManyByNameResponseStream.MsgOnSuccess.newBuilder().setMem(mem).build();
+                CmdGetManyByNameResponseStream requestResponse = CmdGetManyByNameResponseStream.newBuilder().setMsgOnSuccess(msgOnSuccess).build();
+                responseObserver.onNext(requestResponse);
+            }
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.info("Caught Exception in getObjectManyByNameStream()", e);
+        }
     }
 }

@@ -10,6 +10,7 @@ import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 
 
 public class Client {
@@ -20,14 +21,13 @@ public class Client {
                 .forAddress(System.getProperty("host"), Integer.parseInt(System.getProperty("port"))).usePlaintext()
                 .build();
 
-        ConnectionProvider connectionProvider = new ConnectionProvider();
-        new ObjectRepository(null, connectionProvider).runDDL(false);
-        new ObjectRepository(null, connectionProvider).load(1, 1 , new TimeKeeper());
 
         ObjServiceGrpc.ObjServiceBlockingStub stub = ObjServiceGrpc.newBlockingStub(channel);
-        CmdGetManyByNameResponse response = stub.getObjectManyByName(CmdGetManyByName.newBuilder().addSecurityName("testSec-1418335106-0").build());
+        Iterator<CmdGetManyByNameResponseStream> response = stub.getObjectManyByNameStream(CmdGetManyByName.newBuilder().addSecurityName("test0").addSecurityName("test1").addSecurityName("test2").build());
 
-        logger.info("Response received from server:\n" + response);
+        while (response.hasNext()) {
+            logger.info("Response received from server:\n" + response.next());
+        }
 
         channel.shutdown();
     }
