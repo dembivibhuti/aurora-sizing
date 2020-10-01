@@ -1,6 +1,6 @@
 package org.anonymous.sql;
 
-public class Store{
+public class Store {
 
     public static final String DROP_TABLE = "drop table objects";
     public static final String CREATE_TABLE = "create table objects ( \n" + "name varchar NOT NULL, \n"
@@ -14,9 +14,9 @@ public class Store{
 
     public static final String INSERT_RECORDS = "insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    public static final String GET_RECORD_BY_LOWER_NAME = "select name from objects where lower(name) >= ? order by name asc LIMIT ?";
+    public static final String LOOKUP_OBJECTS = "select name from objects where lower(name) >= ? order by name asc LIMIT ?";
 
-    public static final String GET_RECORD_BY_LOWER_NAME_TYPEID = "select name from objects where lower(name) >= ? and typeId = ? order by name asc LIMIT ?";
+    public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where lower(name) >= ? and typeId = ? order by name asc LIMIT ?";
 
     public static final String GET_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where name = ?";
 

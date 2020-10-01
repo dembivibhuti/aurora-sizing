@@ -1,6 +1,11 @@
 package org.anonymous.module;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ProtocolStringList;
 import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.grpc.CmdGetManyByNameExtResponse;
+import org.anonymous.grpc.CmdGetManyByNameExtResponseStream;
+import org.anonymous.grpc.Metadata;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
@@ -21,12 +26,10 @@ import static org.anonymous.sql.Store.*;
 
 public class ObjectRepository implements AutoCloseable {
 
-    private static Logger LOGGER= LoggerFactory.getLogger(ObjectRepository.class);
-
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
-
-    private ConnectionProvider roConnectionProvider;
-    private ConnectionProvider rwConnectionProvider;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
+    private final ConnectionProvider roConnectionProvider;
+    private final ConnectionProvider rwConnectionProvider;
 
     public ObjectRepository(ConnectionProvider roConnectionProvider, ConnectionProvider rwConnectionProvider) {
         this.roConnectionProvider = roConnectionProvider;
@@ -89,8 +92,7 @@ public class ObjectRepository implements AutoCloseable {
         return CompletableFuture.allOf(all);
     }
 
-    private void insertRecs(int numberOfRecsPerThread, CompletableFuture completableFuture,
-            TimeKeeper secInsertTimeKeeper) {
+    private void insertRecs(int numberOfRecsPerThread, CompletableFuture completableFuture, TimeKeeper secInsertTimeKeeper) {
 
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
                 .prepareStatement(INSERT_RECORDS)) {
@@ -102,11 +104,12 @@ public class ObjectRepository implements AutoCloseable {
             for (int i = 0; i < numberOfRecsPerThread; i++) {
 
                 int randTypeId = randIntStream.next();
-                String name = String.format("testSec-%d-%d", randIntStream.next(), i);
+                //String name = String.format("testSec-%d-%d", randIntStream.next(), i);
+                String name = String.format("testSec-%d", i); //changed to test get many
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
-                insertRec.setInt(2, randTypeId);
+                insertRec.setInt(2, 0);// originally randTypeId
                 insertRec.setLong(3, i);
                 insertRec.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
                 insertRec.setLong(5, 0);
@@ -136,12 +139,12 @@ public class ObjectRepository implements AutoCloseable {
     }
 
     public CompletableFuture<List<String>> randomLookUpByPrefix(int numberOfLookupOps, int limit,
-            TimeKeeper lookupTimeKeeper) {
+                                                                TimeKeeper lookupTimeKeeper) {
         CompletableFuture<List<String>> completableFuture = new CompletableFuture();
         List<String> secKeys = new ArrayList<>();
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement(GET_RECORD_BY_LOWER_NAME)) {
+                .prepareStatement(LOOKUP_OBJECTS)) {
 
             while (numberOfLookupOps > 0) {
                 numberOfLookupOps--;
@@ -166,7 +169,7 @@ public class ObjectRepository implements AutoCloseable {
     }
 
     public Stream<CompletableFuture<List<String>>> randomLookUpByPrefixMultiThread(int numberOfLookupOps, int limit,
-            TimeKeeper lookupTimeKeeper) {
+                                                                                   TimeKeeper lookupTimeKeeper) {
         CompletableFuture[] all = new CompletableFuture[numberOfLookupOps];
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
 
@@ -179,8 +182,8 @@ public class ObjectRepository implements AutoCloseable {
                 long spanId = lookupTimeKeeper.start();
                 List<String> secKeys = new ArrayList<>();
                 try (Connection connection = rwConnectionProvider.getConnection();
-                        PreparedStatement lookupStmt = connection.prepareStatement(
-                                GET_RECORD_BY_LOWER_NAME)) {
+                     PreparedStatement lookupStmt = connection.prepareStatement(
+                             LOOKUP_OBJECTS_BY_TYPEID)) {
                     lookupStmt.setString(1, String.format("testSec-%d", randIntStream.next() % 1000));
                     lookupStmt.setInt(2, limit);
                     ResultSet rs = lookupStmt.executeQuery();
@@ -199,31 +202,33 @@ public class ObjectRepository implements AutoCloseable {
         }
         return Stream.of(all);
     }
-    public List<String> lookup(String name, int limit, TimeKeeper lookupTimeKeeper){
+
+    public List<String> lookup(String name, int limit, TimeKeeper lookupTimeKeeper) {
+
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement(GET_RECORD_BY_LOWER_NAME)) {
+                .prepareStatement(LOOKUP_OBJECTS)) {
 
-                long spanId = lookupTimeKeeper.start();
-                lookupStmt.setString(1, name);
-                lookupStmt.setInt(2, limit);
-                ResultSet rs = lookupStmt.executeQuery();
+            long spanId = lookupTimeKeeper.start();
+            lookupStmt.setString(1, name);
+            lookupStmt.setInt(2, limit);
+            ResultSet rs = lookupStmt.executeQuery();
 
-                while (rs.next()) {
-                    secKeys.add(rs.getString(1));
-                }
-                rs.close();
-                lookupTimeKeeper.stop(spanId);
+            while (rs.next()) {
+                secKeys.add(rs.getString(1));
+            }
+            rs.close();
+            lookupTimeKeeper.stop(spanId);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return secKeys;
     }
 
-    public List<String> lookupById(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper){
+    public List<String> lookupById(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper) {
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement(GET_RECORD_BY_LOWER_NAME_TYPEID)) {
+                .prepareStatement(LOOKUP_OBJECTS_BY_TYPEID)) {
 
             long spanId = lookupTimeKeeper.start();
             lookupStmt.setString(1, name);
@@ -248,8 +253,8 @@ public class ObjectRepository implements AutoCloseable {
             long spanId = lookupTimeKeeper.start();
 
             try (Connection connection = rwConnectionProvider.getConnection();
-                    PreparedStatement lookupStmt = connection.prepareStatement(
-                            GET_RECORDS)) {
+                 PreparedStatement lookupStmt = connection.prepareStatement(
+                         GET_RECORDS)) {
                 lookupStmt.setString(1, secKey);
                 ResultSet rs = lookupStmt.executeQuery();
 
@@ -285,7 +290,7 @@ public class ObjectRepository implements AutoCloseable {
                     String.join(",", Collections.nCopies(secKeys.size(), "?")));
 
             try (Connection connection = rwConnectionProvider.getConnection();
-                    PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
+                 PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
                 for (int i = 0; i < secKeys.size(); i++) {
                     lookupStmt.setString(i + 1, secKeys.get(i));
                 }
@@ -350,7 +355,7 @@ public class ObjectRepository implements AutoCloseable {
                     String.join(",", Collections.nCopies(size, "?")));
 
             try (Connection connection = rwConnectionProvider.getConnection();
-                    PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
+                 PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
                 for (int i = 0; i < size; i++) {
                     lookupStmt.setString(i + 1, secKeys.get(i));
                 }
@@ -430,7 +435,7 @@ public class ObjectRepository implements AutoCloseable {
                     String.join(",", Collections.nCopies(size, "?")));
 
             try (Connection connection = rwConnectionProvider.getConnection();
-                    PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
+                 PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
                 for (int i = 0; i < size; i++) {
                     lookupStmt.setString(i + 1, secKeys.get(i));
                 }
@@ -464,7 +469,7 @@ public class ObjectRepository implements AutoCloseable {
             long spanId = lookupTimeKeeper.start();
 
             try (Connection connection = rwConnectionProvider.getConnection();
-                    PreparedStatement lookupStmt = connection.prepareStatement(COUNT_RECORDS)) {
+                 PreparedStatement lookupStmt = connection.prepareStatement(COUNT_RECORDS)) {
                 ResultSet rs = lookupStmt.executeQuery();
                 Long x = null;
                 while (rs.next()) {
@@ -481,6 +486,7 @@ public class ObjectRepository implements AutoCloseable {
         });
         return completableFuture;
     }
+
     public List<ByteString> getManyMemByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
         List<ByteString> secMem = new ArrayList<>();
         String sql = String.format(
@@ -494,7 +500,7 @@ public class ObjectRepository implements AutoCloseable {
                 getManyStmt.setString(i + 1, securityNameList.get(i));
             }
             ResultSet rs = getManyStmt.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 secMem.add(ByteString.copyFrom(rs.getBytes("mem")));
             }
             rs.close();

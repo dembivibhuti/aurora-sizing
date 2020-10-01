@@ -9,15 +9,16 @@ import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Optional;
 
 public class ObjServiceImpl extends ObjServiceImplBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjServiceImpl.class);
-    private static ObjectRepository objectRepositiory;
+    private static ObjectRepository objectRepository;
 
     ObjServiceImpl(ObjectRepository objectRepositiory) {
-        ObjServiceImpl.objectRepositiory = objectRepositiory;
+        ObjServiceImpl.objectRepository = objectRepositiory;
     }
 
     @Override
@@ -40,7 +41,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             }
 
             CmdLookupByNameResponse.Builder responseBuilder = CmdLookupByNameResponse.newBuilder();
-            objectRepositiory.lookup(prefix, limit, timekeeper).stream().forEach(key -> responseBuilder.addSecurityNames(key));
+            objectRepository.lookup(prefix, limit, timekeeper).stream().forEach(key -> responseBuilder.addSecurityNames(key));
             responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
 
@@ -55,12 +56,13 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         final TimeKeeper timekeeper = new TimeKeeper();
         try {
             int limit = request.getCount();
+
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
             }
             CmdLookupByNameResponseStream.Builder responseBuilder = CmdLookupByNameResponseStream.newBuilder();
-            objectRepositiory.lookup(prefix, limit, timekeeper).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
+            objectRepository.lookup(prefix, limit, timekeeper).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             responseObserver.onCompleted();
 
         } catch (Exception e) {
@@ -81,7 +83,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             int typeid = request.getGetType().getNumber();
 
             CmdNameLookupByTypeResponse.Builder responseBuilder = CmdNameLookupByTypeResponse.newBuilder();
-            objectRepositiory.lookupById(prefix, typeid, limit, timekeeper).stream().forEach(key -> responseBuilder.addSecurityNames(key));
+            objectRepository.lookupById(prefix, typeid, limit, timekeeper).stream().forEach(key -> responseBuilder.addSecurityNames(key));
             responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
 
@@ -102,7 +104,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             }
             int typeid = request.getGetType().getNumber();
             CmdNameLookupByTypeResponseStream.Builder responseBuilder = CmdNameLookupByTypeResponseStream.newBuilder();
-            objectRepositiory.lookupById(prefix, typeid, limit, timekeeper).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
+            objectRepository.lookupById(prefix, typeid, limit, timekeeper).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             responseObserver.onCompleted();
 
         } catch (Exception e) {
@@ -117,7 +119,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         try {
             CmdGetByNameResponse response;
 
-            Optional<byte[]> arrayContainsMem = objectRepositiory.getMemByKeyInBytes(request.getSecurityName(), timeKeeper);
+            Optional<byte[]> arrayContainsMem = objectRepository.getMemByKeyInBytes(request.getSecurityName(), timeKeeper);
             if (arrayContainsMem.isPresent()) {
                 response = CmdGetByNameResponse.newBuilder().setSecurity(ByteString.copyFrom(arrayContainsMem.get())).build();
             } else {
@@ -131,13 +133,16 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.info("Caught Exception in getObject()", e);
         }
     }
+
+    @Override
     public void getObjectManyByName(CmdGetManyByName request, StreamObserver<CmdGetManyByNameResponse> responseObserver) {
+        LOGGER.info("got request getObjectManyByName()");
         final TimeKeeper timekeeper = new TimeKeeper();
-        try{
-            List<ByteString> secMemList = objectRepository.getManyMemByName(request.getSecurityNameList(), timekeeper);
+        try {
+            List<ByteString> secMemList = objectRepository.getManyMemByName(request.getSecurityNamesList(), timekeeper);
             CmdGetManyByNameResponse.Builder responseBuilder = CmdGetManyByNameResponse.newBuilder();
             int totalRows = 0;
-            for (ByteString mem:secMemList) {
+            for (ByteString mem : secMemList) {
                 totalRows++;
                 CmdGetManyByNameResponse.RequestResponse.MsgOnSuccess msgOnSuccess = CmdGetManyByNameResponse.RequestResponse.MsgOnSuccess.newBuilder().setMem(mem).build();
                 CmdGetManyByNameResponse.RequestResponse requestResponse = CmdGetManyByNameResponse.RequestResponse.newBuilder().setMsgOnSuccess(msgOnSuccess).build();
@@ -151,11 +156,13 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         }
     }
 
+    @Override
     public void getObjectManyByNameStream(CmdGetManyByName request, StreamObserver<CmdGetManyByNameResponseStream> responseObserver) {
+        LOGGER.info("got request getObjectManyByNameStream()");
         final TimeKeeper timekeeper = new TimeKeeper();
-        try{
-            List<ByteString> secMemList = objectRepository.getManyMemByName(request.getSecurityNameList(), timekeeper);
-            for (ByteString mem:secMemList) {
+        try {
+            List<ByteString> secMemList = objectRepository.getManyMemByName(request.getSecurityNamesList(), timekeeper);
+            for (ByteString mem : secMemList) {
                 CmdGetManyByNameResponseStream.MsgOnSuccess msgOnSuccess = CmdGetManyByNameResponseStream.MsgOnSuccess.newBuilder().setMem(mem).build();
                 CmdGetManyByNameResponseStream requestResponse = CmdGetManyByNameResponseStream.newBuilder().setMsgOnSuccess(msgOnSuccess).build();
                 responseObserver.onNext(requestResponse);
@@ -166,9 +173,11 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         }
     }
 
+    @Override
     public void getObjectManyByNameExt(CmdGetManyByNameExt request, StreamObserver<CmdGetManyByNameExtResponse> responseObserver) {
+        LOGGER.info("got request getObjectManyByNameExt()");
         final TimeKeeper timekeeper = new TimeKeeper();
-        try{
+        try {
             List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessageList = objectRepository.getManySDBByName(request.getSecurityNamesList(), timekeeper);
             CmdGetManyByNameExtResponse.Builder responseBuilder = CmdGetManyByNameExtResponse.newBuilder();
             int totalRows = 0;
@@ -184,9 +193,11 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         }
     }
 
+    @Override
     public void getObjectManyByNameExtStream(CmdGetManyByNameExt request, StreamObserver<CmdGetManyByNameExtResponseStream> responseObserver) {
+        LOGGER.info("got request getObjectManyByNameExtStream()");
         final TimeKeeper timekeeper = new TimeKeeper();
-        try{
+        try {
             List<CmdGetManyByNameExtResponseStream> responseMessageList = objectRepository.getManySDBByNameStream(request.getSecurityNamesList(), timekeeper);
             responseMessageList.forEach(responseObserver::onNext);
             responseObserver.onCompleted();

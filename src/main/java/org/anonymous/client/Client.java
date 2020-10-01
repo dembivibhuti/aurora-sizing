@@ -1,10 +1,5 @@
 package org.anonymous.client;
 
-import org.anonymous.grpc.ObjectRequest;
-import org.anonymous.grpc.ObjectResponse;
-import org.anonymous.grpc.ObjectServiceGrpc;
-import org.anonymous.grpc.*;
-
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.anonymous.grpc.*;
@@ -27,6 +22,7 @@ public class Client {
         ObjServiceGrpc.ObjServiceBlockingStub stub = ObjServiceGrpc.newBlockingStub(channel);
         connect(stub);
         stub.withWaitForReady();
+        // Lookup calls
         lookupByName(stub);
         stub.withWaitForReady();
         lookupByType(stub);
@@ -35,18 +31,27 @@ public class Client {
         stub.withWaitForReady();
         lookupByTypeStream(stub);
         stub.withWaitForReady();
+
+        // Get Object Many Calls
+        getObjectManyByName(stub);
+        stub.withWaitForReady();
         getObjectManyByNameStream(stub);
+        stub.withWaitForReady();
+        getObjectManyByNameExt(stub);
+        stub.withWaitForReady();
+        getObjectManyByNameExtStream(stub);
+
         channel.shutdown();
     }
 
     private static void connect(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdConnectResponse response = stub.connect(CmdConnect.newBuilder().setAppName("test").build());
-        System.out.println("Response received from server:\n" + response);
+        System.out.println("Response received from connect: \n" + response);
     }
 
     private static void lookupByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdLookupByNameResponse response = stub.lookupByName(CmdLookupByName.newBuilder().setCount(10).setMessageType(CmdType.CMD_NAME_LOOKUP).setSecurityNamePrefix("test").build());
-        System.out.println("Response received from server:\n" + response);
+        System.out.println("Response received from lookupByName:\n" + response);
     }
 
     private static void lookupByNameStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
@@ -54,7 +59,7 @@ public class Client {
         Iterator<CmdLookupByNameResponseStream> it;
         try {
             it = stub.lookupByNameStream(request);
-            System.out.println("Response received from server:");
+            System.out.println("Response received from lookupByNameStream:");
             while (it.hasNext()) {
                 CmdLookupByNameResponseStream response = it.next();
                 String objname = response.getSecurityName();
@@ -67,7 +72,7 @@ public class Client {
 
     private static void lookupByType(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdNameLookupByTypeResponse response2 = stub.lookupByType(CmdNameLookupByType.newBuilder().setCount(10).setGetType(GetType.METADATA_GET_FIRST).setMessageType(CmdType.CMD_NAME_LOOKUP_BY_TYPE).build());
-        System.out.println("Response received from server:\n" + response2);
+        System.out.println("Response received from lookupByType: \n" + response2);
     }
 
     private static void lookupByTypeStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
@@ -75,7 +80,7 @@ public class Client {
         Iterator<CmdNameLookupByTypeResponseStream> it;
         try {
             it = stub.lookupByTypeStream(request);
-            System.out.println("Response received from server:");
+            System.out.println("Response received from lookupByTypeStream:");
             while (it.hasNext()) {
                 CmdNameLookupByTypeResponseStream response = it.next();
                 String objname = response.getSecurityName();
@@ -86,26 +91,39 @@ public class Client {
         }
     }
 
+    private static void getObjectManyByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdGetManyByNameResponse response = stub.getObjectManyByName(CmdGetManyByName.newBuilder().addSecurityNames("testSec-0").addSecurityNames("testSec-1").addSecurityNames("testSec-2").build());
+        System.out.println("Response received from getObjectManyByName:\n" + response.getSecurityCount());
+    }
+
     private static void getObjectManyByNameStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        Iterator<CmdGetManyByNameResponseStream> response = stub.getObjectManyByNameStream(CmdGetManyByName.newBuilder().addSecurityName("test0").addSecurityName("test1").addSecurityName("test2").build());
-        while (response.hasNext()) {
-            logger.info("Response received from server:\n" + response.next());
+        CmdGetManyByName request = CmdGetManyByName.newBuilder().addSecurityNames("testSec-0").addSecurityNames("testSec-1").addSecurityNames("testSec-2").build();
+        try {
+            Iterator<CmdGetManyByNameResponseStream> response = stub.getObjectManyByNameStream(request);
+            System.out.println("Response received from getObjectManyByNameStream:");
+            while (response.hasNext()) {
+                System.out.println(response.next().getMessageResponseCase()); //gives 0 on success
+            }
+        } catch (Exception e) {
+            LOGGER.info("Caught exception in Streaming Server-side Get Many by Name stream", e);
         }
-//        Iterator<CmdGetManyByNameResponseStream> response = stub.getObjectManyByNameStream(CmdGetManyByName.newBuilder().addSecurityName("test0").addSecurityName("test1").addSecurityName("test2").build());
-//
-//        while (response.hasNext()) {
-//            logger.info("Response received from server:\n" + response.next());
-//        }
+    }
 
+    private static void getObjectManyByNameExt(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdGetManyByNameExtResponse response = stub.getObjectManyByNameExt(CmdGetManyByNameExt.newBuilder().addSecurityNames("testSec-0").addSecurityNames("testSec-1").addSecurityNames("testSec-2").build());
+        System.out.println("Response received from getObjectManyByNameExt: \n" + response);
+    }
 
-        CmdGetManyByNameExtResponse response = stub.getObjectManyByNameExt(CmdGetManyByNameExt.newBuilder().addSecurityNames("test0").addSecurityNames("test1").addSecurityNames("test2").build());
-        logger.info("Response received from server:\n" + response);
-
-//        Iterator<CmdGetManyByNameExtResponseStream> response = stub.getObjectManyByNameExtStream(CmdGetManyByNameExt.newBuilder().addSecurityNames("test0").addSecurityNames("test1").addSecurityNames("test2").build());
-//        while (response.hasNext()) {
-//            logger.info("Response received from server:\n" + response.next());
-//        }
-
-        channel.shutdown();
+    private static void getObjectManyByNameExtStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdGetManyByNameExt request= CmdGetManyByNameExt.newBuilder().addSecurityNames("testSec-0").addSecurityNames("testSec-1").addSecurityNames("testSec-2").build();
+        try {
+            Iterator<CmdGetManyByNameExtResponseStream> response = stub.getObjectManyByNameExtStream(request);
+            System.out.println("Response received from getObjectManyByNameExtStream:");
+            while (response.hasNext()) {
+                System.out.println(response.next().getMsgOnSuccess().getHasSucceeded());
+            }
+        }catch (Exception e) {
+            LOGGER.info("Caught exception in Streaming Server-side Get Many by Name Ext stream", e);
+        }
     }
 }
