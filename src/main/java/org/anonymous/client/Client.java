@@ -1,12 +1,9 @@
 package org.anonymous.client;
 
-import org.anonymous.connection.ConnectionProvider;
 import org.anonymous.grpc.*;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import org.anonymous.module.ObjectRepository;
-import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,11 +20,20 @@ public class Client {
 
 
         ObjServiceGrpc.ObjServiceBlockingStub stub = ObjServiceGrpc.newBlockingStub(channel);
-        Iterator<CmdGetManyByNameResponseStream> response = stub.getObjectManyByNameStream(CmdGetManyByName.newBuilder().addSecurityName("test0").addSecurityName("test1").addSecurityName("test2").build());
+//        Iterator<CmdGetManyByNameResponseStream> response = stub.getObjectManyByNameStream(CmdGetManyByName.newBuilder().addSecurityName("test0").addSecurityName("test1").addSecurityName("test2").build());
+//
+//        while (response.hasNext()) {
+//            logger.info("Response received from server:\n" + response.next());
+//        }
 
-        while (response.hasNext()) {
-            logger.info("Response received from server:\n" + response.next());
-        }
+
+        CmdGetManyByNameExtResponse response = stub.getObjectManyByNameExt(CmdGetManyByNameExt.newBuilder().addSecurityNames("test0").addSecurityNames("test1").addSecurityNames("test2").build());
+        logger.info("Response received from server:\n" + response);
+
+//        Iterator<CmdGetManyByNameExtResponseStream> response = stub.getObjectManyByNameExtStream(CmdGetManyByNameExt.newBuilder().addSecurityNames("test0").addSecurityNames("test1").addSecurityNames("test2").build());
+//        while (response.hasNext()) {
+//            logger.info("Response received from server:\n" + response.next());
+//        }
 
         channel.shutdown();
     }

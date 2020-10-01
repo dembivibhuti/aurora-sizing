@@ -24,7 +24,7 @@ service ObjService {
 	rpc get_object_many_by_name(CmdGetManyByName) returns (CmdGetManyByNameResponse);
 	rpc get_object_many_by_name_stream(CmdGetManyByName) returns (stream CmdGetManyByNameResponseStream);
 	rpc get_object_many_by_name_ext(CmdGetManyByNameExt) returns (CmdGetManyByNameExtResponse);
-	rpc get_object_many_by_name_ext_stream(CmdGetManyByNameExt) returns (CmdGetManyByNameExtResponseStream);
+	rpc get_object_many_by_name_ext_stream(CmdGetManyByNameExt) returns (stream CmdGetManyByNameExtResponseStream);
 	rpc change_init_data(CmdChangeInitData) returns (CmdChangeInitDataResponse);
 	rpc change_init_data_ext(CmdChangeInitDataExt) returns (CmdChangeInitDataExtResponse);
 }

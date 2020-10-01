@@ -17,6 +17,9 @@ import com.google.protobuf.ProtocolStringList;
 import org.anonymous.connection.ConnectionProvider;
 import java.util.stream.IntStream;
 
+import org.anonymous.grpc.CmdGetManyByNameExtResponse;
+import org.anonymous.grpc.CmdGetManyByNameExtResponseStream;
+import org.anonymous.grpc.Metadata;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
 import java.util.stream.Stream;
@@ -452,6 +455,90 @@ public class ObjectRepository implements AutoCloseable {
             throwables.printStackTrace();
         }
         return secMem;
+    }
+
+    public List<CmdGetManyByNameExtResponse.ResponseMessage> getManySDBByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
+        List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessages = new ArrayList<>();
+        String sql = String.format(
+                "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, sdbDiskMem from objects where name in (%s)",
+                String.join(",", Collections.nCopies(securityNameList.size(), "?")));
+
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
+            long spanId = getManyTimeKeeper.start();
+            for (int i = 0; i < securityNameList.toArray().length; i++) {
+                getManyStmt.setString(i + 1, securityNameList.get(i));
+            }
+            ResultSet rs = getManyStmt.executeQuery();
+            while(rs.next()){
+                try {
+                    Metadata metadata = Metadata.newBuilder().setSecurityName(rs.getString("name"))
+                            .setSecurityType(rs.getInt("typeId"))
+                            .setUpdateCount(rs.getInt("updateCount"))
+                            .setDateCreated(rs.getInt("dateCreated"))
+                            .setTimeUpdate(rs.getString("timeUpdated"))
+                            .setDbIdUpdated(rs.getInt("dbIdUpdated"))
+                            .setLastTxnId(rs.getInt("lastTransaction"))
+                            .setVersionInfo(rs.getInt("versionInfo")).build();
+                    CmdGetManyByNameExtResponse.ResponseMessage.MsgOnSuccess msgOnSuccess = CmdGetManyByNameExtResponse.ResponseMessage.MsgOnSuccess.newBuilder()
+                            .setMetadata(metadata)
+                            .setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem")))
+                            .setHasSucceeded(true).build();
+                    responseMessages.add(CmdGetManyByNameExtResponse.ResponseMessage.newBuilder().setMsgOnSuccess(msgOnSuccess).build());
+                } catch (SQLException throwables) {
+                    CmdGetManyByNameExtResponse.ResponseMessage.MsgOnFailure msgOnFailure = CmdGetManyByNameExtResponse.ResponseMessage.MsgOnFailure.newBuilder().setHasSucceeded(false).build();
+                    responseMessages.add(CmdGetManyByNameExtResponse.ResponseMessage.newBuilder().setMsgOnFailure(msgOnFailure).build());
+                    throwables.printStackTrace();
+                }
+            }
+            rs.close();
+            getManyTimeKeeper.stop(spanId);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return responseMessages;
+    }
+
+    public List<CmdGetManyByNameExtResponseStream> getManySDBByNameStream(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
+        List<CmdGetManyByNameExtResponseStream> responseMessages = new ArrayList<>();
+        String sql = String.format(
+                "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, sdbDiskMem from objects where name in (%s)",
+                String.join(",", Collections.nCopies(securityNameList.size(), "?")));
+
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
+            long spanId = getManyTimeKeeper.start();
+            for (int i = 0; i < securityNameList.toArray().length; i++) {
+                getManyStmt.setString(i + 1, securityNameList.get(i));
+            }
+            ResultSet rs = getManyStmt.executeQuery();
+            while(rs.next()){
+                try {
+                    Metadata metadata = Metadata.newBuilder().setSecurityName(rs.getString("name"))
+                            .setSecurityType(rs.getInt("typeId"))
+                            .setUpdateCount(rs.getInt("updateCount"))
+                            .setDateCreated(rs.getInt("dateCreated"))
+                            .setTimeUpdate(rs.getString("timeUpdated"))
+                            .setDbIdUpdated(rs.getInt("dbIdUpdated"))
+                            .setLastTxnId(rs.getInt("lastTransaction"))
+                            .setVersionInfo(rs.getInt("versionInfo")).build();
+                    CmdGetManyByNameExtResponseStream.MsgOnSuccess msgOnSuccess = CmdGetManyByNameExtResponseStream.MsgOnSuccess.newBuilder()
+                            .setMetadata(metadata)
+                            .setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem")))
+                            .setHasSucceeded(true).build();
+                    responseMessages.add(CmdGetManyByNameExtResponseStream.newBuilder().setMsgOnSuccess(msgOnSuccess).build());
+                } catch (SQLException throwables) {
+                    CmdGetManyByNameExtResponseStream.MsgOnFailure msgOnFailure = CmdGetManyByNameExtResponseStream.MsgOnFailure.newBuilder().setHasSucceeded(false).build();
+                    responseMessages.add(CmdGetManyByNameExtResponseStream.newBuilder().setMsgOnFailure(msgOnFailure).build());
+                    throwables.printStackTrace();
+                }
+            }
+            rs.close();
+            getManyTimeKeeper.stop(spanId);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return responseMessages;
     }
 
     public void close() {
