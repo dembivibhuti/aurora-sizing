@@ -5,6 +5,7 @@ import com.google.protobuf.ProtocolStringList;
 import org.anonymous.connection.ConnectionProvider;
 import org.anonymous.grpc.CmdGetManyByNameExtResponse;
 import org.anonymous.grpc.CmdGetManyByNameExtResponseStream;
+import org.anonymous.grpc.GetType;
 import org.anonymous.grpc.Metadata;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
@@ -23,6 +24,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.anonymous.sql.Store.*;
+
+
 
 public class ObjectRepository implements AutoCloseable {
 
@@ -104,12 +107,11 @@ public class ObjectRepository implements AutoCloseable {
             for (int i = 0; i < numberOfRecsPerThread; i++) {
 
                 int randTypeId = randIntStream.next();
-                //String name = String.format("testSec-%d-%d", randIntStream.next(), i);
-                String name = String.format("testSec-%d", i); //changed to test get many
+                String name = String.format("testSec-%d-%d", randIntStream.next(), i);
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
-                insertRec.setInt(2, 0);// originally randTypeId
+                insertRec.setInt(2, randTypeId);
                 insertRec.setLong(3, i);
                 insertRec.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
                 insertRec.setLong(5, 0);
@@ -202,12 +204,33 @@ public class ObjectRepository implements AutoCloseable {
         }
         return Stream.of(all);
     }
+    private Pair<String,String> expression(int number){
+        Pair<String,String> pair= new Pair(">=","asc"); //default value
+        if(number==2){
+            pair.first= "=";
+            pair.second="asc";
+        }
+        else if(number==3){
+            pair.first= "<=";
+            pair.second="asc";
+        }else if(number == 4){
+            pair.first= "<=";
+            pair.second="desc";
+        }else if(number == 5){
+            pair.first= ">=";
+            pair.second="asc";
+        }else if(number == 6){
+            pair.first= ">=";
+            pair.second="desc";
+        }
+        return pair;
+    }
 
-    public List<String> lookup(String name, int limit, TimeKeeper lookupTimeKeeper) {
-
+    public List<String> lookup(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper){
+        Pair<String,String> exp= expression(typeId);
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement(LOOKUP_OBJECTS)) {
+                .prepareStatement(String.format(LOOKUP_OBJECTS, exp.first, exp.second))) {
 
             long spanId = lookupTimeKeeper.start();
             lookupStmt.setString(1, name);
@@ -225,14 +248,15 @@ public class ObjectRepository implements AutoCloseable {
         return secKeys;
     }
 
-    public List<String> lookupById(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper) {
+    public List<String> lookupById(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper, int objectType){
+        Pair<String,String> exp= expression(typeId);
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement(LOOKUP_OBJECTS_BY_TYPEID)) {
+                .prepareStatement(String.format(LOOKUP_OBJECTS_BY_TYPEID, exp.first, exp.second))) {
 
             long spanId = lookupTimeKeeper.start();
             lookupStmt.setString(1, name);
-            lookupStmt.setInt(2, typeId);
+            lookupStmt.setInt(2, objectType);
             lookupStmt.setInt(3, limit);
             ResultSet rs = lookupStmt.executeQuery();
 

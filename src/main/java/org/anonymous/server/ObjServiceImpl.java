@@ -35,13 +35,14 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         final TimeKeeper timekeeper = new TimeKeeper();
         try {
             int limit = request.getCount();
+            int typeid = request.getGetType().getNumber();
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
             }
 
             CmdLookupByNameResponse.Builder responseBuilder = CmdLookupByNameResponse.newBuilder();
-            objectRepository.lookup(prefix, limit, timekeeper).stream().forEach(key -> responseBuilder.addSecurityNames(key));
+            objectRepository.lookup(prefix, typeid, limit, timekeeper).stream().forEach(key -> responseBuilder.addSecurityNames(key));
             responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
 
@@ -56,13 +57,13 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         final TimeKeeper timekeeper = new TimeKeeper();
         try {
             int limit = request.getCount();
-
+            int typeid = request.getGetType().getNumber();
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
             }
             CmdLookupByNameResponseStream.Builder responseBuilder = CmdLookupByNameResponseStream.newBuilder();
-            objectRepository.lookup(prefix, limit, timekeeper).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
+            objectRepository.lookup(prefix,typeid, limit, timekeeper).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             responseObserver.onCompleted();
 
         } catch (Exception e) {
@@ -76,14 +77,14 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         final TimeKeeper timekeeper = new TimeKeeper();
         try {
             int limit = request.getCount();
+            int typeid = request.getGetType().getNumber();
+            int objectType= request.getSecurityType();
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
             }
-            int typeid = request.getGetType().getNumber();
-
             CmdNameLookupByTypeResponse.Builder responseBuilder = CmdNameLookupByTypeResponse.newBuilder();
-            objectRepository.lookupById(prefix, typeid, limit, timekeeper).stream().forEach(key -> responseBuilder.addSecurityNames(key));
+            objectRepository.lookupById(prefix, typeid, limit, timekeeper, objectType).stream().forEach(key -> responseBuilder.addSecurityNames(key));
             responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
 
@@ -98,13 +99,15 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         final TimeKeeper timekeeper = new TimeKeeper();
         try {
             int limit = request.getCount();
+            int typeid = request.getGetType().getNumber();
+            int objectType= request.getSecurityType();
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
             }
-            int typeid = request.getGetType().getNumber();
+
             CmdNameLookupByTypeResponseStream.Builder responseBuilder = CmdNameLookupByTypeResponseStream.newBuilder();
-            objectRepository.lookupById(prefix, typeid, limit, timekeeper).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
+            objectRepository.lookupById(prefix, typeid, limit, timekeeper, objectType).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             responseObserver.onCompleted();
 
         } catch (Exception e) {

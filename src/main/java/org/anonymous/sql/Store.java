@@ -14,9 +14,9 @@ public class Store {
 
     public static final String INSERT_RECORDS = "insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    public static final String LOOKUP_OBJECTS = "select name from objects where lower(name) >= ? order by name asc LIMIT ?";
+    public static final String LOOKUP_OBJECTS = "select name from objects where lower(name) %s ? order by name %s LIMIT ?";
 
-    public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where lower(name) >= ? and typeId = ? order by name asc LIMIT ?";
+    public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where lower(name) %s ? and typeId = ? order by name %s LIMIT ?";
 
     public static final String GET_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where name = ?";
 
