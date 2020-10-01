@@ -165,4 +165,33 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.info("Caught Exception in getObjectManyByNameStream()", e);
         }
     }
+
+    public void getObjectManyByNameExt(CmdGetManyByNameExt request, StreamObserver<CmdGetManyByNameExtResponse> responseObserver) {
+        final TimeKeeper timekeeper = new TimeKeeper();
+        try{
+            List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessageList = objectRepository.getManySDBByName(request.getSecurityNamesList(), timekeeper);
+            CmdGetManyByNameExtResponse.Builder responseBuilder = CmdGetManyByNameExtResponse.newBuilder();
+            int totalRows = 0;
+            for (CmdGetManyByNameExtResponse.ResponseMessage sdb : responseMessageList) {
+                totalRows++;
+                responseBuilder.addResp(sdb);
+            }
+            responseBuilder.setCount(totalRows);
+            responseObserver.onNext(responseBuilder.build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.info("Caught Exception in getObjectManyByNameExt()", e);
+        }
+    }
+
+    public void getObjectManyByNameExtStream(CmdGetManyByNameExt request, StreamObserver<CmdGetManyByNameExtResponseStream> responseObserver) {
+        final TimeKeeper timekeeper = new TimeKeeper();
+        try{
+            List<CmdGetManyByNameExtResponseStream> responseMessageList = objectRepository.getManySDBByNameStream(request.getSecurityNamesList(), timekeeper);
+            responseMessageList.forEach(responseObserver::onNext);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.info("Caught Exception in getObjectManyByNameExtStream()", e);
+        }
+    }
 }
