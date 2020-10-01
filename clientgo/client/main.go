@@ -22,21 +22,28 @@ func main() {
 
 func ssMain(scl ssclient.SSClient) {
 	err := scl.UseService("tdmsqa_nyc_bm_lta3", func() {
-		res, err := scl.LookupByName("test", model.GET_EQUAL, 10)
+		// LookupByName - streaming
+		res, err := scl.LookupByName("test", model.GET_EQUAL, 1000) //  250GB/32KB = 7812500
 		if err != nil {
 			log.Fatal(err)
 		}
 		secnames := []string{}
 		for k := range res {
-			fmt.Println(k)
 			secnames = append(secnames, k)
+			// GetObject - SingleRPC
+			respObj, err := scl.GetObject(k)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			fmt.Printf("SecName: %s -- SecBytesLen: %d\n", k, len(respObj.Mem))
 		}
 		mch, err := scl.GetObjectMany(secnames)
 		if err != nil {
 			log.Fatal(err)
 		}
 		for k := range mch {
-			fmt.Println("SecLen: ", len(k.Mem))
+			fmt.Println("GetObjectMany SecLen: ", len(k.Mem))
 		}
 	})
 

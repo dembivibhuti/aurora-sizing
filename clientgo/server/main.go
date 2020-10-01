@@ -26,6 +26,7 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterObjServiceService(grpcServer, &pb.ObjServiceService{
 		Connect:                      connect,
+		GetObject:                    getObject,
 		LookupByNameStream:           lookupByNameStream,
 		GetObjectManyByNameStream:    getObjectManyByNameStream,
 		GetObjectManyByNameExtStream: getObjectManyByNameExtStream,
@@ -39,6 +40,13 @@ func connect(ctx context.Context, in *pb.CmdConnect) (*pb.CmdConnectResponse, er
 		MsgSize:     111,
 		VerAndRev:   222,
 		FeatureFlag: 333,
+	}
+	return resp, nil
+}
+
+func getObject(ctx context.Context, in *pb.CmdGetByName) (*pb.CmdGetByNameResponse, error) {
+	resp := &pb.CmdGetByNameResponse{
+		Response: &pb.CmdGetByNameResponse_Security{Security: getRandomBytes(rand.Intn(32 * 1024))},
 	}
 	return resp, nil
 }
@@ -88,7 +96,6 @@ func getObjectManyByNameStream(in *pb.CmdGetManyByName, stream pb.ObjService_Get
 
 func getObjectManyByNameExtStream(in *pb.CmdGetManyByNameExt, stream pb.ObjService_GetObjectManyByNameExtStreamServer) error {
 	for _, v := range in.SecurityNames {
-
 		imsg := &pb.CmdGetManyByNameExtResponseStream_MsgOnSuccess{
 			HasSucceeded: true,
 			Metadata:     nil,
