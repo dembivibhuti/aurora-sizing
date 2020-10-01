@@ -1,5 +1,9 @@
 package org.anonymous.client;
 
+import org.anonymous.grpc.ObjectRequest;
+import org.anonymous.grpc.ObjectResponse;
+import org.anonymous.grpc.ObjectServiceGrpc;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.anonymous.grpc.*;
@@ -28,6 +32,8 @@ public class Client {
         lookupByNameStream(stub);
         stub.withWaitForReady();
         lookupByTypeStream(stub);
+        stub.withWaitForReady();
+        getObjectManyByNameStream(stub);
         channel.shutdown();
     }
 
@@ -75,6 +81,13 @@ public class Client {
             }
         } catch (Exception e) {
             LOGGER.info("Caught exception in Streaming Server-side Lookup by type stream", e);
+        }
+    }
+
+    private static void getObjectManyByNameStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        Iterator<CmdGetManyByNameResponseStream> response = stub.getObjectManyByNameStream(CmdGetManyByName.newBuilder().addSecurityName("test0").addSecurityName("test1").addSecurityName("test2").build());
+        while (response.hasNext()) {
+            logger.info("Response received from server:\n" + response.next());
         }
     }
 }

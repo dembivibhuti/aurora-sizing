@@ -106,7 +106,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
-                insertRec.setInt(2, 0); //originally randTypeId
+                insertRec.setInt(2, randTypeId);
                 insertRec.setLong(3, i);
                 insertRec.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
                 insertRec.setLong(5, 0);
@@ -480,6 +480,29 @@ public class ObjectRepository implements AutoCloseable {
             }
         });
         return completableFuture;
+    }
+    public List<ByteString> getManyMemByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
+        List<ByteString> secMem = new ArrayList<>();
+        String sql = String.format(
+                "select mem from objects where name in (%s)",
+                String.join(",", Collections.nCopies(securityNameList.size(), "?")));
+
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
+            long spanId = getManyTimeKeeper.start();
+            for (int i = 0; i < securityNameList.toArray().length; i++) {
+                getManyStmt.setString(i + 1, securityNameList.get(i));
+            }
+            ResultSet rs = getManyStmt.executeQuery();
+            while(rs.next()){
+                secMem.add(ByteString.copyFrom(rs.getBytes("mem")));
+            }
+            rs.close();
+            getManyTimeKeeper.stop(spanId);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return secMem;
     }
 
     public void close() {

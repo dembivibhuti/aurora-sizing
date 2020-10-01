@@ -131,4 +131,38 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.info("Caught Exception in getObject()", e);
         }
     }
+    public void getObjectManyByName(CmdGetManyByName request, StreamObserver<CmdGetManyByNameResponse> responseObserver) {
+        final TimeKeeper timekeeper = new TimeKeeper();
+        try{
+            List<ByteString> secMemList = objectRepository.getManyMemByName(request.getSecurityNameList(), timekeeper);
+            CmdGetManyByNameResponse.Builder responseBuilder = CmdGetManyByNameResponse.newBuilder();
+            int totalRows = 0;
+            for (ByteString mem:secMemList) {
+                totalRows++;
+                CmdGetManyByNameResponse.RequestResponse.MsgOnSuccess msgOnSuccess = CmdGetManyByNameResponse.RequestResponse.MsgOnSuccess.newBuilder().setMem(mem).build();
+                CmdGetManyByNameResponse.RequestResponse requestResponse = CmdGetManyByNameResponse.RequestResponse.newBuilder().setMsgOnSuccess(msgOnSuccess).build();
+                responseBuilder.addRequestResponse(requestResponse);
+            }
+            responseBuilder.setSecurityCount(totalRows);
+            responseObserver.onNext(responseBuilder.build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.info("Caught Exception in getObjectManyByName()", e);
+        }
+    }
+
+    public void getObjectManyByNameStream(CmdGetManyByName request, StreamObserver<CmdGetManyByNameResponseStream> responseObserver) {
+        final TimeKeeper timekeeper = new TimeKeeper();
+        try{
+            List<ByteString> secMemList = objectRepository.getManyMemByName(request.getSecurityNameList(), timekeeper);
+            for (ByteString mem:secMemList) {
+                CmdGetManyByNameResponseStream.MsgOnSuccess msgOnSuccess = CmdGetManyByNameResponseStream.MsgOnSuccess.newBuilder().setMem(mem).build();
+                CmdGetManyByNameResponseStream requestResponse = CmdGetManyByNameResponseStream.newBuilder().setMsgOnSuccess(msgOnSuccess).build();
+                responseObserver.onNext(requestResponse);
+            }
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.info("Caught Exception in getObjectManyByNameStream()", e);
+        }
+    }
 }
