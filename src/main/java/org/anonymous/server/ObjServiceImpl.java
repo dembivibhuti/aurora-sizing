@@ -208,4 +208,27 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.info("Caught Exception in getObjectManyByNameExtStream()", e);
         }
     }
+
+    @Override
+    public void getObjectExt(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver) {
+        LOGGER.info("got request getObjectExt()");
+        TimeKeeper timeKeeper = new TimeKeeper();
+        try {
+            CmdGetByNameExtResponse response;
+            Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getSDBRecordsByKey(request.getSecurityName(), timeKeeper);
+
+            if(msgOnSuccess.isPresent()){
+                response = CmdGetByNameExtResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
+            }else{
+                LOGGER.error("Object Doesn't exist");
+                CmdGetByNameExtResponse.MsgOnFailure msgOnFailure = CmdGetByNameExtResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
+                response = CmdGetByNameExtResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
+            }
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.info("Caught Exception in getObjectExt()", e);
+        }
+    }
 }

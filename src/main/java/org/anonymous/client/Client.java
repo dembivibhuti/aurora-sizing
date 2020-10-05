@@ -40,6 +40,12 @@ public class Client {
         getObjectManyByNameExt(stub);
         stub.withWaitForReady();
         getObjectManyByNameExtStream(stub);
+        stub.withWaitForReady();
+
+        // Get Object By Name Calls
+        getObjectByName(stub);
+        stub.withWaitForReady();
+        getObjectByNameExt(stub);
 
         channel.shutdown();
     }
@@ -125,5 +131,14 @@ public class Client {
         }catch (Exception e) {
             LOGGER.info("Caught exception in Streaming Server-side Get Many by Name Ext stream", e);
         }
+    }
+
+    private static void getObjectByNameExt(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdGetByNameExtResponse response = stub.getObjectExt(CmdGetByNameExt.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-10-0").build());
+        System.out.println("Response received from getObjectByNameExt: \n" + response);
+    }
+    private static void getObjectByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdGetByNameResponse response = stub.getObject(CmdGetByName.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-10-0").build());
+        System.out.println("Response received from getObjectByName: \n" + response);
     }
 }

@@ -3,9 +3,9 @@ package org.anonymous.module;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
 import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.grpc.CmdGetByNameExtResponse;
 import org.anonymous.grpc.CmdGetManyByNameExtResponse;
 import org.anonymous.grpc.CmdGetManyByNameExtResponseStream;
-import org.anonymous.grpc.GetType;
 import org.anonymous.grpc.Metadata;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
@@ -303,6 +303,35 @@ public class ObjectRepository implements AutoCloseable {
             }
         });
         return completableFuture;
+    }
+    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getSDBRecordsByKey(final String secKey, final TimeKeeper lookupTimeKeeper) {
+        CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement lookupStmt = connection.prepareStatement(
+                     GET_ALL_RECORDS)) {
+            lookupStmt.setString(1, secKey);
+            ResultSet rs = lookupStmt.executeQuery();
+
+            while (rs.next()) {
+                msgOnSuccess = CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
+                        setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem"))).
+                        setMetadata(Metadata.newBuilder().
+                                setSecurityName(rs.getString("name")).
+                                setSecurityType(rs.getInt("typeId")).
+                                setLastTxnId(rs.getLong("lastTransaction")).
+                                setUpdateCount(rs.getLong("updateCount")).
+                                setDateCreated(rs.getInt("dateCreated")).
+                                setDbIdUpdated(rs.getInt("dbIdUpdated")).
+                                setVersionInfo(rs.getInt("versionInfo")).
+                                setTimeUpdate(rs.getString("timeUpdated"))).
+                        build();
+            }
+            rs.close();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return Optional.ofNullable(msgOnSuccess);
     }
 
     public CompletableFuture<Void> getManySDBByKeys(List<String> secKeys, TimeKeeper lookupTimeKeeper) {
