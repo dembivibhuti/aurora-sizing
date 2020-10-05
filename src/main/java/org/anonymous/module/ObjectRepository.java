@@ -552,11 +552,11 @@ public class ObjectRepository implements AutoCloseable {
                 try {
                     Metadata metadata = Metadata.newBuilder().setSecurityName(rs.getString("name"))
                             .setSecurityType(rs.getInt("typeId"))
-                            .setUpdateCount(rs.getInt("updateCount"))
+                            .setUpdateCount(rs.getLong("updateCount"))
                             .setDateCreated(rs.getInt("dateCreated"))
                             .setTimeUpdate(rs.getString("timeUpdated"))
                             .setDbIdUpdated(rs.getInt("dbIdUpdated"))
-                            .setLastTxnId(rs.getInt("lastTransaction"))
+                            .setLastTxnId(rs.getLong("lastTransaction"))
                             .setVersionInfo(rs.getInt("versionInfo")).build();
                     CmdGetManyByNameExtResponse.ResponseMessage.MsgOnSuccess msgOnSuccess = CmdGetManyByNameExtResponse.ResponseMessage.MsgOnSuccess.newBuilder()
                             .setMetadata(metadata)
@@ -594,11 +594,11 @@ public class ObjectRepository implements AutoCloseable {
                 try {
                     Metadata metadata = Metadata.newBuilder().setSecurityName(rs.getString("name"))
                             .setSecurityType(rs.getInt("typeId"))
-                            .setUpdateCount(rs.getInt("updateCount"))
+                            .setUpdateCount(rs.getLong("updateCount"))
                             .setDateCreated(rs.getInt("dateCreated"))
                             .setTimeUpdate(rs.getString("timeUpdated"))
                             .setDbIdUpdated(rs.getInt("dbIdUpdated"))
-                            .setLastTxnId(rs.getInt("lastTransaction"))
+                            .setLastTxnId(rs.getLong("lastTransaction"))
                             .setVersionInfo(rs.getInt("versionInfo")).build();
                     CmdGetManyByNameExtResponseStream.MsgOnSuccess msgOnSuccess = CmdGetManyByNameExtResponseStream.MsgOnSuccess.newBuilder()
                             .setMetadata(metadata)
