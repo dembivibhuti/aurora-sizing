@@ -30,11 +30,11 @@ type GetType int32
 const (
 	GetType_METADATA_GET_FIRST   GetType = 0
 	GetType_METADATA_GET_LAST    GetType = 1
-	GetType_METADATA_GET_EQUAL   GetType = 2
-	GetType_METADATA_GET_LESS    GetType = 3
-	GetType_METADATA_GET_LE      GetType = 4
-	GetType_METADATA_GET_GREATER GetType = 5
-	GetType_METADATA_GET_GE      GetType = 6
+	GetType_METADATA_GET_EQUAL   GetType = 2 // = asc
+	GetType_METADATA_GET_LESS    GetType = 3 //<= asc
+	GetType_METADATA_GET_LE      GetType = 4 //<= desc
+	GetType_METADATA_GET_GREATER GetType = 5 // >= asc
+	GetType_METADATA_GET_GE      GetType = 6 //>= desc
 	GetType_METADATA_GET_NEXT    GetType = 7
 	GetType_METADATA_GET_PREV    GetType = 8
 )
