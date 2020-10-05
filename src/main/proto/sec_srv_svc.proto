@@ -1,9 +1,0 @@
-syntax = "proto3";
-option java_multiple_files = true;
-package org.anonymous.grpc;
-
-import "srv_msg_get_many_by_name.proto";
-
-service SecSrvSvc {
-	rpc process_msg_get_many_by_name(SrvMsgGetManyByName) returns (SrvMsgGetManyByNameResponse) {}
-}
