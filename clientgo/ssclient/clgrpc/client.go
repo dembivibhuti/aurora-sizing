@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -15,6 +16,10 @@ import (
 type SSClient struct {
 	client pb.ObjServiceClient
 	conn   *grpc.ClientConn
+}
+
+func timeTaken(msg string, t time.Time) {
+	fmt.Println(msg, " : ", time.Since(t))
 }
 
 func mustGetConn(addr string) *grpc.ClientConn {
@@ -66,6 +71,7 @@ func (s *SSClient) LookupByName(prefix string, cmpType model.CmpType, nr int32) 
 	}
 	ch := make(chan string)
 	go func() {
+		defer timeTaken("LookupByName", time.Now())
 		for {
 			resp, err := strmCl.Recv()
 			if err == io.EOF { // also takes care of io.EOF
@@ -95,6 +101,7 @@ func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpTy
 	}
 	ch := make(chan string)
 	go func() {
+		defer timeTaken("LookupByType", time.Now())
 		for {
 			resp, err := strmCl.Recv()
 			if err == io.EOF {
@@ -112,6 +119,7 @@ func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpTy
 }
 
 func (s *SSClient) GetObject(sname string) (*model.Object, error) {
+	defer timeTaken("GetObject", time.Now())
 	ctx := context.Background()
 	resp, err := s.client.GetObject(ctx, &pb.CmdGetByName{SecurityName: sname})
 	if err != nil {
@@ -140,6 +148,7 @@ func (s *SSClient) GetObjectMany(snames []string) (<-chan *model.Object, error) 
 	}
 	ch := make(chan *model.Object)
 	go func() {
+		defer timeTaken("GetObjectMany", time.Now())
 		for {
 			resp, err := strmCl.Recv()
 			if err == io.EOF {
@@ -171,6 +180,7 @@ func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, e
 	}
 	ch := make(chan *model.ObjectExt)
 	go func() {
+		defer timeTaken("GetObjectManyExt", time.Now())
 		for {
 			resp, err := strmCl.Recv()
 			if err == io.EOF {

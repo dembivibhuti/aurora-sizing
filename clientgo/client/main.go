@@ -23,7 +23,7 @@ func main() {
 func ssMain(scl ssclient.SSClient) {
 	err := scl.UseService("tdmsqa_nyc_bm_lta3", func() {
 		// LookupByName - streaming
-		res, err := scl.LookupByName("test", model.GET_EQUAL, 1000) //  250GB/32KB = 7812500
+		res, err := scl.LookupByName("test", model.GET_EQUAL, 10) //  250GB/32KB = 7812500
 		if err != nil {
 			log.Fatal(err)
 		}
