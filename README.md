@@ -43,7 +43,7 @@ mvn exec:java -Dexec.mainClass="org.anonymous.boot.Program"
 
 Run the GRPC Server
 mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
--maximumPoolSize=100 \
+-DmaximumPoolSize=100 \
 -DdataSource.user=postgres \
 -DdataSource.password=postgres \
 -DdataSource.databaseName=postgres \

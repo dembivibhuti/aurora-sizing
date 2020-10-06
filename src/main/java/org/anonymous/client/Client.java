@@ -23,7 +23,7 @@ public class Client {
         connect(stub);
         stub.withWaitForReady();
         // Lookup calls
-        lookupByName(stub);
+        lookupByName(stub, 100);
         stub.withWaitForReady();
         lookupByType(stub);
         stub.withWaitForReady();
@@ -57,8 +57,8 @@ public class Client {
         System.out.println("Response received from connect: \n" + response);
     }
 
-    private static void lookupByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdLookupByNameResponse response = stub.lookupByName(CmdLookupByName.newBuilder().setCount(1000000).setMessageType(CmdType.CMD_NAME_LOOKUP).setGetType(GetType.METADATA_GET_GREATER).setSecurityNamePrefix("test").build());
+    private static void lookupByName(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {
+        CmdLookupByNameResponse response = stub.lookupByName(CmdLookupByName.newBuilder().setCount(count).setMessageType(CmdType.CMD_NAME_LOOKUP).setGetType(GetType.METADATA_GET_GREATER).setSecurityNamePrefix("test").build());
         System.out.println("Response received from lookupByName:\n" + response);
     }
 
