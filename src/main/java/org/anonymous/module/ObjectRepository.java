@@ -107,7 +107,7 @@ public class ObjectRepository implements AutoCloseable {
             for (int i = 0; i < numberOfRecsPerThread; i++) {
 
                 int randTypeId = randIntStream.next();
-                String name = "testSec-" + i;
+                String name = String.format("testSec-%d-%d", randIntStream.next(), i);
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
