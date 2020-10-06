@@ -23,7 +23,7 @@ func main() {
 func ssMain(scl ssclient.SSClient) {
 	err := scl.UseService("tdmsqa_nyc_bm_lta3", func() {
 		// LookupByName - streaming
-		res, err := scl.LookupByName("test", model.GET_EQUAL, 10) //  250GB/32KB = 7812500
+		res, err := scl.LookupByName("test", model.GET_EQUAL, 3) //  250GB/32KB = 7812500
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -38,6 +38,7 @@ func ssMain(scl ssclient.SSClient) {
 			}
 			fmt.Printf("SecName: %s -- SecBytesLen: %d\n", k, len(respObj.Mem))
 		}
+		secnames = []string{"testSec-0", "testSec-1", "testSec-2"}
 		mch, err := scl.GetObjectMany(secnames)
 		if err != nil {
 			log.Fatal(err)
