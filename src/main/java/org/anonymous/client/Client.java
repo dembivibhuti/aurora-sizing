@@ -25,13 +25,13 @@ public class Client {
         // Lookup calls
         lookupByName(stub, 100);
         stub.withWaitForReady();
-        lookupByType(stub);
+        lookupByType(stub, 100);
         stub.withWaitForReady();
         lookupByNameStream(stub, 10000);
         stub.withWaitForReady();
         lookupByNameStreamAll(stub);
         stub.withWaitForReady();
-        lookupByTypeStream(stub);
+        lookupByTypeStream(stub, 100);
         stub.withWaitForReady();
 
         // Get Object Many Calls
@@ -95,13 +95,13 @@ public class Client {
         }
     }
 
-    private static void lookupByType(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdNameLookupByTypeResponse response2 = stub.lookupByType(CmdNameLookupByType.newBuilder().setCount(1000000).setMessageType(CmdType.CMD_NAME_LOOKUP_BY_TYPE).setGetType(GetType.METADATA_GET_GREATER).setSecurityType(0).build());
+    private static void lookupByType(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {
+        CmdNameLookupByTypeResponse response2 = stub.lookupByType(CmdNameLookupByType.newBuilder().setCount(count).setMessageType(CmdType.CMD_NAME_LOOKUP_BY_TYPE).setGetType(GetType.METADATA_GET_GREATER).setSecurityType(0).build());
         System.out.println("Response received from lookupByType: \n" + response2);
     }
 
-    private static void lookupByTypeStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdNameLookupByType request = CmdNameLookupByType.newBuilder().setCount(1000000).setGetType(GetType.METADATA_GET_GREATER).setSecurityType(0).setMessageType(CmdType.CMD_NAME_LOOKUP_BY_TYPE).build();
+    private static void lookupByTypeStream(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {
+        CmdNameLookupByType request = CmdNameLookupByType.newBuilder().setCount(count).setGetType(GetType.METADATA_GET_GREATER).setSecurityType(0).setMessageType(CmdType.CMD_NAME_LOOKUP_BY_TYPE).build();
         Iterator<CmdNameLookupByTypeResponseStream> it;
         try {
             it = stub.lookupByTypeStream(request);
