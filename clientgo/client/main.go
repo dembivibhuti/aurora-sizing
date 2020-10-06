@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"sort"
 	"time"
 
@@ -17,6 +18,7 @@ var (
 
 func main() {
 	flag.Parse()
+	rand.Seed(time.Now().UnixNano())
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
 	defer sscl.Close()
 	ssMain(sscl)
@@ -28,12 +30,24 @@ func runNTimesWithArg(n int, fn func(n int32), arg int32) {
 	}
 }
 
+func StringWithCharset(length int, charset string) string {
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+func randDigit(n int) string {
+	return StringWithCharset(n, "123456789")
+}
+
 func ssMain(scl ssclient.SSClient) {
 	scl.UseService("tdmsqa_nyc_bm_lta3", func() {
 
 		lookupOnly := func(n int32) {
 			start := time.Now()
-			res, err := scl.LookupByName("testSec--", model.GET_GREATER, n) //  250GB/32KB = 7812500
+			res, err := scl.LookupByName("testSec--"+randDigit(5), model.GET_GREATER, n) //  250GB/32KB = 7812500
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -46,7 +60,7 @@ func ssMain(scl ssclient.SSClient) {
 
 		lookupWithGetObject := func(n int32) {
 			s3start := time.Now()
-			res, err := scl.LookupByName("testSec--", model.GET_GREATER, n)
+			res, err := scl.LookupByName("testSec--"+randDigit(5), model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -70,7 +84,7 @@ func ssMain(scl ssclient.SSClient) {
 
 		lookupWithGetMany := func(n int32) {
 			start := time.Now()
-			res, err := scl.LookupByName("testSec--", model.GET_GREATER, n)
+			res, err := scl.LookupByName("testSec--"+randDigit(5), model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
