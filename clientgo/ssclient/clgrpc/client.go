@@ -206,3 +206,17 @@ func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, e
 	}()
 	return ch, nil
 }
+
+func (s *SSClient) GetObjectExt(sname string) (*model.ObjectExt, error) {
+	ctx := context.Background()
+	resp, err := s.client.GetObjectExt(ctx, &pb.CmdGetByNameExt{
+		SecurityName: sname,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp.GetMsgOnSuccess().GetMetadata()
+	return &model.ObjectExt{
+		Mem: resp.GetMsgOnSuccess().GetMem(),
+	}, nil
+}

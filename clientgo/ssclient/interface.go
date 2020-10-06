@@ -22,6 +22,7 @@ type SSClient interface {
 	LookupByName(prefix string, cmpType model.CmpType, nr int32) (<-chan string, error)
 	LookupByType(prefix string, stype uint32, cmpType model.CmpType, nr int32) (<-chan string, error)
 	GetObject(sname string) (*model.Object, error)
+	GetObjectExt(sname string) (*model.ObjectExt, error)
 	GetObjectMany(snames []string) (<-chan *model.Object, error)
 	GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, error)
 }
