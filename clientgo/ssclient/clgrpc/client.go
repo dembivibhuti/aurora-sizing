@@ -19,7 +19,7 @@ type SSClient struct {
 }
 
 func timeTaken(msg string, t time.Time) {
-	fmt.Println(msg, " : ", time.Since(t))
+	//fmt.Println(msg, " : ", time.Since(t))
 }
 
 func mustGetConn(addr string) *grpc.ClientConn {
