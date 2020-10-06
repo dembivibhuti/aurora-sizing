@@ -20,7 +20,7 @@ export GOCACHE=/home/ec2-user/gocache
 make clean
 make
 
-./testclient
+./testclient -sa 172.31.222.242:8080
 
 echo "Run Complete"
 

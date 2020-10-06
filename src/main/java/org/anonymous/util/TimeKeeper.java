@@ -52,7 +52,7 @@ public class TimeKeeper {
     public void condense() {
         Duration span;
         Duration totalDuration = Duration.ZERO;
-        int spanCount = 0;
+        int spanCount = 1;
         while ((span = durations.poll()) != null && spanCount <= MAX_SPANS_FOR_CONDENSE) {
             totalDuration = totalDuration.plus(span);
 
