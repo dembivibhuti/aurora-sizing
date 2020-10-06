@@ -23,11 +23,11 @@ public class Statistics {
     public static void log(
             TimeKeeper timekeeper) {
         if(timekeeper.opsCount() > 0 ) {
-            LOGGER.info("Average Time Per '" + timekeeper.getOp() + "' = " + timekeeper.avg().getSeconds());
-            LOGGER.info("Peak Time Per '" + timekeeper.getOp() + "' = " + timekeeper.peak().getSeconds());
-            LOGGER.info("Floor Time Per '" + timekeeper.getOp() + "' = " + timekeeper.floor().getSeconds());
+            LOGGER.info("Average Time Per '" + timekeeper.getOp() + "' = " + timekeeper.avg().getNano());
+            LOGGER.info("Peak Time Per '" + timekeeper.getOp() + "' = " + timekeeper.peak().getNano());
+            LOGGER.info("Floor Time Per '" + timekeeper.getOp() + "' = " + timekeeper.floor().getNano());
             LOGGER.info("Total Time Spent for " + timekeeper.opsCount() + " '" + timekeeper.getOp() + "'(s) = "
-                    + timekeeper.lifetime().getSeconds());
+                    + timekeeper.lifetime().getNano());
             LOGGER.info("====================================================================");
         }
     }

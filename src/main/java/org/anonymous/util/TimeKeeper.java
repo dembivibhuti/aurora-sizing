@@ -19,6 +19,7 @@ public class TimeKeeper {
     private Duration avgDuration = Duration.ZERO;
     private int opsCount = 0;
 
+
     private Duration peak = Duration.ZERO;
     private Duration floor = ChronoUnit.FOREVER.getDuration();
 
