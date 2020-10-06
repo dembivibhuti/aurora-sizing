@@ -13,7 +13,7 @@ public class TimeKeeper {
 
     public static final int MAX_SPANS_FOR_CONDENSE = 30;
     private final String op;
-    private Instant creationTime = Instant.now();
+    private Instant resetTime = Instant.now();
 
     private AtomicLong clicks = new AtomicLong(0);
     private Duration avgDuration = Duration.ZERO;
@@ -69,10 +69,9 @@ public class TimeKeeper {
         }
         if (spanCount > 0) {
             avgDuration = totalDuration.dividedBy(spanCount);
-        } else {
-            avgDuration = Duration.ZERO;
+            opsCount = spanCount;
+            resetTime = Instant.now();
         }
-        opsCount = spanCount;
     }
 
     public Duration peak() {
@@ -92,7 +91,7 @@ public class TimeKeeper {
     }
 
     public Duration lifetime() {
-        return Duration.between(creationTime, Instant.now());
+        return Duration.between(resetTime, Instant.now());
     }
 
     public static String humanReadableFormat(Duration duration) {
