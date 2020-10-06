@@ -23,14 +23,14 @@ public class Client {
         connect(stub);
         stub.withWaitForReady();
         // Lookup calls
-//        lookupByName(stub);
-//        stub.withWaitForReady();
-//        lookupByType(stub);
-//        stub.withWaitForReady();
-//        lookupByNameStream(stub);
-//        stub.withWaitForReady();
-//        lookupByTypeStream(stub);
-//        stub.withWaitForReady();
+        lookupByName(stub);
+        stub.withWaitForReady();
+        lookupByType(stub);
+        stub.withWaitForReady();
+        lookupByNameStream(stub);
+        stub.withWaitForReady();
+        lookupByTypeStream(stub);
+        stub.withWaitForReady();
 
         // Get Object Many Calls
         getObjectManyByName(stub);
@@ -40,12 +40,12 @@ public class Client {
         getObjectManyByNameExt(stub);
         stub.withWaitForReady();
         getObjectManyByNameExtStream(stub);
-//        stub.withWaitForReady();
-//
-//        // Get Object By Name Calls
-//        getObjectByName(stub);
-//        stub.withWaitForReady();
-//        getObjectByNameExt(stub);
+        stub.withWaitForReady();
+
+        // Get Object By Name Calls
+        getObjectByName(stub);
+        stub.withWaitForReady();
+        getObjectByNameExt(stub);
 
         channel.shutdown();
     }
