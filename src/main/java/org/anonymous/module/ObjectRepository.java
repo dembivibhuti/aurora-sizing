@@ -234,7 +234,12 @@ public class ObjectRepository implements AutoCloseable {
 
             long spanId = lookupTimeKeeper.start();
             lookupStmt.setString(1, name);
-            lookupStmt.setInt(2, limit);
+            if( 0 < limit ){
+                lookupStmt.setInt(2, limit);
+            } else {
+                lookupStmt.setString(2,"ALL");
+            }
+
             ResultSet rs = lookupStmt.executeQuery();
 
             while (rs.next()) {

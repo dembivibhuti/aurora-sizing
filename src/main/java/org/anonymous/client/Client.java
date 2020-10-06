@@ -27,7 +27,9 @@ public class Client {
         stub.withWaitForReady();
         lookupByType(stub);
         stub.withWaitForReady();
-        lookupByNameStream(stub);
+        lookupByNameStream(stub, 10000);
+        stub.withWaitForReady();
+        lookupByNameStreamAll(stub);
         stub.withWaitForReady();
         lookupByTypeStream(stub);
         stub.withWaitForReady();
@@ -60,8 +62,8 @@ public class Client {
         System.out.println("Response received from lookupByName:\n" + response);
     }
 
-    private static void lookupByNameStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdLookupByName request = CmdLookupByName.newBuilder().setCount(1000000).setMessageType(CmdType.CMD_NAME_LOOKUP).setGetType(GetType.METADATA_GET_GREATER).setSecurityNamePrefix("test").build();
+    private static void lookupByNameStream(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {
+        CmdLookupByName request = CmdLookupByName.newBuilder().setCount(count).setMessageType(CmdType.CMD_NAME_LOOKUP).setGetType(GetType.METADATA_GET_GREATER).setSecurityNamePrefix("test").build();
         Iterator<CmdLookupByNameResponseStream> it;
         try {
             it = stub.lookupByNameStream(request);
@@ -73,6 +75,23 @@ public class Client {
             }
         } catch (Exception e) {
             LOGGER.info("Caught exception in Streaming Server-side Lookup by name stream", e);
+        }
+    }
+
+
+    private static void lookupByNameStreamAll(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdLookupByName request = CmdLookupByName.newBuilder().setCount(0).setMessageType(CmdType.CMD_NAME_LOOKUP).setGetType(GetType.METADATA_GET_GREATER).setSecurityNamePrefix("test").build();
+        Iterator<CmdLookupByNameResponseStream> it;
+        try {
+            it = stub.lookupByNameStream(request);
+            System.out.println("Response received from lookupByNameStreamALL:");
+            while (it.hasNext()) {
+                CmdLookupByNameResponseStream response = it.next();
+                String objname = response.getSecurityName();
+                System.out.println(objname);
+            }
+        } catch (Exception e) {
+            LOGGER.info("Caught exception in Streaming Server-side Lookup by name stream ALL", e);
         }
     }
 
