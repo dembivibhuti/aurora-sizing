@@ -27,4 +27,16 @@ mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
 -Dport=8080 \
 -Dexec.mainClass="org.anonymous.server.GrpcServer"
 
+java \
+-DmaximumPoolSize=5000 \
+-DdataSource.user=postgres \
+-DdataSource.password=postgres \
+-DdataSource.databaseName=postgres \
+-DdataSource.currentSchema=public \
+-DdataSource.portNumber=5432 \
+-DdataSource.roserverName=database-1.cluster-ro-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
+-DdataSource.rwserverName=database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
+-Dport=8080 \
+-jar /home/ec2-user/environment/aurora-sizing/target/aurora-sizing-1.0-SNAPSHOT.jar
+
 
