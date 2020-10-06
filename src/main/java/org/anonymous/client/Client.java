@@ -23,14 +23,14 @@ public class Client {
         connect(stub);
         stub.withWaitForReady();
         // Lookup calls
-        lookupByName(stub);
-        stub.withWaitForReady();
-        lookupByType(stub);
-        stub.withWaitForReady();
-        lookupByNameStream(stub);
-        stub.withWaitForReady();
-        lookupByTypeStream(stub);
-        stub.withWaitForReady();
+//        lookupByName(stub);
+//        stub.withWaitForReady();
+//        lookupByType(stub);
+//        stub.withWaitForReady();
+//        lookupByNameStream(stub);
+//        stub.withWaitForReady();
+//        lookupByTypeStream(stub);
+//        stub.withWaitForReady();
 
         // Get Object Many Calls
         getObjectManyByName(stub);
@@ -40,12 +40,12 @@ public class Client {
         getObjectManyByNameExt(stub);
         stub.withWaitForReady();
         getObjectManyByNameExtStream(stub);
-        stub.withWaitForReady();
-
-        // Get Object By Name Calls
-        getObjectByName(stub);
-        stub.withWaitForReady();
-        getObjectByNameExt(stub);
+//        stub.withWaitForReady();
+//
+//        // Get Object By Name Calls
+//        getObjectByName(stub);
+//        stub.withWaitForReady();
+//        getObjectByNameExt(stub);
 
         channel.shutdown();
     }
@@ -134,11 +134,11 @@ public class Client {
     }
 
     private static void getObjectByNameExt(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdGetByNameExtResponse response = stub.getObjectExt(CmdGetByNameExt.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-10-0").build());
+        CmdGetByNameExtResponse response = stub.getObjectExt(CmdGetByNameExt.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-0").build());
         System.out.println("Response received from getObjectByNameExt: \n" + response);
     }
     private static void getObjectByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdGetByNameResponse response = stub.getObject(CmdGetByName.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-10-0").build());
+        CmdGetByNameResponse response = stub.getObject(CmdGetByName.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-0").build());
         System.out.println("Response received from getObjectByName: \n" + response);
     }
 }

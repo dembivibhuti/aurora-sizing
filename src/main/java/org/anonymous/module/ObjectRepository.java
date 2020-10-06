@@ -107,7 +107,7 @@ public class ObjectRepository implements AutoCloseable {
             for (int i = 0; i < numberOfRecsPerThread; i++) {
 
                 int randTypeId = randIntStream.next();
-                String name = String.format("testSec-%d-%d", randIntStream.next(), i);
+                String name = "testSec-" + i;
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
@@ -542,8 +542,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public List<ByteString> getManyMemByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
         List<ByteString> secMem = new ArrayList<>();
-        String sql = String.format(
-                "select mem from objects where name in (%s)",
+        String sql = String.format(GET_MANY_MEM_RECORDS,
                 String.join(",", Collections.nCopies(securityNameList.size(), "?")));
 
         try (Connection connection = roConnectionProvider.getConnection();
@@ -566,8 +565,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public List<CmdGetManyByNameExtResponse.ResponseMessage> getManySDBByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
         List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessages = new ArrayList<>();
-        String sql = String.format(
-                "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, sdbDiskMem from objects where name in (%s)",
+        String sql = String.format(GET_MANY_RECORDS,
                 String.join(",", Collections.nCopies(securityNameList.size(), "?")));
 
         try (Connection connection = roConnectionProvider.getConnection();
@@ -608,8 +606,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public List<CmdGetManyByNameExtResponseStream> getManySDBByNameStream(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
         List<CmdGetManyByNameExtResponseStream> responseMessages = new ArrayList<>();
-        String sql = String.format(
-                "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, sdbDiskMem from objects where name in (%s)",
+        String sql = String.format(GET_MANY_RECORDS,
                 String.join(",", Collections.nCopies(securityNameList.size(), "?")));
 
         try (Connection connection = roConnectionProvider.getConnection();

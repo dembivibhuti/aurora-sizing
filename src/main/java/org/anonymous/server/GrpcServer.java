@@ -23,7 +23,7 @@ public class GrpcServer {
             if ( isInMemDB()) {
                 objectRepositiory.runDDL(false);
                 TimeKeeper timekeeper = new TimeKeeper();
-                objectRepositiory.load(6, 6, timekeeper).join();
+                objectRepositiory.load(6, 1, timekeeper).join();
             }
 
             int port = Integer.parseInt(System.getProperty("port"));

@@ -30,7 +30,7 @@ public class Store {
 
     public static final String GET_MANY_SDB_RECORDS = "select sdbDiskMem from objects where name in (%s)";
 
-    public static final String GET_MANY_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where name in (%s)";
+    public static final String GET_MANY_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, sdbDiskMem from objects where name in (%s)";
 
     public static final String GET_ALL_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, sdbDiskMem from objects where name = ?";
 
