@@ -11,11 +11,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TimeKeeper {
 
+    public static final int MAX_SPANS_FOR_CONDENSE = 30;
     private final String op;
     private Instant creationTime = Instant.now();
 
     private AtomicLong clicks = new AtomicLong(0);
-    private Duration totalDuration = Duration.ZERO;
+    private Duration avgDuration = Duration.ZERO;
+    private int opsCount = 0;
 
     private Duration peak = Duration.ZERO;
     private Duration floor = ChronoUnit.FOREVER.getDuration();
@@ -47,9 +49,11 @@ public class TimeKeeper {
         return span;
     }
 
-    private void condense() {
+    public void condense() {
         Duration span;
-        while ((span = durations.poll()) != null) {
+        Duration totalDuration = Duration.ZERO;
+        int spanCount = 0;
+        while ((span = durations.poll()) != null && spanCount <= MAX_SPANS_FOR_CONDENSE) {
             totalDuration = totalDuration.plus(span);
 
             if (span.compareTo(peak) > 0) {
@@ -59,26 +63,27 @@ public class TimeKeeper {
             if (span.compareTo(floor) < 0) {
                 floor = span;
             }
+
+            spanCount++;
         }
+        avgDuration = totalDuration.dividedBy(spanCount);
+        opsCount = spanCount;
     }
 
     public Duration peak() {
-        condense();
         return peak;
     }
 
     public Duration floor() {
-        condense();
         return floor;
     }
 
     public Duration avg() {
-        condense();
-        return totalDuration.dividedBy(clicks.get());
+        return avgDuration;
     }
 
-    public long ops() {
-        return clicks.get();
+    public long opsCount() {
+        return opsCount;
     }
 
     public Duration lifetime() {
