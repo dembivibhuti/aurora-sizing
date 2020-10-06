@@ -542,8 +542,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public List<ByteString> getManyMemByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
         List<ByteString> secMem = new ArrayList<>();
-        String sql = String.format(GET_MANY_MEM_RECORDS,
-                String.join(",", Collections.nCopies(securityNameList.size(), "?")));
+        String sql = String.format(GET_MANY_MEM_RECORDS, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
 
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
@@ -565,8 +564,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public List<CmdGetManyByNameExtResponse.ResponseMessage> getManySDBByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
         List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessages = new ArrayList<>();
-        String sql = String.format(GET_MANY_RECORDS,
-                String.join(",", Collections.nCopies(securityNameList.size(), "?")));
+        String sql = String.format(GET_MANY_RECORDS, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
 
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
@@ -606,8 +604,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public List<CmdGetManyByNameExtResponseStream> getManySDBByNameStream(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
         List<CmdGetManyByNameExtResponseStream> responseMessages = new ArrayList<>();
-        String sql = String.format(GET_MANY_RECORDS,
-                String.join(",", Collections.nCopies(securityNameList.size(), "?")));
+        String sql = String.format(GET_MANY_RECORDS, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
 
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
