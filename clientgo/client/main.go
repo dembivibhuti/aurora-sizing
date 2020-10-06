@@ -22,18 +22,18 @@ func main() {
 	ssMain(sscl)
 }
 
-func runNTimes(n int, fn func()) {
+func runNTimesWithArg(n int, fn func(n int32), arg int32) {
 	for i := 0; i < n; i++ {
-		fn()
+		fn(arg)
 	}
 }
 
 func ssMain(scl ssclient.SSClient) {
 	scl.UseService("tdmsqa_nyc_bm_lta3", func() {
-		// scenario 1 : LookupByName : 100
-		scenario1 := func() {
+
+		lookupOnly := func(n int32) {
 			start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 100) //  250GB/32KB = 7812500
+			res, err := scl.LookupByName("testSec--", model.GET_GREATER, n) //  250GB/32KB = 7812500
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -41,27 +41,12 @@ func ssMain(scl ssclient.SSClient) {
 			for k := range res {
 				secnames = append(secnames, k)
 			}
-			fmt.Println("LookupByName/100: ", time.Since(start))
+			fmt.Printf("LookupByName/%d: %s\n", len(secnames), time.Since(start))
 		}
 
-		// scenario 2: LookupByName: 0 // no limit
-		scenario2 := func() {
-			start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 0)
-			if err != nil {
-				log.Fatal(err)
-			}
-			secnames := []string{}
-			for k := range res {
-				secnames = append(secnames, k)
-			}
-			fmt.Println("LookupByName/0: ", time.Since(start))
-		}
-
-		// scnario 3: LookupByName: 100 -> GetObject
-		scenario3 := func() {
+		lookupWithGetObject := func(n int32) {
 			s3start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 100)
+			res, err := scl.LookupByName("testSec--", model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -76,16 +61,16 @@ func ssMain(scl ssclient.SSClient) {
 				timesPerGet = append(timesPerGet, elapsed)
 				_ = resp
 			}
-			fmt.Println("LookupByName/100->GetObj: ", time.Since(s3start))
+			s3elapsed := time.Since(s3start)
 			sort.Slice(timesPerGet, func(i, j int) bool {
 				return timesPerGet[i].Nanoseconds() < timesPerGet[j].Nanoseconds()
 			})
-			fmt.Printf("LookupByName/100->GetObj->Ind --- Min: %s, Max: %s, Median: %s\n", timesPerGet[0].String(), timesPerGet[len(timesPerGet)-1].String(), timesPerGet[len(timesPerGet)/2])
+			fmt.Printf("LookupByName/%d->GetObj->Individual --- [Total: %s] Min: %s, Max: %s, Median: %s\n", len(timesPerGet), s3elapsed.String(), timesPerGet[0].String(), timesPerGet[len(timesPerGet)-1].String(), timesPerGet[len(timesPerGet)/2])
 		}
 
-		scenario4 := func() {
+		lookupWithGetMany := func(n int32) {
 			start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 100)
+			res, err := scl.LookupByName("testSec--", model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -100,13 +85,14 @@ func ssMain(scl ssclient.SSClient) {
 			for obj := range resp {
 				_ = obj
 			}
-			fmt.Println("LookupByName/100->GetObjectManyExt: ", time.Since(start))
+			fmt.Printf("LookupByName/%d->GetObjectManyExt: %s\n", len(secnames), time.Since(start).String())
 		}
 
-		runNTimes(3, scenario1)
-		runNTimes(3, scenario2)
-		runNTimes(3, scenario3)
-		runNTimes(10, scenario4)
-
+		increments := []int32{1, 10, 100, 1_000, 10_000, 100_000, 1_000_000} // go can have numebers 100 -> 1_0_0
+		for _, i := range increments {
+			runNTimesWithArg(3, lookupOnly, i)
+			runNTimesWithArg(3, lookupWithGetObject, i)
+			runNTimesWithArg(3, lookupWithGetMany, i)
+		}
 	})
 }
