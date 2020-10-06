@@ -52,7 +52,8 @@ public class TimeKeeper {
     public void condense() {
         Duration span;
         Duration totalDuration = Duration.ZERO;
-        int spanCount = 1;
+        int spanCount = 0;
+
         while ((span = durations.poll()) != null && spanCount <= MAX_SPANS_FOR_CONDENSE) {
             totalDuration = totalDuration.plus(span);
 
@@ -66,7 +67,11 @@ public class TimeKeeper {
 
             spanCount++;
         }
-        avgDuration = totalDuration.dividedBy(spanCount);
+        if (spanCount > 0) {
+            avgDuration = totalDuration.dividedBy(spanCount);
+        } else {
+            avgDuration = Duration.ZERO;
+        }
         opsCount = spanCount;
     }
 
