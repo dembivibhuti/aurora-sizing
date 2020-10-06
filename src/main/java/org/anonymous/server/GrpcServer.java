@@ -12,7 +12,7 @@ import static org.anonymous.connection.ConnectionProvider.isInMemDB;
 
 public class GrpcServer {
 
-    private static Logger LOGGER= LoggerFactory.getLogger(GrpcServer.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(GrpcServer.class);
 
     public static void main(String[] args) {
         try (ConnectionProvider.Holder holder = ConnectionProvider.create()) {
