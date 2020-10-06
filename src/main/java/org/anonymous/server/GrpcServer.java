@@ -19,7 +19,6 @@ public class GrpcServer {
 
             ObjectRepository objectRepositiory = new ObjectRepository(holder.roConnectionProvider, holder.rwConnectionProvider);
 
-
             if ( isInMemDB()) {
                 objectRepositiory.runDDL(false);
                 TimeKeeper timekeeper = new TimeKeeper();
