@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import java.util.concurrent.CompletableFuture;
 import java.util.List;
 
+import static org.anonymous.stats.Statistics.log;
+
 public class LoadObjectsDataAndLookup {
 
     private ConnectionProvider roConnectionProvider;
@@ -24,51 +26,44 @@ public class LoadObjectsDataAndLookup {
     }
 
     public void loadObjectsAndLookup(int numberOfSec, int numberOfLookupOps, int lookupLimit) throws Exception {
-        TimeKeeper timekeeper = new TimeKeeper();
+        TimeKeeper timekeeper = new TimeKeeper("insert");
         objectRepositiory.load(numberOfSec, 10, timekeeper).join();
-        log("insert", timekeeper);
+        log(timekeeper);
 
-        timekeeper = new TimeKeeper();
+        timekeeper = new TimeKeeper("countRecs");
         long count = objectRepositiory.countRecs(timekeeper).get();
         System.out.println("no. of sec. records = " + count);
-        log("countRecs", timekeeper);
+        log(timekeeper);
 
-        timekeeper = new TimeKeeper();
+        timekeeper = new TimeKeeper("lookup/single-thread");
         List<String> secKeys = objectRepositiory.randomLookUpByPrefix(numberOfLookupOps, lookupLimit, timekeeper).get();
         System.out.println("no. of sec. matched = " + secKeys.size());
-        log("lookup/single-thread", timekeeper);
+        log(timekeeper);
 
-        timekeeper = new TimeKeeper();
+        timekeeper = new TimeKeeper("lookup/multi-thread");
         secKeys = objectRepositiory.randomLookUpByPrefixMultiThread(numberOfLookupOps, lookupLimit, timekeeper)
                 .map(CompletableFuture::join).flatMap(list -> list.stream()).collect(Collectors.toList());
         System.out.println("no. of sec. matched = " + secKeys.size());
-        log("lookup/multi-thread", timekeeper);
+        log(timekeeper);
 
-        timekeeper = new TimeKeeper();
+        timekeeper = new TimeKeeper("getSDBByKeys");
         objectRepositiory.getSDBByKey(secKeys.get(0), timekeeper).join();
-        log("getSDBByKeys", timekeeper);
+        log(timekeeper);
 
-        timekeeper = new TimeKeeper();
+        timekeeper = new TimeKeeper("getManySDBByKeys");
         objectRepositiory.getManySDBByKeys(secKeys, timekeeper).join();
-        log("getManySDBByKeys", timekeeper);
+        log(timekeeper);
 
-        timekeeper = new TimeKeeper();
+        timekeeper = new TimeKeeper("getSDBMemByKey");
         objectRepositiory.getSDBMemByKey(secKeys.get(0), timekeeper).join();
-        log("getSDBMemByKey", timekeeper);
+        log(timekeeper);
 
-        timekeeper = new TimeKeeper();
+        timekeeper = new TimeKeeper("getSDBMemsByKeys");
         objectRepositiory.getSDBMemsByKeys(secKeys, timekeeper).join();
-        log("getSDBMemsByKeys", timekeeper);
+        log(timekeeper);
     }
 
-    private void log(String op, TimeKeeper timekeeper) {
-        System.out.println("Average Time Per '" + op + "' = " + TimeKeeper.humanReadableFormat(timekeeper.avg()));
-        System.out.println("Peak Time Per '" + op + "' = " + TimeKeeper.humanReadableFormat(timekeeper.peak()));
-        System.out.println("Floor Time Per '" + op + "' = " + TimeKeeper.humanReadableFormat(timekeeper.floor()));
-        System.out.println("Total Time Spent for " + timekeeper.ops() + " '" + op + "'(s) = "
-                + TimeKeeper.humanReadableFormat(timekeeper.lifetime()));
-        System.out.println("====================================================================");
-    }
+
 
     private void randomLookUpByPrefix() {
 

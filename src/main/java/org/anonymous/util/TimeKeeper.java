@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TimeKeeper {
 
+    private final String op;
     private Instant creationTime = Instant.now();
 
     private AtomicLong clicks = new AtomicLong(0);
@@ -21,6 +22,10 @@ public class TimeKeeper {
 
     private Map<Long, Instant> starts = new ConcurrentHashMap<>();
     private Queue<Duration> durations = new ConcurrentLinkedDeque<>();
+
+    public TimeKeeper(String op) {
+        this.op = op;
+    }
 
     public long start() {
         Instant now = Instant.now();
@@ -82,5 +87,9 @@ public class TimeKeeper {
 
     public static String humanReadableFormat(Duration duration) {
         return duration.toString().substring(2).replaceAll("(\\d[HMS])(?!$)", "$1 ").toLowerCase();
+    }
+
+    public String getOp() {
+        return op;
     }
 }
