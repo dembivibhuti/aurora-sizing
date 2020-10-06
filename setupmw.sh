@@ -18,8 +18,8 @@ mvn clean formatter:format compile package
 
 java \
 -server \
--Xms128m \
--Xmx1024m \
+-Xms8g \
+-Xmx8g \
 -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
 -DmaximumPoolSize=2000 \
 -DdataSource.user=postgres \
