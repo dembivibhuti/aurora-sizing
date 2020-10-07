@@ -74,6 +74,7 @@ public class ConnectionProvider implements AutoCloseable {
     private static Properties getRWProperties() {
         Properties rwprops = new Properties();
         rwprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
+        rwprops.setProperty("maximumPoolSize", System.getProperty("maximumPoolSize"));
         rwprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
         if (System.getProperty("dataSource.password") == null) {
             rwprops.setProperty("dataSource.password",

@@ -7,14 +7,14 @@ import org.anonymous.util.TimeKeeper;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class SecurityLoad {
+public class ObjectLoad {
     private final static ConnectionProvider.Holder holder = ConnectionProvider.create();
 
     public static void main(String[] args) throws Exception {
 
         try {
             ObjectRepository objectRepository = new ObjectRepository(holder.roConnectionProvider, holder.rwConnectionProvider);
-            TimeKeeper timekeeper = new TimeKeeper();
+            TimeKeeper timekeeper = new TimeKeeper("load");
             objectRepository.load(7812500, 6, timekeeper).join();
         } catch (Exception ex) {
             ex.printStackTrace();

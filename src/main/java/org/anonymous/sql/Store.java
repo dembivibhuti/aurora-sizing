@@ -10,13 +10,14 @@ public class Store {
             + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL, \n"
             + "Primary Key ( name ) )";
 
-    public static final String CREATE_RECORD_INDEX_BY_TYPEID_NAME = "create unique index object_typeid_name on objects(typeId, name)";
+    public static final String CREATE_RECORD_INDEX_BY_TYPEID_NAME = "create index object_typeid_name on objects(typeId, lower(name))";
+    public static final String CREATE_RECORD_INDEX_BY_LOWER_NAME = "create index object_lower_name on objects(lower(name))";
 
     public static final String INSERT_RECORDS = "insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     public static final String LOOKUP_OBJECTS = "select name from objects where lower(name) %s ? order by name %s LIMIT ?";
 
-    public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where lower(name) %s ? and typeId = ? order by name %s LIMIT ?";
+    public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where typeId = ? and lower(name) %s ? order by name %s LIMIT ?";
 
     public static final String GET_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where name = ?";
 

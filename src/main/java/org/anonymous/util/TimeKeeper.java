@@ -11,16 +11,24 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TimeKeeper {
 
-    private Instant creationTime = Instant.now();
+    public static final int MAX_SPANS_FOR_CONDENSE = 30;
+    private final String op;
+    private Instant resetTime = Instant.now();
 
     private AtomicLong clicks = new AtomicLong(0);
-    private Duration totalDuration = Duration.ZERO;
+    private Duration avgDuration = Duration.ZERO;
+    private int opsCount = 0;
+
 
     private Duration peak = Duration.ZERO;
     private Duration floor = ChronoUnit.FOREVER.getDuration();
 
     private Map<Long, Instant> starts = new ConcurrentHashMap<>();
     private Queue<Duration> durations = new ConcurrentLinkedDeque<>();
+
+    public TimeKeeper(String op) {
+        this.op = op;
+    }
 
     public long start() {
         Instant now = Instant.now();
@@ -42,9 +50,12 @@ public class TimeKeeper {
         return span;
     }
 
-    private void condense() {
+    public void condense() {
         Duration span;
-        while ((span = durations.poll()) != null) {
+        Duration totalDuration = Duration.ZERO;
+        int spanCount = 0;
+
+        while ((span = durations.poll()) != null && spanCount <= MAX_SPANS_FOR_CONDENSE) {
             totalDuration = totalDuration.plus(span);
 
             if (span.compareTo(peak) > 0) {
@@ -54,33 +65,41 @@ public class TimeKeeper {
             if (span.compareTo(floor) < 0) {
                 floor = span;
             }
+
+            spanCount++;
+        }
+        if (spanCount > 0) {
+            avgDuration = totalDuration.dividedBy(spanCount);
+            opsCount = spanCount;
+            resetTime = Instant.now();
         }
     }
 
     public Duration peak() {
-        condense();
         return peak;
     }
 
     public Duration floor() {
-        condense();
         return floor;
     }
 
     public Duration avg() {
-        condense();
-        return totalDuration.dividedBy(clicks.get());
+        return avgDuration;
     }
 
-    public long ops() {
-        return clicks.get();
+    public long opsCount() {
+        return opsCount;
     }
 
     public Duration lifetime() {
-        return Duration.between(creationTime, Instant.now());
+        return Duration.between(resetTime, Instant.now());
     }
 
     public static String humanReadableFormat(Duration duration) {
         return duration.toString().substring(2).replaceAll("(\\d[HMS])(?!$)", "$1 ").toLowerCase();
+    }
+
+    public String getOp() {
+        return op;
     }
 }

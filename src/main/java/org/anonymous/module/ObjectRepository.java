@@ -57,6 +57,12 @@ public class ObjectRepository implements AutoCloseable {
             connection.prepareStatement(CREATE_RECORD_INDEX_BY_TYPEID_NAME)
                     .executeUpdate();
             LOGGER.info(" created index by typeId and name ");
+
+            connection.prepareStatement(CREATE_RECORD_INDEX_BY_LOWER_NAME)
+                    .executeUpdate();
+            LOGGER.info(" created index by name ");
+
+
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -226,35 +232,38 @@ public class ObjectRepository implements AutoCloseable {
         return pair;
     }
 
-    public List<String> lookup(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper){
+    public List<String> lookup(String name, int typeId, int limit){
         Pair<String,String> exp= expression(typeId);
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(String.format(LOOKUP_OBJECTS, exp.first, exp.second))) {
 
-            long spanId = lookupTimeKeeper.start();
-            lookupStmt.setString(1, name);
-            lookupStmt.setInt(2, limit);
+            lookupStmt.setString(1, name.toLowerCase());
+            if( 0 < limit ){
+                lookupStmt.setInt(2, limit);
+            } else {
+                lookupStmt.setString(2,"ALL");
+            }
+
             ResultSet rs = lookupStmt.executeQuery();
 
             while (rs.next()) {
                 secKeys.add(rs.getString(1));
             }
             rs.close();
-            lookupTimeKeeper.stop(spanId);
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return secKeys;
     }
 
-    public List<String> lookupById(String name, int typeId, int limit, TimeKeeper lookupTimeKeeper, int objectType){
+    public List<String> lookupById(String name, int typeId, int limit, int objectType){
         Pair<String,String> exp= expression(typeId);
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(String.format(LOOKUP_OBJECTS_BY_TYPEID, exp.first, exp.second))) {
 
-            long spanId = lookupTimeKeeper.start();
             lookupStmt.setString(1, name);
             lookupStmt.setInt(2, objectType);
             lookupStmt.setInt(3, limit);
@@ -264,7 +273,7 @@ public class ObjectRepository implements AutoCloseable {
                 secKeys.add(rs.getString(1));
             }
             rs.close();
-            lookupTimeKeeper.stop(spanId);
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -304,7 +313,7 @@ public class ObjectRepository implements AutoCloseable {
         });
         return completableFuture;
     }
-    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getSDBRecordsByKey(final String secKey, final TimeKeeper lookupTimeKeeper) {
+    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getSDBRecordsByKey(final String secKey) {
         CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement lookupStmt = connection.prepareStatement(
@@ -463,7 +472,7 @@ public class ObjectRepository implements AutoCloseable {
         return completableFuture;
     }
 
-    public Optional<byte[]> getMemByKeyInBytes(final String secKey, final TimeKeeper timeKeeper) {
+    public Optional<byte[]> getMemByKeyInBytes(final String secKey) {
         byte[] arrayContainsMem = null;
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(GET_MEM)) {
@@ -540,12 +549,12 @@ public class ObjectRepository implements AutoCloseable {
         return completableFuture;
     }
 
-    public List<ByteString> getManyMemByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
+    public List<ByteString> getManyMemByName(ProtocolStringList securityNameList) {
         List<ByteString> secMem = new ArrayList<>();
         String sql = String.format(GET_MANY_MEM_RECORDS, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
-            long spanId = getManyTimeKeeper.start();
+
             for (int i = 0; i < securityNameList.toArray().length; i++) {
                 getManyStmt.setString(i + 1, securityNameList.get(i));
             }
@@ -554,19 +563,18 @@ public class ObjectRepository implements AutoCloseable {
                 secMem.add(ByteString.copyFrom(rs.getBytes("mem")));
             }
             rs.close();
-            getManyTimeKeeper.stop(spanId);
+
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
         return secMem;
     }
 
-    public List<CmdGetManyByNameExtResponse.ResponseMessage> getManySDBByName(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
+    public List<CmdGetManyByNameExtResponse.ResponseMessage> getManySDBByName(ProtocolStringList securityNameList) {
         List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessages = new ArrayList<>();
         String sql = String.format(GET_MANY_RECORDS, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
-            long spanId = getManyTimeKeeper.start();
             for (int i = 0; i < securityNameList.toArray().length; i++) {
                 getManyStmt.setString(i + 1, securityNameList.get(i));
             }
@@ -593,19 +601,19 @@ public class ObjectRepository implements AutoCloseable {
                 }
             }
             rs.close();
-            getManyTimeKeeper.stop(spanId);
+
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
         return responseMessages;
     }
 
-    public List<CmdGetManyByNameExtResponseStream> getManySDBByNameStream(ProtocolStringList securityNameList, TimeKeeper getManyTimeKeeper) {
+    public List<CmdGetManyByNameExtResponseStream> getManySDBByNameStream(ProtocolStringList securityNameList) {
         List<CmdGetManyByNameExtResponseStream> responseMessages = new ArrayList<>();
         String sql = String.format(GET_MANY_RECORDS, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
-            long spanId = getManyTimeKeeper.start();
+
             for (int i = 0; i < securityNameList.toArray().length; i++) {
                 getManyStmt.setString(i + 1, securityNameList.get(i));
             }
@@ -632,7 +640,7 @@ public class ObjectRepository implements AutoCloseable {
                 }
             }
             rs.close();
-            getManyTimeKeeper.stop(spanId);
+
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
