@@ -63,27 +63,25 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     @Override
     public void lookupByNameStream(CmdLookupByName request, StreamObserver<CmdLookupByNameResponseStream> responseObserver) {
         LOGGER.info("got request lookupByNameStream()");
+        long start = System.currentTimeMillis();
         long span = Statistics.lookupByNameStream.start();
         try {
             int limit = request.getCount();
-            LOGGER.info("limit = " + limit);
             int typeid = request.getGetType().getNumber();
-            LOGGER.info("typeid = " + typeid);
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
             }
-            LOGGER.info("prefix = " + prefix);
             CmdLookupByNameResponseStream.Builder responseBuilder = CmdLookupByNameResponseStream.newBuilder();
             List<String> results = objectRepository.lookup(prefix,typeid, limit);
-            LOGGER.info("results = " + results);
             results.stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             responseObserver.onCompleted();
-            LOGGER.info("done");
+            LOGGER.info("elapsed time = " + (System.currentTimeMillis() - start ) / 1000 );
         } catch (Exception e) {
             LOGGER.info("Caught Exception in lookupByNameStream()", e);
         } finally {
             Statistics.lookupByNameStream.stop(span);
+
         }
     }
 
