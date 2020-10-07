@@ -79,7 +79,7 @@ func ssMain(scl ssclient.SSClient) {
 			sort.Slice(timesPerGet, func(i, j int) bool {
 				return timesPerGet[i].Nanoseconds() < timesPerGet[j].Nanoseconds()
 			})
-			fmt.Printf("LookupByName/%d->GetObj->Individual --- [Total: %s] Min: %s, Max: %s, Median: %s\n", len(timesPerGet), s3elapsed.String(), timesPerGet[0].String(), timesPerGet[len(timesPerGet)-1].String(), timesPerGet[len(timesPerGet)/2])
+			fmt.Printf("LookupByName/%d->GetObj->Individual --- [Total: %s] Min: %s, Max: %s, Med: %s, p99: %s\n", len(timesPerGet), s3elapsed.String(), timesPerGet[0].String(), timesPerGet[len(timesPerGet)-1].String(), timesPerGet[len(timesPerGet)/2], timesPerGet[(len(timesPerGet)*99)/100])
 		}
 
 		lookupWithGetMany := func(n int32) {
