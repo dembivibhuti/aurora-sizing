@@ -54,8 +54,6 @@ public class ObjectRepository implements AutoCloseable {
                 LOGGER.error("failed to drop table, will try creating it ", ex);
             }
 
-
-
             connection.prepareStatement(CREATE_TABLE).executeUpdate();
             LOGGER.info(" created objects table ");
             connection.commit();
