@@ -60,6 +60,10 @@ public class ObjectRepository implements AutoCloseable {
 
             connection.prepareStatement(CREATE_RECORD_INDEX_BY_LOWER_NAME)
                     .executeUpdate();
+            LOGGER.info(" created index by lower name ");
+
+            connection.prepareStatement(CREATE_RECORD_INDEX_BY_NAME)
+                    .executeUpdate();
             LOGGER.info(" created index by name ");
 
 

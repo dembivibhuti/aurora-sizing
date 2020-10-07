@@ -7,11 +7,11 @@ public class Store {
             + "typeId integer NOT NULL, \n" + "lastTransaction bigint NOT NULL, \n"
             + "timeUpdated timestamp NOT NULL, \n" + "updateCount bigint NOT NULL, \n"
             + "dateCreated integer NOT NULL, \n" + "dbIdUpdated integer NOT NULL, \n"
-            + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL, \n"
-            + "Primary Key ( name ) )";
+            + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL";
 
-    public static final String CREATE_RECORD_INDEX_BY_TYPEID_NAME = "create index object_typeid_name on objects(typeId, lower(name))";
-    public static final String CREATE_RECORD_INDEX_BY_LOWER_NAME = "create index object_lower_name on objects(lower(name))";
+    public static final String CREATE_RECORD_INDEX_BY_TYPEID_NAME = "create unique index object_typeid_name on objects(typeId, lower(name))";
+    public static final String CREATE_RECORD_INDEX_BY_LOWER_NAME = "create unique index object_lower_name on objects(lower(name))";
+    public static final String CREATE_RECORD_INDEX_BY_NAME = "create unique index object_name on objects(name)";
 
     public static final String INSERT_RECORDS = "insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
