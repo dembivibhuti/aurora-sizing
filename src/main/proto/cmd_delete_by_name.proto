@@ -1,0 +1,19 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+import "cmd_type.proto";
+import "metadata.proto";
+import "trans_msg_response.proto";
+
+message CmdDeleteData {
+	int32 msg_size = 1;
+	CmdType msg_type = 2;
+	Metadata metadata = 3;
+	int32 ignore_err_flag = 4;
+}
+
+message CmdDeleteDataResponse {
+	TransMsgResponse trans_msg_response = 1;
+}

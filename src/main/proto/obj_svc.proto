@@ -13,6 +13,8 @@ import "cmd_get_many_by_name.proto";
 import "cmd_get_many_by_name_ext.proto";
 import "cmd_change_init_data.proto";
 import "cmd_change_init_data_ext.proto";
+import "cmd_delete_by_name.proto";
+import "cmd_rename_by_name.proto";
 
 service ObjService {
 	rpc connect(CmdConnect) returns (CmdConnectResponse);
@@ -29,4 +31,6 @@ service ObjService {
 	rpc get_object_many_by_name_ext_stream(CmdGetManyByNameExt) returns (stream CmdGetManyByNameExtResponseStream);
 	rpc change_init_data(CmdChangeInitData) returns (CmdChangeInitDataResponse);
 	rpc change_init_data_ext(CmdChangeInitDataExt) returns (CmdChangeInitDataExtResponse);
+	rpc delete_data(CmdDeleteData) returns (CmdDeleteDataResponse);
+	rpc rename_data(CmdRenameData) returns (CmdRenameDataResponse);
 }
