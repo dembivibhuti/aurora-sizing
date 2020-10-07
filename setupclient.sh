@@ -12,6 +12,7 @@ sudo tar -C /usr/local -xzf go1.15.2.linux-amd64.tar.gz
 echo 'export PATH=$PATH:/usr/local/go/bin' > ~/.profile
 echo 'export PATH=$PATH:/usr/local/go/bin' > /home/ec2-user/.profile
 export PATH=$PATH:/usr/local/go/bin
+export GO111MODULE=on
 
 git clone https://github.com/somnath67643/aurora-sizing.git
 
