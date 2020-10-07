@@ -140,6 +140,7 @@ public class ObjectRepository implements AutoCloseable {
                 secInsertTimeKeeper.stop(spanId);
             }
             completableFuture.complete("");
+            LOGGER.info("Inserted another {} records", numberOfRecsPerThread);
 
         } catch (Exception ex) {
             ex.printStackTrace();
