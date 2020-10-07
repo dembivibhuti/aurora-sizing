@@ -35,13 +35,18 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     public void lookupByName(CmdLookupByName request, StreamObserver<CmdLookupByNameResponse> responseObserver) {
         LOGGER.info("got request lookupByName()");
         long span = Statistics.lookupByName.start();
+
         try {
             int limit = request.getCount();
+            LOGGER.info("limit = " + limit);
             int typeid = request.getGetType().getNumber();
+            LOGGER.info("typeid = " + typeid);
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
             }
+
+            LOGGER.info("prefix = " + prefix);
 
             CmdLookupByNameResponse.Builder responseBuilder = CmdLookupByNameResponse.newBuilder();
             objectRepository.lookup(prefix, typeid, limit).stream().forEach(key -> responseBuilder.addSecurityNames(key));
@@ -61,15 +66,20 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         long span = Statistics.lookupByNameStream.start();
         try {
             int limit = request.getCount();
+            LOGGER.info("limit = " + limit);
             int typeid = request.getGetType().getNumber();
+            LOGGER.info("typeid = " + typeid);
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
             }
+            LOGGER.info("prefix = " + prefix);
             CmdLookupByNameResponseStream.Builder responseBuilder = CmdLookupByNameResponseStream.newBuilder();
-            objectRepository.lookup(prefix,typeid, limit).stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
+            List<String> results = objectRepository.lookup(prefix,typeid, limit);
+            LOGGER.info("results = " + results);
+            results.stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             responseObserver.onCompleted();
-
+            LOGGER.info("done");
         } catch (Exception e) {
             LOGGER.info("Caught Exception in lookupByNameStream()", e);
         } finally {
