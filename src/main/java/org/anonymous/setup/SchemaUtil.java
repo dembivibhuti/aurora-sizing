@@ -11,7 +11,7 @@ public class SchemaUtil {
 
     private final static ConnectionProvider.Holder holder = ConnectionProvider.create();
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         try (Connection connection = holder.rwConnectionProvider.getConnection()) {
             connection
@@ -33,7 +33,7 @@ public class SchemaUtil {
         } catch (SQLException ex) {
             ex.printStackTrace();
         } finally {
-
+            holder.close();
         }
     }
 }
