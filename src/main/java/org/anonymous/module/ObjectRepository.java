@@ -273,7 +273,7 @@ public class ObjectRepository implements AutoCloseable {
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(String.format(LOOKUP_OBJECTS_BY_TYPEID, exp.first, exp.second))) {
 
-            lookupStmt.setString(1, name);
+            lookupStmt.setString(1, name.toLowerCase());
             lookupStmt.setInt(2, objectType);
             lookupStmt.setInt(3, limit);
             ResultSet rs = lookupStmt.executeQuery();
