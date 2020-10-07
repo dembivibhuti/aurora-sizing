@@ -73,7 +73,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
                 prefix = request.getSecurityNamePrefix();
             }
             CmdLookupByNameResponseStream.Builder responseBuilder = CmdLookupByNameResponseStream.newBuilder();
-            List<String> results = objectRepository.lookup(prefix,typeid, limit);
+            List<String> results = objectRepository.lookup(prefix, typeid, limit);
             results.stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             responseObserver.onCompleted();
             LOGGER.info("elapsed time = " + (System.currentTimeMillis() - start ) / 1000 );

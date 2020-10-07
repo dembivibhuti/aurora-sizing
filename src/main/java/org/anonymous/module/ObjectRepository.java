@@ -57,6 +57,12 @@ public class ObjectRepository implements AutoCloseable {
             connection.prepareStatement(CREATE_RECORD_INDEX_BY_TYPEID_NAME)
                     .executeUpdate();
             LOGGER.info(" created index by typeId and name ");
+
+            connection.prepareStatement(CREATE_RECORD_INDEX_BY_LOWER_NAME)
+                    .executeUpdate();
+            LOGGER.info(" created index by name ");
+
+
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -232,7 +238,7 @@ public class ObjectRepository implements AutoCloseable {
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(String.format(LOOKUP_OBJECTS, exp.first, exp.second))) {
 
-            lookupStmt.setString(1, name);
+            lookupStmt.setString(1, name.toLowerCase());
             if( 0 < limit ){
                 lookupStmt.setInt(2, limit);
             } else {
