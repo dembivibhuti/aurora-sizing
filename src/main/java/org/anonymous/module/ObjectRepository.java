@@ -44,6 +44,7 @@ public class ObjectRepository implements AutoCloseable {
         try (Connection connection = rwConnectionProvider.getConnection()) {
 
             if (dropAndCreate) {
+                System.out.println(" dropping objects ");
                 connection.prepareStatement(DROP_TABLE).executeUpdate();
                 connection.commit();
                 System.out.println(" dropped objects ");
