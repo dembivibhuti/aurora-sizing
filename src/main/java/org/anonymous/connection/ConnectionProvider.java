@@ -15,6 +15,7 @@ public class ConnectionProvider implements AutoCloseable {
 
     public ConnectionProvider(Properties ps) {
         HikariConfig config = new HikariConfig(ps);
+        config.setMaximumPoolSize(2000);
         ds = new HikariDataSource(config);
     }
 
