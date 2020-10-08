@@ -28,10 +28,6 @@ func NewObjectServiceClient(cc grpc.ClientConnInterface) ObjectServiceClient {
 	return &objectServiceClient{cc}
 }
 
-var objectServiceExistsStreamDesc = &grpc.StreamDesc{
-	StreamName: "exists",
-}
-
 func (c *objectServiceClient) Exists(ctx context.Context, in *ObjectRequest, opts ...grpc.CallOption) (*ObjectResponse, error) {
 	out := new(ObjectResponse)
 	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjectService/exists", in, out, opts...)
@@ -41,51 +37,61 @@ func (c *objectServiceClient) Exists(ctx context.Context, in *ObjectRequest, opt
 	return out, nil
 }
 
-// ObjectServiceService is the service API for ObjectService service.
-// Fields should be assigned to their respective handler implementations only before
-// RegisterObjectServiceService is called.  Any unassigned fields will result in the
-// handler for that method returning an Unimplemented error.
-type ObjectServiceService struct {
-	Exists func(context.Context, *ObjectRequest) (*ObjectResponse, error)
+// ObjectServiceServer is the server API for ObjectService service.
+// All implementations must embed UnimplementedObjectServiceServer
+// for forward compatibility
+type ObjectServiceServer interface {
+	Exists(context.Context, *ObjectRequest) (*ObjectResponse, error)
+	mustEmbedUnimplementedObjectServiceServer()
 }
 
-func (s *ObjectServiceService) exists(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+// UnimplementedObjectServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedObjectServiceServer struct {
+}
+
+func (UnimplementedObjectServiceServer) Exists(context.Context, *ObjectRequest) (*ObjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Exists not implemented")
+}
+func (UnimplementedObjectServiceServer) mustEmbedUnimplementedObjectServiceServer() {}
+
+// UnsafeObjectServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ObjectServiceServer will
+// result in compilation errors.
+type UnsafeObjectServiceServer interface {
+	mustEmbedUnimplementedObjectServiceServer()
+}
+
+func RegisterObjectServiceServer(s *grpc.Server, srv ObjectServiceServer) {
+	s.RegisterService(&_ObjectService_serviceDesc, srv)
+}
+
+func _ObjectService_Exists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ObjectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return s.Exists(ctx, in)
+		return srv.(ObjectServiceServer).Exists(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
-		Server:     s,
+		Server:     srv,
 		FullMethod: "/org.anonymous.grpc.ObjectService/Exists",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.Exists(ctx, req.(*ObjectRequest))
+		return srv.(ObjectServiceServer).Exists(ctx, req.(*ObjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// RegisterObjectServiceService registers a service implementation with a gRPC server.
-func RegisterObjectServiceService(s grpc.ServiceRegistrar, srv *ObjectServiceService) {
-	srvCopy := *srv
-	if srvCopy.Exists == nil {
-		srvCopy.Exists = func(context.Context, *ObjectRequest) (*ObjectResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method Exists not implemented")
-		}
-	}
-	sd := grpc.ServiceDesc{
-		ServiceName: "org.anonymous.grpc.ObjectService",
-		Methods: []grpc.MethodDesc{
-			{
-				MethodName: "exists",
-				Handler:    srvCopy.exists,
-			},
+var _ObjectService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "org.anonymous.grpc.ObjectService",
+	HandlerType: (*ObjectServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "exists",
+			Handler:    _ObjectService_Exists_Handler,
 		},
-		Streams:  []grpc.StreamDesc{},
-		Metadata: "ObjectService.proto",
-	}
-
-	s.RegisterService(&sd, nil)
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "ObjectService.proto",
 }

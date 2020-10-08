@@ -43,10 +43,6 @@ func NewObjServiceClient(cc grpc.ClientConnInterface) ObjServiceClient {
 	return &objServiceClient{cc}
 }
 
-var objServiceConnectStreamDesc = &grpc.StreamDesc{
-	StreamName: "connect",
-}
-
 func (c *objServiceClient) Connect(ctx context.Context, in *CmdConnect, opts ...grpc.CallOption) (*CmdConnectResponse, error) {
 	out := new(CmdConnectResponse)
 	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/connect", in, out, opts...)
@@ -54,10 +50,6 @@ func (c *objServiceClient) Connect(ctx context.Context, in *CmdConnect, opts ...
 		return nil, err
 	}
 	return out, nil
-}
-
-var objServiceConnectExtStreamDesc = &grpc.StreamDesc{
-	StreamName: "connect_ext",
 }
 
 func (c *objServiceClient) ConnectExt(ctx context.Context, in *CmdConnectExt, opts ...grpc.CallOption) (*CmdConnectExtResponse, error) {
@@ -69,10 +61,6 @@ func (c *objServiceClient) ConnectExt(ctx context.Context, in *CmdConnectExt, op
 	return out, nil
 }
 
-var objServiceLookupByNameStreamDesc = &grpc.StreamDesc{
-	StreamName: "lookup_by_name",
-}
-
 func (c *objServiceClient) LookupByName(ctx context.Context, in *CmdLookupByName, opts ...grpc.CallOption) (*CmdLookupByNameResponse, error) {
 	out := new(CmdLookupByNameResponse)
 	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/lookup_by_name", in, out, opts...)
@@ -82,13 +70,8 @@ func (c *objServiceClient) LookupByName(ctx context.Context, in *CmdLookupByName
 	return out, nil
 }
 
-var objServiceLookupByNameStreamStreamDesc = &grpc.StreamDesc{
-	StreamName:    "lookup_by_name_stream",
-	ServerStreams: true,
-}
-
 func (c *objServiceClient) LookupByNameStream(ctx context.Context, in *CmdLookupByName, opts ...grpc.CallOption) (ObjService_LookupByNameStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, objServiceLookupByNameStreamStreamDesc, "/org.anonymous.grpc.ObjService/lookup_by_name_stream", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ObjService_serviceDesc.Streams[0], "/org.anonymous.grpc.ObjService/lookup_by_name_stream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,10 +102,6 @@ func (x *objServiceLookupByNameStreamClient) Recv() (*CmdLookupByNameResponseStr
 	return m, nil
 }
 
-var objServiceLookupByTypeStreamDesc = &grpc.StreamDesc{
-	StreamName: "lookup_by_type",
-}
-
 func (c *objServiceClient) LookupByType(ctx context.Context, in *CmdNameLookupByType, opts ...grpc.CallOption) (*CmdNameLookupByTypeResponse, error) {
 	out := new(CmdNameLookupByTypeResponse)
 	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/lookup_by_type", in, out, opts...)
@@ -132,13 +111,8 @@ func (c *objServiceClient) LookupByType(ctx context.Context, in *CmdNameLookupBy
 	return out, nil
 }
 
-var objServiceLookupByTypeStreamStreamDesc = &grpc.StreamDesc{
-	StreamName:    "lookup_by_type_stream",
-	ServerStreams: true,
-}
-
 func (c *objServiceClient) LookupByTypeStream(ctx context.Context, in *CmdNameLookupByType, opts ...grpc.CallOption) (ObjService_LookupByTypeStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, objServiceLookupByTypeStreamStreamDesc, "/org.anonymous.grpc.ObjService/lookup_by_type_stream", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ObjService_serviceDesc.Streams[1], "/org.anonymous.grpc.ObjService/lookup_by_type_stream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -169,10 +143,6 @@ func (x *objServiceLookupByTypeStreamClient) Recv() (*CmdNameLookupByTypeRespons
 	return m, nil
 }
 
-var objServiceGetObjectStreamDesc = &grpc.StreamDesc{
-	StreamName: "get_object",
-}
-
 func (c *objServiceClient) GetObject(ctx context.Context, in *CmdGetByName, opts ...grpc.CallOption) (*CmdGetByNameResponse, error) {
 	out := new(CmdGetByNameResponse)
 	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_object", in, out, opts...)
@@ -180,10 +150,6 @@ func (c *objServiceClient) GetObject(ctx context.Context, in *CmdGetByName, opts
 		return nil, err
 	}
 	return out, nil
-}
-
-var objServiceGetObjectExtStreamDesc = &grpc.StreamDesc{
-	StreamName: "get_object_ext",
 }
 
 func (c *objServiceClient) GetObjectExt(ctx context.Context, in *CmdGetByNameExt, opts ...grpc.CallOption) (*CmdGetByNameExtResponse, error) {
@@ -195,10 +161,6 @@ func (c *objServiceClient) GetObjectExt(ctx context.Context, in *CmdGetByNameExt
 	return out, nil
 }
 
-var objServiceGetObjectManyByNameStreamDesc = &grpc.StreamDesc{
-	StreamName: "get_object_many_by_name",
-}
-
 func (c *objServiceClient) GetObjectManyByName(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (*CmdGetManyByNameResponse, error) {
 	out := new(CmdGetManyByNameResponse)
 	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_object_many_by_name", in, out, opts...)
@@ -208,13 +170,8 @@ func (c *objServiceClient) GetObjectManyByName(ctx context.Context, in *CmdGetMa
 	return out, nil
 }
 
-var objServiceGetObjectManyByNameStreamStreamDesc = &grpc.StreamDesc{
-	StreamName:    "get_object_many_by_name_stream",
-	ServerStreams: true,
-}
-
 func (c *objServiceClient) GetObjectManyByNameStream(ctx context.Context, in *CmdGetManyByName, opts ...grpc.CallOption) (ObjService_GetObjectManyByNameStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, objServiceGetObjectManyByNameStreamStreamDesc, "/org.anonymous.grpc.ObjService/get_object_many_by_name_stream", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ObjService_serviceDesc.Streams[2], "/org.anonymous.grpc.ObjService/get_object_many_by_name_stream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -245,10 +202,6 @@ func (x *objServiceGetObjectManyByNameStreamClient) Recv() (*CmdGetManyByNameRes
 	return m, nil
 }
 
-var objServiceGetObjectManyByNameExtStreamDesc = &grpc.StreamDesc{
-	StreamName: "get_object_many_by_name_ext",
-}
-
 func (c *objServiceClient) GetObjectManyByNameExt(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (*CmdGetManyByNameExtResponse, error) {
 	out := new(CmdGetManyByNameExtResponse)
 	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_object_many_by_name_ext", in, out, opts...)
@@ -258,13 +211,8 @@ func (c *objServiceClient) GetObjectManyByNameExt(ctx context.Context, in *CmdGe
 	return out, nil
 }
 
-var objServiceGetObjectManyByNameExtStreamStreamDesc = &grpc.StreamDesc{
-	StreamName:    "get_object_many_by_name_ext_stream",
-	ServerStreams: true,
-}
-
 func (c *objServiceClient) GetObjectManyByNameExtStream(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (ObjService_GetObjectManyByNameExtStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, objServiceGetObjectManyByNameExtStreamStreamDesc, "/org.anonymous.grpc.ObjService/get_object_many_by_name_ext_stream", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ObjService_serviceDesc.Streams[3], "/org.anonymous.grpc.ObjService/get_object_many_by_name_ext_stream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -295,10 +243,6 @@ func (x *objServiceGetObjectManyByNameExtStreamClient) Recv() (*CmdGetManyByName
 	return m, nil
 }
 
-var objServiceChangeInitDataStreamDesc = &grpc.StreamDesc{
-	StreamName: "change_init_data",
-}
-
 func (c *objServiceClient) ChangeInitData(ctx context.Context, in *CmdChangeInitData, opts ...grpc.CallOption) (*CmdChangeInitDataResponse, error) {
 	out := new(CmdChangeInitDataResponse)
 	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/change_init_data", in, out, opts...)
@@ -306,10 +250,6 @@ func (c *objServiceClient) ChangeInitData(ctx context.Context, in *CmdChangeInit
 		return nil, err
 	}
 	return out, nil
-}
-
-var objServiceChangeInitDataExtStreamDesc = &grpc.StreamDesc{
-	StreamName: "change_init_data_ext",
 }
 
 func (c *objServiceClient) ChangeInitDataExt(ctx context.Context, in *CmdChangeInitDataExt, opts ...grpc.CallOption) (*CmdChangeInitDataExtResponse, error) {
@@ -321,10 +261,6 @@ func (c *objServiceClient) ChangeInitDataExt(ctx context.Context, in *CmdChangeI
 	return out, nil
 }
 
-var objServiceDeleteDataStreamDesc = &grpc.StreamDesc{
-	StreamName: "delete_data",
-}
-
 func (c *objServiceClient) DeleteData(ctx context.Context, in *CmdDeleteData, opts ...grpc.CallOption) (*CmdDeleteDataResponse, error) {
 	out := new(CmdDeleteDataResponse)
 	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/delete_data", in, out, opts...)
@@ -332,10 +268,6 @@ func (c *objServiceClient) DeleteData(ctx context.Context, in *CmdDeleteData, op
 		return nil, err
 	}
 	return out, nil
-}
-
-var objServiceRenameDataStreamDesc = &grpc.StreamDesc{
-	StreamName: "rename_data",
 }
 
 func (c *objServiceClient) RenameData(ctx context.Context, in *CmdRenameData, opts ...grpc.CallOption) (*CmdRenameDataResponse, error) {
@@ -347,260 +279,154 @@ func (c *objServiceClient) RenameData(ctx context.Context, in *CmdRenameData, op
 	return out, nil
 }
 
-// ObjServiceService is the service API for ObjService service.
-// Fields should be assigned to their respective handler implementations only before
-// RegisterObjServiceService is called.  Any unassigned fields will result in the
-// handler for that method returning an Unimplemented error.
-type ObjServiceService struct {
-	Connect                      func(context.Context, *CmdConnect) (*CmdConnectResponse, error)
-	ConnectExt                   func(context.Context, *CmdConnectExt) (*CmdConnectExtResponse, error)
-	LookupByName                 func(context.Context, *CmdLookupByName) (*CmdLookupByNameResponse, error)
-	LookupByNameStream           func(*CmdLookupByName, ObjService_LookupByNameStreamServer) error
-	LookupByType                 func(context.Context, *CmdNameLookupByType) (*CmdNameLookupByTypeResponse, error)
-	LookupByTypeStream           func(*CmdNameLookupByType, ObjService_LookupByTypeStreamServer) error
-	GetObject                    func(context.Context, *CmdGetByName) (*CmdGetByNameResponse, error)
-	GetObjectExt                 func(context.Context, *CmdGetByNameExt) (*CmdGetByNameExtResponse, error)
-	GetObjectManyByName          func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error)
-	GetObjectManyByNameStream    func(*CmdGetManyByName, ObjService_GetObjectManyByNameStreamServer) error
-	GetObjectManyByNameExt       func(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponse, error)
-	GetObjectManyByNameExtStream func(*CmdGetManyByNameExt, ObjService_GetObjectManyByNameExtStreamServer) error
-	ChangeInitData               func(context.Context, *CmdChangeInitData) (*CmdChangeInitDataResponse, error)
-	ChangeInitDataExt            func(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error)
-	DeleteData                   func(context.Context, *CmdDeleteData) (*CmdDeleteDataResponse, error)
-	RenameData                   func(context.Context, *CmdRenameData) (*CmdRenameDataResponse, error)
+// ObjServiceServer is the server API for ObjService service.
+// All implementations must embed UnimplementedObjServiceServer
+// for forward compatibility
+type ObjServiceServer interface {
+	Connect(context.Context, *CmdConnect) (*CmdConnectResponse, error)
+	ConnectExt(context.Context, *CmdConnectExt) (*CmdConnectExtResponse, error)
+	LookupByName(context.Context, *CmdLookupByName) (*CmdLookupByNameResponse, error)
+	LookupByNameStream(*CmdLookupByName, ObjService_LookupByNameStreamServer) error
+	LookupByType(context.Context, *CmdNameLookupByType) (*CmdNameLookupByTypeResponse, error)
+	LookupByTypeStream(*CmdNameLookupByType, ObjService_LookupByTypeStreamServer) error
+	GetObject(context.Context, *CmdGetByName) (*CmdGetByNameResponse, error)
+	GetObjectExt(context.Context, *CmdGetByNameExt) (*CmdGetByNameExtResponse, error)
+	GetObjectManyByName(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error)
+	GetObjectManyByNameStream(*CmdGetManyByName, ObjService_GetObjectManyByNameStreamServer) error
+	GetObjectManyByNameExt(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponse, error)
+	GetObjectManyByNameExtStream(*CmdGetManyByNameExt, ObjService_GetObjectManyByNameExtStreamServer) error
+	ChangeInitData(context.Context, *CmdChangeInitData) (*CmdChangeInitDataResponse, error)
+	ChangeInitDataExt(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error)
+	DeleteData(context.Context, *CmdDeleteData) (*CmdDeleteDataResponse, error)
+	RenameData(context.Context, *CmdRenameData) (*CmdRenameDataResponse, error)
+	mustEmbedUnimplementedObjServiceServer()
 }
 
-func (s *ObjServiceService) connect(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+// UnimplementedObjServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedObjServiceServer struct {
+}
+
+func (UnimplementedObjServiceServer) Connect(context.Context, *CmdConnect) (*CmdConnectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Connect not implemented")
+}
+func (UnimplementedObjServiceServer) ConnectExt(context.Context, *CmdConnectExt) (*CmdConnectExtResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConnectExt not implemented")
+}
+func (UnimplementedObjServiceServer) LookupByName(context.Context, *CmdLookupByName) (*CmdLookupByNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LookupByName not implemented")
+}
+func (UnimplementedObjServiceServer) LookupByNameStream(*CmdLookupByName, ObjService_LookupByNameStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method LookupByNameStream not implemented")
+}
+func (UnimplementedObjServiceServer) LookupByType(context.Context, *CmdNameLookupByType) (*CmdNameLookupByTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LookupByType not implemented")
+}
+func (UnimplementedObjServiceServer) LookupByTypeStream(*CmdNameLookupByType, ObjService_LookupByTypeStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method LookupByTypeStream not implemented")
+}
+func (UnimplementedObjServiceServer) GetObject(context.Context, *CmdGetByName) (*CmdGetByNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetObject not implemented")
+}
+func (UnimplementedObjServiceServer) GetObjectExt(context.Context, *CmdGetByNameExt) (*CmdGetByNameExtResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetObjectExt not implemented")
+}
+func (UnimplementedObjServiceServer) GetObjectManyByName(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetObjectManyByName not implemented")
+}
+func (UnimplementedObjServiceServer) GetObjectManyByNameStream(*CmdGetManyByName, ObjService_GetObjectManyByNameStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetObjectManyByNameStream not implemented")
+}
+func (UnimplementedObjServiceServer) GetObjectManyByNameExt(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetObjectManyByNameExt not implemented")
+}
+func (UnimplementedObjServiceServer) GetObjectManyByNameExtStream(*CmdGetManyByNameExt, ObjService_GetObjectManyByNameExtStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetObjectManyByNameExtStream not implemented")
+}
+func (UnimplementedObjServiceServer) ChangeInitData(context.Context, *CmdChangeInitData) (*CmdChangeInitDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeInitData not implemented")
+}
+func (UnimplementedObjServiceServer) ChangeInitDataExt(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeInitDataExt not implemented")
+}
+func (UnimplementedObjServiceServer) DeleteData(context.Context, *CmdDeleteData) (*CmdDeleteDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteData not implemented")
+}
+func (UnimplementedObjServiceServer) RenameData(context.Context, *CmdRenameData) (*CmdRenameDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenameData not implemented")
+}
+func (UnimplementedObjServiceServer) mustEmbedUnimplementedObjServiceServer() {}
+
+// UnsafeObjServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ObjServiceServer will
+// result in compilation errors.
+type UnsafeObjServiceServer interface {
+	mustEmbedUnimplementedObjServiceServer()
+}
+
+func RegisterObjServiceServer(s *grpc.Server, srv ObjServiceServer) {
+	s.RegisterService(&_ObjService_serviceDesc, srv)
+}
+
+func _ObjService_Connect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CmdConnect)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return s.Connect(ctx, in)
+		return srv.(ObjServiceServer).Connect(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
-		Server:     s,
+		Server:     srv,
 		FullMethod: "/org.anonymous.grpc.ObjService/Connect",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.Connect(ctx, req.(*CmdConnect))
+		return srv.(ObjServiceServer).Connect(ctx, req.(*CmdConnect))
 	}
 	return interceptor(ctx, in, info, handler)
 }
-func (s *ObjServiceService) connectExt(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+
+func _ObjService_ConnectExt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CmdConnectExt)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return s.ConnectExt(ctx, in)
+		return srv.(ObjServiceServer).ConnectExt(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
-		Server:     s,
+		Server:     srv,
 		FullMethod: "/org.anonymous.grpc.ObjService/ConnectExt",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.ConnectExt(ctx, req.(*CmdConnectExt))
+		return srv.(ObjServiceServer).ConnectExt(ctx, req.(*CmdConnectExt))
 	}
 	return interceptor(ctx, in, info, handler)
 }
-func (s *ObjServiceService) lookupByName(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+
+func _ObjService_LookupByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CmdLookupByName)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return s.LookupByName(ctx, in)
+		return srv.(ObjServiceServer).LookupByName(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
-		Server:     s,
+		Server:     srv,
 		FullMethod: "/org.anonymous.grpc.ObjService/LookupByName",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.LookupByName(ctx, req.(*CmdLookupByName))
+		return srv.(ObjServiceServer).LookupByName(ctx, req.(*CmdLookupByName))
 	}
 	return interceptor(ctx, in, info, handler)
 }
-func (s *ObjServiceService) lookupByNameStream(_ interface{}, stream grpc.ServerStream) error {
+
+func _ObjService_LookupByNameStream_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(CmdLookupByName)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return s.LookupByNameStream(m, &objServiceLookupByNameStreamServer{stream})
-}
-func (s *ObjServiceService) lookupByType(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdNameLookupByType)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return s.LookupByType(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/LookupByType",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.LookupByType(ctx, req.(*CmdNameLookupByType))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-func (s *ObjServiceService) lookupByTypeStream(_ interface{}, stream grpc.ServerStream) error {
-	m := new(CmdNameLookupByType)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return s.LookupByTypeStream(m, &objServiceLookupByTypeStreamServer{stream})
-}
-func (s *ObjServiceService) getObject(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdGetByName)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return s.GetObject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObject",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.GetObject(ctx, req.(*CmdGetByName))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-func (s *ObjServiceService) getObjectExt(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdGetByNameExt)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return s.GetObjectExt(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectExt",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.GetObjectExt(ctx, req.(*CmdGetByNameExt))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-func (s *ObjServiceService) getObjectManyByName(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdGetManyByName)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return s.GetObjectManyByName(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectManyByName",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.GetObjectManyByName(ctx, req.(*CmdGetManyByName))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-func (s *ObjServiceService) getObjectManyByNameStream(_ interface{}, stream grpc.ServerStream) error {
-	m := new(CmdGetManyByName)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return s.GetObjectManyByNameStream(m, &objServiceGetObjectManyByNameStreamServer{stream})
-}
-func (s *ObjServiceService) getObjectManyByNameExt(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdGetManyByNameExt)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return s.GetObjectManyByNameExt(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectManyByNameExt",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.GetObjectManyByNameExt(ctx, req.(*CmdGetManyByNameExt))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-func (s *ObjServiceService) getObjectManyByNameExtStream(_ interface{}, stream grpc.ServerStream) error {
-	m := new(CmdGetManyByNameExt)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return s.GetObjectManyByNameExtStream(m, &objServiceGetObjectManyByNameExtStreamServer{stream})
-}
-func (s *ObjServiceService) changeInitData(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdChangeInitData)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return s.ChangeInitData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/ChangeInitData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.ChangeInitData(ctx, req.(*CmdChangeInitData))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-func (s *ObjServiceService) changeInitDataExt(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdChangeInitDataExt)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return s.ChangeInitDataExt(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/ChangeInitDataExt",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.ChangeInitDataExt(ctx, req.(*CmdChangeInitDataExt))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-func (s *ObjServiceService) deleteData(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdDeleteData)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return s.DeleteData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/DeleteData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.DeleteData(ctx, req.(*CmdDeleteData))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-func (s *ObjServiceService) renameData(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdRenameData)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return s.RenameData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     s,
-		FullMethod: "/org.anonymous.grpc.ObjService/RenameData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.RenameData(ctx, req.(*CmdRenameData))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(ObjServiceServer).LookupByNameStream(m, &objServiceLookupByNameStreamServer{stream})
 }
 
 type ObjService_LookupByNameStreamServer interface {
@@ -616,6 +442,32 @@ func (x *objServiceLookupByNameStreamServer) Send(m *CmdLookupByNameResponseStre
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ObjService_LookupByType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdNameLookupByType)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).LookupByType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/LookupByType",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).LookupByType(ctx, req.(*CmdNameLookupByType))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_LookupByTypeStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(CmdNameLookupByType)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ObjServiceServer).LookupByTypeStream(m, &objServiceLookupByTypeStreamServer{stream})
+}
+
 type ObjService_LookupByTypeStreamServer interface {
 	Send(*CmdNameLookupByTypeResponseStream) error
 	grpc.ServerStream
@@ -627,6 +479,68 @@ type objServiceLookupByTypeStreamServer struct {
 
 func (x *objServiceLookupByTypeStreamServer) Send(m *CmdNameLookupByTypeResponseStream) error {
 	return x.ServerStream.SendMsg(m)
+}
+
+func _ObjService_GetObject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdGetByName)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).GetObject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/GetObject",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).GetObject(ctx, req.(*CmdGetByName))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_GetObjectExt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdGetByNameExt)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).GetObjectExt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectExt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).GetObjectExt(ctx, req.(*CmdGetByNameExt))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_GetObjectManyByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdGetManyByName)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).GetObjectManyByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectManyByName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).GetObjectManyByName(ctx, req.(*CmdGetManyByName))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_GetObjectManyByNameStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(CmdGetManyByName)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ObjServiceServer).GetObjectManyByNameStream(m, &objServiceGetObjectManyByNameStreamServer{stream})
 }
 
 type ObjService_GetObjectManyByNameStreamServer interface {
@@ -642,6 +556,32 @@ func (x *objServiceGetObjectManyByNameStreamServer) Send(m *CmdGetManyByNameResp
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ObjService_GetObjectManyByNameExt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdGetManyByNameExt)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).GetObjectManyByNameExt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectManyByNameExt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).GetObjectManyByNameExt(ctx, req.(*CmdGetManyByNameExt))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_GetObjectManyByNameExtStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(CmdGetManyByNameExt)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ObjServiceServer).GetObjectManyByNameExtStream(m, &objServiceGetObjectManyByNameExtStreamServer{stream})
+}
+
 type ObjService_GetObjectManyByNameExtStreamServer interface {
 	Send(*CmdGetManyByNameExtResponseStream) error
 	grpc.ServerStream
@@ -655,165 +595,152 @@ func (x *objServiceGetObjectManyByNameExtStreamServer) Send(m *CmdGetManyByNameE
 	return x.ServerStream.SendMsg(m)
 }
 
-// RegisterObjServiceService registers a service implementation with a gRPC server.
-func RegisterObjServiceService(s grpc.ServiceRegistrar, srv *ObjServiceService) {
-	srvCopy := *srv
-	if srvCopy.Connect == nil {
-		srvCopy.Connect = func(context.Context, *CmdConnect) (*CmdConnectResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method Connect not implemented")
-		}
+func _ObjService_ChangeInitData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdChangeInitData)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	if srvCopy.ConnectExt == nil {
-		srvCopy.ConnectExt = func(context.Context, *CmdConnectExt) (*CmdConnectExtResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method ConnectExt not implemented")
-		}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).ChangeInitData(ctx, in)
 	}
-	if srvCopy.LookupByName == nil {
-		srvCopy.LookupByName = func(context.Context, *CmdLookupByName) (*CmdLookupByNameResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method LookupByName not implemented")
-		}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/ChangeInitData",
 	}
-	if srvCopy.LookupByNameStream == nil {
-		srvCopy.LookupByNameStream = func(*CmdLookupByName, ObjService_LookupByNameStreamServer) error {
-			return status.Errorf(codes.Unimplemented, "method LookupByNameStream not implemented")
-		}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).ChangeInitData(ctx, req.(*CmdChangeInitData))
 	}
-	if srvCopy.LookupByType == nil {
-		srvCopy.LookupByType = func(context.Context, *CmdNameLookupByType) (*CmdNameLookupByTypeResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method LookupByType not implemented")
-		}
-	}
-	if srvCopy.LookupByTypeStream == nil {
-		srvCopy.LookupByTypeStream = func(*CmdNameLookupByType, ObjService_LookupByTypeStreamServer) error {
-			return status.Errorf(codes.Unimplemented, "method LookupByTypeStream not implemented")
-		}
-	}
-	if srvCopy.GetObject == nil {
-		srvCopy.GetObject = func(context.Context, *CmdGetByName) (*CmdGetByNameResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method GetObject not implemented")
-		}
-	}
-	if srvCopy.GetObjectExt == nil {
-		srvCopy.GetObjectExt = func(context.Context, *CmdGetByNameExt) (*CmdGetByNameExtResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method GetObjectExt not implemented")
-		}
-	}
-	if srvCopy.GetObjectManyByName == nil {
-		srvCopy.GetObjectManyByName = func(context.Context, *CmdGetManyByName) (*CmdGetManyByNameResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method GetObjectManyByName not implemented")
-		}
-	}
-	if srvCopy.GetObjectManyByNameStream == nil {
-		srvCopy.GetObjectManyByNameStream = func(*CmdGetManyByName, ObjService_GetObjectManyByNameStreamServer) error {
-			return status.Errorf(codes.Unimplemented, "method GetObjectManyByNameStream not implemented")
-		}
-	}
-	if srvCopy.GetObjectManyByNameExt == nil {
-		srvCopy.GetObjectManyByNameExt = func(context.Context, *CmdGetManyByNameExt) (*CmdGetManyByNameExtResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method GetObjectManyByNameExt not implemented")
-		}
-	}
-	if srvCopy.GetObjectManyByNameExtStream == nil {
-		srvCopy.GetObjectManyByNameExtStream = func(*CmdGetManyByNameExt, ObjService_GetObjectManyByNameExtStreamServer) error {
-			return status.Errorf(codes.Unimplemented, "method GetObjectManyByNameExtStream not implemented")
-		}
-	}
-	if srvCopy.ChangeInitData == nil {
-		srvCopy.ChangeInitData = func(context.Context, *CmdChangeInitData) (*CmdChangeInitDataResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method ChangeInitData not implemented")
-		}
-	}
-	if srvCopy.ChangeInitDataExt == nil {
-		srvCopy.ChangeInitDataExt = func(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method ChangeInitDataExt not implemented")
-		}
-	}
-	if srvCopy.DeleteData == nil {
-		srvCopy.DeleteData = func(context.Context, *CmdDeleteData) (*CmdDeleteDataResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method DeleteData not implemented")
-		}
-	}
-	if srvCopy.RenameData == nil {
-		srvCopy.RenameData = func(context.Context, *CmdRenameData) (*CmdRenameDataResponse, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method RenameData not implemented")
-		}
-	}
-	sd := grpc.ServiceDesc{
-		ServiceName: "org.anonymous.grpc.ObjService",
-		Methods: []grpc.MethodDesc{
-			{
-				MethodName: "connect",
-				Handler:    srvCopy.connect,
-			},
-			{
-				MethodName: "connect_ext",
-				Handler:    srvCopy.connectExt,
-			},
-			{
-				MethodName: "lookup_by_name",
-				Handler:    srvCopy.lookupByName,
-			},
-			{
-				MethodName: "lookup_by_type",
-				Handler:    srvCopy.lookupByType,
-			},
-			{
-				MethodName: "get_object",
-				Handler:    srvCopy.getObject,
-			},
-			{
-				MethodName: "get_object_ext",
-				Handler:    srvCopy.getObjectExt,
-			},
-			{
-				MethodName: "get_object_many_by_name",
-				Handler:    srvCopy.getObjectManyByName,
-			},
-			{
-				MethodName: "get_object_many_by_name_ext",
-				Handler:    srvCopy.getObjectManyByNameExt,
-			},
-			{
-				MethodName: "change_init_data",
-				Handler:    srvCopy.changeInitData,
-			},
-			{
-				MethodName: "change_init_data_ext",
-				Handler:    srvCopy.changeInitDataExt,
-			},
-			{
-				MethodName: "delete_data",
-				Handler:    srvCopy.deleteData,
-			},
-			{
-				MethodName: "rename_data",
-				Handler:    srvCopy.renameData,
-			},
-		},
-		Streams: []grpc.StreamDesc{
-			{
-				StreamName:    "lookup_by_name_stream",
-				Handler:       srvCopy.lookupByNameStream,
-				ServerStreams: true,
-			},
-			{
-				StreamName:    "lookup_by_type_stream",
-				Handler:       srvCopy.lookupByTypeStream,
-				ServerStreams: true,
-			},
-			{
-				StreamName:    "get_object_many_by_name_stream",
-				Handler:       srvCopy.getObjectManyByNameStream,
-				ServerStreams: true,
-			},
-			{
-				StreamName:    "get_object_many_by_name_ext_stream",
-				Handler:       srvCopy.getObjectManyByNameExtStream,
-				ServerStreams: true,
-			},
-		},
-		Metadata: "obj_svc.proto",
-	}
+	return interceptor(ctx, in, info, handler)
+}
 
-	s.RegisterService(&sd, nil)
+func _ObjService_ChangeInitDataExt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdChangeInitDataExt)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).ChangeInitDataExt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/ChangeInitDataExt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).ChangeInitDataExt(ctx, req.(*CmdChangeInitDataExt))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_DeleteData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdDeleteData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).DeleteData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/DeleteData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).DeleteData(ctx, req.(*CmdDeleteData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_RenameData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdRenameData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).RenameData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/RenameData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).RenameData(ctx, req.(*CmdRenameData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _ObjService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "org.anonymous.grpc.ObjService",
+	HandlerType: (*ObjServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "connect",
+			Handler:    _ObjService_Connect_Handler,
+		},
+		{
+			MethodName: "connect_ext",
+			Handler:    _ObjService_ConnectExt_Handler,
+		},
+		{
+			MethodName: "lookup_by_name",
+			Handler:    _ObjService_LookupByName_Handler,
+		},
+		{
+			MethodName: "lookup_by_type",
+			Handler:    _ObjService_LookupByType_Handler,
+		},
+		{
+			MethodName: "get_object",
+			Handler:    _ObjService_GetObject_Handler,
+		},
+		{
+			MethodName: "get_object_ext",
+			Handler:    _ObjService_GetObjectExt_Handler,
+		},
+		{
+			MethodName: "get_object_many_by_name",
+			Handler:    _ObjService_GetObjectManyByName_Handler,
+		},
+		{
+			MethodName: "get_object_many_by_name_ext",
+			Handler:    _ObjService_GetObjectManyByNameExt_Handler,
+		},
+		{
+			MethodName: "change_init_data",
+			Handler:    _ObjService_ChangeInitData_Handler,
+		},
+		{
+			MethodName: "change_init_data_ext",
+			Handler:    _ObjService_ChangeInitDataExt_Handler,
+		},
+		{
+			MethodName: "delete_data",
+			Handler:    _ObjService_DeleteData_Handler,
+		},
+		{
+			MethodName: "rename_data",
+			Handler:    _ObjService_RenameData_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "lookup_by_name_stream",
+			Handler:       _ObjService_LookupByNameStream_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "lookup_by_type_stream",
+			Handler:       _ObjService_LookupByTypeStream_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "get_object_many_by_name_stream",
+			Handler:       _ObjService_GetObjectManyByNameStream_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "get_object_many_by_name_ext_stream",
+			Handler:       _ObjService_GetObjectManyByNameExtStream_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "obj_svc.proto",
 }
