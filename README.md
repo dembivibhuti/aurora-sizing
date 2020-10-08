@@ -157,7 +157,8 @@ make
 
 // IAM Authentication ( assuming IAM Authentication is turned on Aurora )
 // Create user in DB from psql
-// In case recreating then :  DROP ROLE mwuser
+\\ \du ---- for checking exiting users
+// In case recreating then :  DROP ROLE mwuser;
 
 CREATE USER mwuser WITH LOGIN; 
 GRANT rds_iam TO mwuser;
@@ -165,6 +166,7 @@ GRANT rds_iam TO mwuser;
 //Ensure delete the 'credential' and other aws profile files, we dont want the SDK to get confused
             
 mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
+-DmaximumPoolSize=10 \
 -DdataSource.user=mwuser \
 -Drds.region=us-east-1 \
 -DdataSource.databaseName=postgres \
@@ -189,8 +191,9 @@ Default output format [None]: json
 
 
 export PGPASSWORD="$(aws --profile dbuser rds generate-db-auth-token \
---hostname $RDSHOST \
+--hostname "$RDSHOST" \
 --port 5432 \
+--debug \
 --region us-east-1 \
 --username mwuser)"
 
@@ -203,6 +206,11 @@ aws rds generate-db-auth-token \
 
 psql -h "$RDHOST" -p 5432 "dbname=postgres user=mwuser sslrootcert=rds-ca-2019-root.pem sslmode=verify-full"
 
+// EC2 IAM Role Creds
+curl http://169.254.169.254/latest/meta-data/iam/security-credentials/role_name
+e.g. curl http://169.254.169.254/latest/meta-data/iam/security-credentials/EC2_ROLE_RDS_AUTH
+//Caller Identity
+aws sts get-caller-identity
 
 
 // Go Client Build
@@ -221,6 +229,38 @@ docker run --net=host -it mfrw/client:0.1 /testclient -sa 172.31.118.6:8080
 // To expand the EBS Disk Size 
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/recognize-expanded-volume-linux.html
 
+
+
+export result="$(aws sts assume-role \
+  --role-arn arn:aws:iam::083946944027:role/EC2_ROLE_RDS_AUTH \
+  --role-session-name ROLE_SESSION_NAME \
+  --duration-seconds 900 \
+  --region us-east-1)"
+  
+  
+GRANT CREATE ON DATABASE postgres TO mwuser;
+GRANT  USAGE   ON SCHEMA public  TO mwuser;
+GRANT CREATE ON SCHEMA public TO mwuser;
+GRANT CONNECT ON DATABASE postgres TO mwuser ;
+ALTER SCHEMA public OWNER TO mwuser;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO mwuser;
+
+
+
+mvn exec:java -DdataSourceClassName=org.postgresql.ds.PGSimpleDataSource \
+-DmaximumPoolSize=100 \
+-DdataSource.user=rwuser \
+-Drds.region=us-east-1 \
+-DdataSource.databaseName=postgres \
+-DdataSource.currentSchema=public \
+-DdataSource.portNumber=5432 \
+-DdataSource.roserverName=database-1.cluster-ro-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
+-DdataSource.rwserverName=database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com \
+-Djavax.net.ssl.trustStore=aurora-postgresql.jks \
+-Djavax.net.ssl.trustStorePassword=aurora-postgresql \
+-Dport=8080 \
+-Dexec.mainClass="org.anonymous.server.GrpcServer"
+  
 
 
 

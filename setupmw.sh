@@ -46,3 +46,7 @@ nohup java \
 -jar ~/aurora-sizing/target/aurora-sizing-1.0-SNAPSHOT.jar &
 
 
+// Increase the ulimit to 20000 = https://stackoverflow.com/questions/11342167/how-to-increase-ulimit-on-amazon-ec2-instance
+
+
+
