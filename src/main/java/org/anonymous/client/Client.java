@@ -96,12 +96,12 @@ public class Client {
     }
 
     private static void lookupByType(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {
-        CmdNameLookupByTypeResponse response2 = stub.lookupByType(CmdNameLookupByType.newBuilder().setCount(count).setMessageType(CmdType.CMD_NAME_LOOKUP_BY_TYPE).setGetType(GetType.METADATA_GET_GREATER).setSecurityType(0).build());
+        CmdNameLookupByTypeResponse response2 = stub.lookupByType(CmdNameLookupByType.newBuilder().setCount(count).setMessageType(CmdType.CMD_NAME_LOOKUP_BY_TYPE).setGetType(GetType.METADATA_GET_GREATER).setSecurityType(0).setSecurityNamePrefix("test").build());
         System.out.println("Response received from lookupByType: \n" + response2);
     }
 
     private static void lookupByTypeStream(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {
-        CmdNameLookupByType request = CmdNameLookupByType.newBuilder().setCount(count).setGetType(GetType.METADATA_GET_GREATER).setSecurityType(0).setMessageType(CmdType.CMD_NAME_LOOKUP_BY_TYPE).build();
+        CmdNameLookupByType request = CmdNameLookupByType.newBuilder().setCount(count).setGetType(GetType.METADATA_GET_GREATER).setSecurityType(0).setMessageType(CmdType.CMD_NAME_LOOKUP_BY_TYPE).setSecurityNamePrefix("test").build();
         Iterator<CmdNameLookupByTypeResponseStream> it;
         try {
             it = stub.lookupByTypeStream(request);
@@ -158,6 +158,6 @@ public class Client {
     }
     private static void getObjectByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdGetByNameResponse response = stub.getObject(CmdGetByName.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-0").build());
-        System.out.println("Response received from getObjectByName: \n" + response);
+        System.out.println("Response received from getObjectByName: \n" + response.getSecurity());
     }
 }

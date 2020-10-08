@@ -125,15 +125,16 @@ public class ObjectRepository implements AutoCloseable {
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
-                insertRec.setInt(2, randTypeId);
-                insertRec.setLong(3, i);
-                insertRec.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
-                insertRec.setLong(5, 0);
-                insertRec.setInt(6, 0);
+                insertRec.setString(2, name.toLowerCase());
+                insertRec.setInt(3, randTypeId);
+                insertRec.setLong(4, i);
+                insertRec.setTimestamp(5, new java.sql.Timestamp(System.currentTimeMillis()));
+                insertRec.setLong(6, 0);
                 insertRec.setInt(7, 0);
                 insertRec.setInt(8, 0);
-                insertRec.setBytes(9, sdbMem);
-                insertRec.setBytes(10, mem);
+                insertRec.setInt(9, 0);
+                insertRec.setBytes(10, sdbMem);
+                insertRec.setBytes(11, mem);
                 insertRec.executeUpdate();
                 connection.commit();
 
@@ -297,7 +298,7 @@ public class ObjectRepository implements AutoCloseable {
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement lookupStmt = connection.prepareStatement(
                          GET_RECORDS)) {
-                lookupStmt.setString(1, secKey);
+                lookupStmt.setString(1, secKey.toLowerCase());
                 ResultSet rs = lookupStmt.executeQuery();
 
                 Object x = null;
@@ -327,7 +328,7 @@ public class ObjectRepository implements AutoCloseable {
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement lookupStmt = connection.prepareStatement(
                      GET_ALL_RECORDS)) {
-            lookupStmt.setString(1, secKey);
+            lookupStmt.setString(1, secKey.toLowerCase());
             ResultSet rs = lookupStmt.executeQuery();
 
             while (rs.next()) {
@@ -363,7 +364,7 @@ public class ObjectRepository implements AutoCloseable {
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
                 for (int i = 0; i < secKeys.size(); i++) {
-                    lookupStmt.setString(i + 1, secKeys.get(i));
+                    lookupStmt.setString(i + 1, secKeys.get(i).toLowerCase());
                 }
 
                 ResultSet rs = lookupStmt.executeQuery();
@@ -398,7 +399,7 @@ public class ObjectRepository implements AutoCloseable {
 
             try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                     .prepareStatement(GET_SDB_MEM)) {
-                lookupStmt.setString(1, secKey);
+                lookupStmt.setString(1, secKey.toLowerCase());
                 ResultSet rs = lookupStmt.executeQuery();
 
                 Object x = null;
@@ -428,7 +429,7 @@ public class ObjectRepository implements AutoCloseable {
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
                 for (int i = 0; i < size; i++) {
-                    lookupStmt.setString(i + 1, secKeys.get(i));
+                    lookupStmt.setString(i + 1, secKeys.get(i).toLowerCase());
                 }
 
                 ResultSet rs = lookupStmt.executeQuery();
@@ -462,7 +463,7 @@ public class ObjectRepository implements AutoCloseable {
 
             try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                     .prepareStatement(GET_MEM)) {
-                lookupStmt.setString(1, secKey);
+                lookupStmt.setString(1, secKey.toLowerCase());
                 ResultSet rs = lookupStmt.executeQuery();
 
                 Object x = null;
@@ -485,7 +486,7 @@ public class ObjectRepository implements AutoCloseable {
         byte[] arrayContainsMem = null;
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(GET_MEM)) {
-            lookupStmt.setString(1, secKey);
+            lookupStmt.setString(1, secKey.toLowerCase());
             ResultSet rs = lookupStmt.executeQuery();
             while (rs.next()) {
                 arrayContainsMem = rs.getBytes("mem");
@@ -508,7 +509,7 @@ public class ObjectRepository implements AutoCloseable {
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement lookupStmt = connection.prepareStatement(sql)) {
                 for (int i = 0; i < size; i++) {
-                    lookupStmt.setString(i + 1, secKeys.get(i));
+                    lookupStmt.setString(i + 1, secKeys.get(i).toLowerCase());
                 }
 
                 ResultSet rs = lookupStmt.executeQuery();
@@ -565,7 +566,7 @@ public class ObjectRepository implements AutoCloseable {
              PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
 
             for (int i = 0; i < securityNameList.toArray().length; i++) {
-                getManyStmt.setString(i + 1, securityNameList.get(i));
+                getManyStmt.setString(i + 1, securityNameList.get(i).toLowerCase());
             }
             ResultSet rs = getManyStmt.executeQuery();
             while (rs.next()) {
@@ -585,7 +586,7 @@ public class ObjectRepository implements AutoCloseable {
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
             for (int i = 0; i < securityNameList.toArray().length; i++) {
-                getManyStmt.setString(i + 1, securityNameList.get(i));
+                getManyStmt.setString(i + 1, securityNameList.get(i).toLowerCase());
             }
             ResultSet rs = getManyStmt.executeQuery();
             while(rs.next()){
@@ -624,7 +625,7 @@ public class ObjectRepository implements AutoCloseable {
              PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
 
             for (int i = 0; i < securityNameList.toArray().length; i++) {
-                getManyStmt.setString(i + 1, securityNameList.get(i));
+                getManyStmt.setString(i + 1, securityNameList.get(i).toLowerCase());
             }
             ResultSet rs = getManyStmt.executeQuery();
             while(rs.next()){
