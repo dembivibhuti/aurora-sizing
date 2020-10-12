@@ -33,10 +33,10 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
         try {
             CmdInsertResponse.Builder responseBuilder = CmdInsertResponse.newBuilder();
             TransMsgResponse.Builder transMsgResponseBuilder = TransMsgResponse.newBuilder();
-            if(objectRepository.insertRec(request.getSdbDisk(), request.getMem())){
+            if(objectRepository.insertRec(request.getMetadata(), request.getMem())){
                 TransMsgResponse.MsgOnSuccess.NotSecSyncMessage notSecSyncMessage = TransMsgResponse.MsgOnSuccess.NotSecSyncMessage.newBuilder()
                         .setAck(1)
-                        .setTxnId((int) request.getSdbDisk().getLastTxnId()).build();
+                        .setTxnId((int) request.getMetadata().getLastTxnId()).build();
                 TransMsgResponse.MsgOnSuccess msgOnSuccess = TransMsgResponse.MsgOnSuccess.newBuilder().setNotSecSyncMessage(notSecSyncMessage).build();
                 transMsgResponseBuilder.setMsgOnSuccess(msgOnSuccess);
             }
@@ -61,10 +61,10 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
         try {
             CmdUpdateResponse.Builder responseBuilder = CmdUpdateResponse.newBuilder();
             TransMsgResponse.Builder transMsgResponseBuilder = TransMsgResponse.newBuilder();
-            if(objectRepository.updateRec(request.getOldSdbDisk(), request.getNewSdbDisk(), request.getMem())){
+            if(objectRepository.updateRec(request.getOldMetadata(), request.getNewMetadata(), request.getMem())){
                 TransMsgResponse.MsgOnSuccess.NotSecSyncMessage notSecSyncMessage = TransMsgResponse.MsgOnSuccess.NotSecSyncMessage.newBuilder()
                         .setAck(1)
-                        .setTxnId((int) request.getNewSdbDisk().getLastTxnId()).build();
+                        .setTxnId((int) request.getNewMetadata().getLastTxnId()).build();
                 TransMsgResponse.MsgOnSuccess msgOnSuccess = TransMsgResponse.MsgOnSuccess.newBuilder().setNotSecSyncMessage(notSecSyncMessage).build();
                 transMsgResponseBuilder.setMsgOnSuccess(msgOnSuccess);
             }
@@ -82,12 +82,13 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
             LOGGER.info("Caught Exception in updateRecord()", e);
         }
     }
+
     @Override
-    public void deleteRecord(CmdDeleteData request, StreamObserver<CmdDeleteDataResponse> responseObserver) {
+    public void deleteRecord(CmdDelete request, StreamObserver<CmdDeleteResponse> responseObserver) {
         LOGGER.info("got request deleteRecord()");
 
         try {
-            CmdDeleteDataResponse.Builder responseBuilder = CmdDeleteDataResponse.newBuilder();
+            CmdDeleteResponse.Builder responseBuilder = CmdDeleteResponse.newBuilder();
             Optional<TransMsgResponse.MsgOnSuccess> msgOnSuccess = objectRepository.deleteDataRecords(request.getMetadata());
 
             if(msgOnSuccess.isPresent()){
@@ -113,11 +114,11 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
     }
 
     @Override
-    public void renameRecord(CmdRenameData request, StreamObserver<CmdRenameDataResponse> responseObserver) {
+    public void renameRecord(CmdRename request, StreamObserver<CmdRenameResponse> responseObserver) {
         LOGGER.info("got request renameRecord()");
 
         try {
-            CmdRenameDataResponse.Builder responseBuilder = CmdRenameDataResponse.newBuilder();
+            CmdRenameResponse.Builder responseBuilder = CmdRenameResponse.newBuilder();
             Optional<TransMsgResponse.MsgOnSuccess> msgOnSuccess = objectRepository.renameDataRecords(request.getOldMetadata(), request.getNewMetadata());
 
             if(msgOnSuccess.isPresent()){

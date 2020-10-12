@@ -15,6 +15,6 @@ service TransactionService {
   rpc connect_ext(CmdConnectExt) returns (CmdConnectExtResponse);
   rpc insert_record(CmdInsert) returns (CmdInsertResponse);
   rpc update_record(CmdUpdate) returns (CmdUpdateResponse);
-  rpc delete_record(CmdDeleteData) returns (CmdDeleteDataResponse);
-  rpc rename_record(CmdRenameData) returns (CmdRenameDataResponse);
+  rpc delete_record(CmdDelete) returns (CmdDeleteResponse);
+  rpc rename_record(CmdRename) returns (CmdRenameResponse);
 }

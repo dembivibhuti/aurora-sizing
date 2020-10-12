@@ -14,8 +14,9 @@ import (
 )
 
 type SSClient struct {
-	client pb.ObjServiceClient
-	conn   *grpc.ClientConn
+	client      pb.ObjServiceClient
+	transClient pb.TransactionServiceClient
+	conn        *grpc.ClientConn
 }
 
 func timeTaken(msg string, t time.Time) {
@@ -36,8 +37,9 @@ func mustGetConn(addr string) *grpc.ClientConn {
 func NewSSClient(addr string) *SSClient {
 	conn := mustGetConn(addr)
 	return &SSClient{
-		client: pb.NewObjServiceClient(conn),
-		conn:   conn,
+		client:      pb.NewObjServiceClient(conn),
+		transClient: pb.NewTransactionServiceClient(conn),
+		conn:        conn,
 	}
 }
 
@@ -219,4 +221,63 @@ func (s *SSClient) GetObjectExt(sname string) (*model.ObjectExt, error) {
 	return &model.ObjectExt{
 		Mem: resp.GetMsgOnSuccess().GetMem(),
 	}, nil
+}
+
+func (s *SSClient) InsertRecord(metadata *pb.Metadata, cmdType pb.CmdType, nr int32) (*pb.CmdInsertResponse, error) {
+	ctx := context.Background()
+	resp, err := s.transClient.InsertRecord(ctx, &pb.CmdInsert{
+		MsgSize:  nr,
+		MsgType:  cmdType,
+		Metadata: metadata,
+		MemSize:  5,
+		Mem:      []byte{},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (s *SSClient) RenameRecord(oldMetadata *pb.Metadata, newMetadata *pb.Metadata, cmdType pb.CmdType, nr int32) (*pb.CmdRenameResponse, error) {
+	ctx := context.Background()
+	resp, err := s.transClient.RenameRecord(ctx, &pb.CmdRename{
+		MsgSize:     nr,
+		MsgType:     cmdType,
+		OldMetadata: oldMetadata,
+		NewMetadata: newMetadata,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (s *SSClient) UpdateRecord(oldMetadata *pb.Metadata, newMetadata *pb.Metadata, cmdType pb.CmdType, nr int32) (*pb.CmdUpdateResponse, error) {
+	ctx := context.Background()
+	resp, err := s.transClient.UpdateRecord(ctx, &pb.CmdUpdate{
+		MsgSize:     nr,
+		MsgType:     cmdType,
+		OldMetadata: oldMetadata,
+		NewMetadata: newMetadata,
+		MemSize:     5,
+		Mem:         []byte{},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (s *SSClient) DeleteRecord(metadata *pb.Metadata, cmdType pb.CmdType, nr int32, ignoreflags int32) (*pb.CmdDeleteResponse, error) {
+	ctx := context.Background()
+	resp, err := s.transClient.DeleteRecord(ctx, &pb.CmdDelete{
+		MsgSize:       nr,
+		MsgType:       cmdType,
+		Metadata:      metadata,
+		IgnoreErrFlag: ignoreflags,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

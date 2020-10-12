@@ -89,8 +89,8 @@ func (o *objServer) ChangeInitDataExt(_ context.Context, _ *pb.CmdChangeInitData
 	panic("not implemented") // TODO: Implement
 }
 
-func (o *objServer) DeleteData(_ context.Context, _ *pb.CmdDeleteData) (*pb.CmdDeleteDataResponse, error) {
-	panic("not implemented") // TODO: Implement
+func (o *objServer) DeleteRecord(ctx context.Context, in *pb.CmdDelete) (*pb.CmdDeleteResponse, error) {
+	return deleteRecord(ctx, in)
 }
 
 func (o *objServer) RenameData(_ context.Context, _ *pb.CmdRenameData) (*pb.CmdRenameDataResponse, error) {
@@ -180,4 +180,33 @@ func getObjectManyByNameExtStream(in *pb.CmdGetManyByNameExt, stream pb.ObjServi
 		}
 	}
 	return nil
+}
+
+func deleteRecord(ctx context.Context, in *pb.CmdDelete) (*pb.CmdDeleteResponse, error) {
+	syncMsg := &pb.TransMsgResponse_MsgOnSuccess_SecSyncMessage{
+		MessageSize:      uint32(in.MsgSize),
+		Ack:              1,
+		SourceDbId:       123,
+		SourceTxnId:      123,
+		DestinationTxnId: 123,
+	}
+	msgSecSync := &pb.TransMsgResponse_MsgOnSuccess_SecSyncMessage_{
+		SecSyncMessage: syncMsg,
+	}
+
+	msgSuccess := &pb.TransMsgResponse_MsgOnSuccess{
+		MessageResponse: msgSecSync,
+	}
+
+	msgSuccessResp := &pb.TransMsgResponse_MsgOnSuccess_{
+		MsgOnSuccess: msgSuccess,
+	}
+
+	transmsg := &pb.TransMsgResponse{
+		RequestReponse: msgSuccessResp,
+	}
+	resp := &pb.CmdDeleteResponse{
+		TransMsgResponse: transmsg,
+	}
+	return resp, nil
 }

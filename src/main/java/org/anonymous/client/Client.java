@@ -71,7 +71,7 @@ public class Client {
     private static void insertRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
         Metadata sdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0001-01-01 00:00:00").
                 setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
-        CmdInsertResponse response = stub.insertRecord(CmdInsert.newBuilder().setSdbDisk(sdb).build());
+        CmdInsertResponse response = stub.insertRecord(CmdInsert.newBuilder().setMetadata(sdb).build());
         LOGGER.info("Response received from insertRecordTest: Ack is...... \n" + response);
     }
     private static void updateRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
@@ -79,14 +79,14 @@ public class Client {
                 setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
         Metadata sdb2 = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
                 .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
-        CmdUpdateResponse response = stub.updateRecord(CmdUpdate.newBuilder().setOldSdbDisk(sdb1).setNewSdbDisk(sdb2).build());
+        CmdUpdateResponse response = stub.updateRecord(CmdUpdate.newBuilder().setOldMetadata(sdb1).setNewMetadata(sdb2).build());
         LOGGER.info("Response received from updateRecordTest: Ack is...... \n" + response);
     }
 
     private static void deleteRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
         Metadata sdb = Metadata.newBuilder().setSecurityName("renamedRecord").setTimeUpdate("0").setVersionInfo(7).setUpdateCount(2)
                 .setDbIdUpdated(4).setLastTxnId(33333).build();
-        CmdDeleteDataResponse response = stub.deleteRecord(CmdDeleteData.newBuilder().setMetadata(sdb).build());
+        CmdDeleteResponse response = stub.deleteRecord(CmdDelete.newBuilder().setMetadata(sdb).build());
        LOGGER.info("Response received from deleteRecordTest: \n" + response);
     }
 
@@ -94,7 +94,7 @@ public class Client {
         Metadata oldSdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
                 .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
         Metadata newSdb = Metadata.newBuilder().setSecurityName("renamedRecord").setDbIdUpdated(4).setUpdateCount(2).setVersionInfo(7).setLastTxnId(33333).setDateCreated(8).build();
-        CmdRenameDataResponse response = stub.renameRecord(CmdRenameData.newBuilder().setOldMetadata(oldSdb).setNewMetadata(newSdb).build());
+        CmdRenameResponse response = stub.renameRecord(CmdRename.newBuilder().setOldMetadata(oldSdb).setNewMetadata(newSdb).build());
         LOGGER.info("Response received from renameRecordTest: \n" + response);
     }
 

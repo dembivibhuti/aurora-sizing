@@ -654,15 +654,16 @@ public class ObjectRepository implements AutoCloseable {
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRecStmt = connection
                 .prepareStatement(INSERT_RECORDS)) {
             insertRecStmt.setString(1, sdbDisk.getSecurityName());
-            insertRecStmt.setInt(2, sdbDisk.getSecurityType());
-            insertRecStmt.setLong(3, sdbDisk.getLastTxnId());
-            insertRecStmt.setTimestamp(4, Timestamp.valueOf(sdbDisk.getTimeUpdate()));
-            insertRecStmt.setLong(5, sdbDisk.getUpdateCount());
-            insertRecStmt.setInt(6, sdbDisk.getDateCreated());
-            insertRecStmt.setInt(7, sdbDisk.getDbIdUpdated());
-            insertRecStmt.setInt(8, sdbDisk.getVersionInfo());
-            insertRecStmt.setBytes(9, getSizedByteArray(100));
-            insertRecStmt.setBytes(10, mem.toByteArray());
+            insertRecStmt.setString(2, sdbDisk.getSecurityName().toLowerCase());
+            insertRecStmt.setInt(3, sdbDisk.getSecurityType());
+            insertRecStmt.setLong(4, sdbDisk.getLastTxnId());
+            insertRecStmt.setTimestamp(5,new java.sql.Timestamp(System.currentTimeMillis()));// Timestamp.valueOf(sdbDisk.getTimeUpdate()));
+            insertRecStmt.setLong(6, sdbDisk.getUpdateCount());
+            insertRecStmt.setInt(7, sdbDisk.getDateCreated());
+            insertRecStmt.setInt(8, sdbDisk.getDbIdUpdated());
+            insertRecStmt.setInt(9, sdbDisk.getVersionInfo());
+            insertRecStmt.setBytes(10, getSizedByteArray(100));
+            insertRecStmt.setBytes(11, mem.toByteArray());
             rowsAffected = insertRecStmt.executeUpdate();
             connection.commit();
         } catch (SQLException throwables) {
@@ -727,16 +728,17 @@ public class ObjectRepository implements AutoCloseable {
              PreparedStatement lookupStmt = connection.prepareStatement(
                      RENAME_RECORDS)) {
             lookupStmt.setString(1, newSdbDisk.getSecurityName());
-            lookupStmt.setLong(2, newSdbDisk.getLastTxnId());
-            lookupStmt.setTimestamp(3, new java.sql.Timestamp(System.currentTimeMillis()));
-            lookupStmt.setLong(4, newSdbDisk.getUpdateCount());
-            lookupStmt.setInt(5, newSdbDisk.getDateCreated());
-            lookupStmt.setInt(6, newSdbDisk.getDbIdUpdated());
-            lookupStmt.setInt(7, newSdbDisk.getVersionInfo());
-            lookupStmt.setBytes(8, getSizedByteArray(100));   // will change
-            lookupStmt.setString(9, oldSdbDisk.getSecurityName());
-            lookupStmt.setLong(10, oldSdbDisk.getUpdateCount());
-            lookupStmt.setInt(11, oldSdbDisk.getDbIdUpdated());
+            lookupStmt.setString(2, newSdbDisk.getSecurityName().toLowerCase());
+            lookupStmt.setLong(3, newSdbDisk.getLastTxnId());
+            lookupStmt.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
+            lookupStmt.setLong(5, newSdbDisk.getUpdateCount());
+            lookupStmt.setInt(6, newSdbDisk.getDateCreated());
+            lookupStmt.setInt(7, newSdbDisk.getDbIdUpdated());
+            lookupStmt.setInt(8, newSdbDisk.getVersionInfo());
+            lookupStmt.setBytes(9, getSizedByteArray(100));   // will change
+            lookupStmt.setString(10, oldSdbDisk.getSecurityName());
+            lookupStmt.setLong(11, oldSdbDisk.getUpdateCount());
+            lookupStmt.setInt(12, oldSdbDisk.getDbIdUpdated());
 
             int recordsRenamed = lookupStmt.executeUpdate();
 

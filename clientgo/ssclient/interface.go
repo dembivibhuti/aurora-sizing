@@ -3,6 +3,7 @@ package ssclient
 import (
 	"log"
 
+	pb "github.com/somnath67643/aurora-sizing/clientgo/baseproto"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/clgrpc"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
@@ -25,6 +26,10 @@ type SSClient interface {
 	GetObjectExt(sname string) (*model.ObjectExt, error)
 	GetObjectMany(snames []string) (<-chan *model.Object, error)
 	GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, error)
+	InsertRecord(metadata *pb.Metadata, cmdType pb.CmdType, nr int32) (*pb.CmdInsertResponse, error)
+	RenameRecord(oldMetadata *pb.Metadata, newMetadata *pb.Metadata, cmdType pb.CmdType, nr int32) (*pb.CmdRenameResponse, error)
+	UpdateRecord(oldMetadata *pb.Metadata, newMetadata *pb.Metadata, cmdType pb.CmdType, nr int32) (*pb.CmdUpdateResponse, error)
+	DeleteRecord(metadata *pb.Metadata, cmdType pb.CmdType, nr int32, ignoreflags int32) (*pb.CmdDeleteResponse, error)
 }
 
 func NewSSClient(addr string, typ ClientType) SSClient {
