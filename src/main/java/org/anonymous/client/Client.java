@@ -19,42 +19,83 @@ public class Client {
                 .build();
 
 
-        ObjServiceGrpc.ObjServiceBlockingStub stub = ObjServiceGrpc.newBlockingStub(channel);
-        connect(stub);
-        stub.withWaitForReady();
+        ObjServiceGrpc.ObjServiceBlockingStub objSvcStub = ObjServiceGrpc.newBlockingStub(channel);
+        connect(objSvcStub);
+        objSvcStub.withWaitForReady();
         // Lookup calls
-        lookupByName(stub, 100);
-        stub.withWaitForReady();
-        lookupByType(stub, 100);
-        stub.withWaitForReady();
-        lookupByNameStream(stub, 10000);
-        stub.withWaitForReady();
-        lookupByNameStreamAll(stub);
-        stub.withWaitForReady();
-        lookupByTypeStream(stub, 100);
-        stub.withWaitForReady();
+        lookupByName(objSvcStub, 100);
+        objSvcStub.withWaitForReady();
+        lookupByType(objSvcStub, 100);
+        objSvcStub.withWaitForReady();
+        lookupByNameStream(objSvcStub, 10000);
+        objSvcStub.withWaitForReady();
+        lookupByNameStreamAll(objSvcStub);
+        objSvcStub.withWaitForReady();
+        lookupByTypeStream(objSvcStub, 100);
+        objSvcStub.withWaitForReady();
 
         // Get Object Many Calls
-        getObjectManyByName(stub);
-        stub.withWaitForReady();
-        getObjectManyByNameStream(stub);
-        stub.withWaitForReady();
-        getObjectManyByNameExt(stub);
-        stub.withWaitForReady();
-        getObjectManyByNameExtStream(stub);
-        stub.withWaitForReady();
+        getObjectManyByName(objSvcStub);
+        objSvcStub.withWaitForReady();
+        getObjectManyByNameStream(objSvcStub);
+        objSvcStub.withWaitForReady();
+        getObjectManyByNameExt(objSvcStub);
+        objSvcStub.withWaitForReady();
+        getObjectManyByNameExtStream(objSvcStub);
+        objSvcStub.withWaitForReady();
 
         // Get Object By Name Calls
-        getObjectByName(stub);
-        stub.withWaitForReady();
-        getObjectByNameExt(stub);
+        getObjectByName(objSvcStub);
+        objSvcStub.withWaitForReady();
+        getObjectByNameExt(objSvcStub);
+
+        TransactionServiceGrpc.TransactionServiceBlockingStub transSvcStub = TransactionServiceGrpc.newBlockingStub(channel);
+
+        insertRecordTest(transSvcStub);
+        transSvcStub.withWaitForReady();
+        updateRecordTest(transSvcStub);
+        transSvcStub.withWaitForReady();
+        renameRecordTest(transSvcStub);
+        transSvcStub.withWaitForReady();
+        deleteRecordTest(transSvcStub);
 
         channel.shutdown();
+
     }
 
     private static void connect(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdConnectResponse response = stub.connect(CmdConnect.newBuilder().setAppName("test").build());
-        System.out.println("Response received from connect: \n" + response);
+        LOGGER.info("Response received from connect: \n" + response);
+    }
+
+    private static void insertRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
+        Metadata sdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0001-01-01 00:00:00").
+                setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
+        CmdInsertResponse response = stub.insertRecord(CmdInsert.newBuilder().setSdbDisk(sdb).build());
+        LOGGER.info("Response received from insertRecordTest: Ack is...... \n" + response);
+    }
+    private static void updateRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
+        Metadata sdb1 = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0001-01-01 00:00:00").
+                setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
+        Metadata sdb2 = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
+                .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
+        CmdUpdateResponse response = stub.updateRecord(CmdUpdate.newBuilder().setOldSdbDisk(sdb1).setNewSdbDisk(sdb2).build());
+        LOGGER.info("Response received from updateRecordTest: Ack is...... \n" + response);
+    }
+
+    private static void deleteRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
+        Metadata sdb = Metadata.newBuilder().setSecurityName("renamedRecord").setTimeUpdate("0").setVersionInfo(7).setUpdateCount(2)
+                .setDbIdUpdated(4).setLastTxnId(33333).build();
+        CmdDeleteDataResponse response = stub.deleteRecord(CmdDeleteData.newBuilder().setMetadata(sdb).build());
+       LOGGER.info("Response received from deleteRecordTest: \n" + response);
+    }
+
+    private static void renameRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
+        Metadata oldSdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
+                .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
+        Metadata newSdb = Metadata.newBuilder().setSecurityName("renamedRecord").setDbIdUpdated(4).setUpdateCount(2).setVersionInfo(7).setLastTxnId(33333).setDateCreated(8).build();
+        CmdRenameDataResponse response = stub.renameRecord(CmdRenameData.newBuilder().setOldMetadata(oldSdb).setNewMetadata(newSdb).build());
+        LOGGER.info("Response received from renameRecordTest: \n" + response);
     }
 
     private static void lookupByName(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {

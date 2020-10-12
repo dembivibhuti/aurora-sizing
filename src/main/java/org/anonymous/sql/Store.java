@@ -16,6 +16,19 @@ public class Store {
 
     public static final String INSERT_RECORDS = "insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+    public static final String UPDATE_RECORDS =
+            "UPDATE objects SET \n" +
+                    "   typeId = ?,\n" +
+                    "   lastTransaction = ?,\n" +
+                    "   timeUpdated = ?,\n" +
+                    "   updateCount = ?,\n" +
+                    "   dateCreated = ?,\n" +
+                    "   dbIdUpdated = ?,\n" +
+                    "   versionInfo = ?,\n" +
+                    "   sdbDiskMem = ?,\n" +
+                    "   mem = ?\n" +
+                    "WHERE name = ? AND updateCount = ? AND dbIdUpdated = ?";
+
     public static final String LOOKUP_OBJECTS = "select name from objects where nameLower %s ? order by name %s LIMIT ?";
 
     public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where nameLower %s ? and typeId = ? order by name %s LIMIT ?";
@@ -35,5 +48,9 @@ public class Store {
     public static final String GET_MANY_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, sdbDiskMem from objects where nameLower in (%s)";
 
     public static final String GET_ALL_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, sdbDiskMem from objects where nameLower = ?";
+
+    public static final String DELETE_RECORDS = "delete from objects where name = ? and updateCount = ? and dbIdUpdated = ?";
+
+    public static final String RENAME_RECORDS = "update objects set name = ?, lastTransaction = ?, timeUpdated = ?, updateCount = ?, dateCreated = ?, dbIdUpdated = ?,versionInfo = ?, sdbDiskMem = ? where name = ? and updateCount = ? and dbIdUpdated = ?";
 
 }

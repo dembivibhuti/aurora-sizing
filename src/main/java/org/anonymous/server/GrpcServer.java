@@ -30,7 +30,9 @@ public class GrpcServer {
 
             int port = Integer.parseInt(System.getProperty("port"));
             Server server = ServerBuilder.forPort(port)
-                    .addService(new ObjServiceImpl(objectRepositiory)).build();
+                    .addService(new ObjServiceImpl(objectRepositiory))
+                    .addService(new TransactionServiceImpl(objectRepositiory))
+                    .build();
 
             LOGGER.info("Listening on {}", port);
             server.start();

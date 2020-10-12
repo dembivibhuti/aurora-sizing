@@ -1,0 +1,20 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+import "cmd_type.proto";
+import "metadata.proto";
+import "cmd_trans_msg_response.proto";
+
+message CmdInsert {
+  int32 message_size = 1;
+  CmdType message_type = 2;
+  Metadata sdb_disk = 3;
+  int32 mem_size = 4;
+  bytes mem = 5;
+}
+
+message CmdInsertResponse {
+  TransMsgResponse trans_msg_response = 1;
+}
