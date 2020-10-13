@@ -1,6 +1,28 @@
 package model
 
+import "github.com/prometheus/client_golang/prometheus"
+
 type CmpType int
+
+type Metrics struct {
+	GlookupByName     prometheus.Gauge
+	GlookupByType     prometheus.Gauge
+	GgetObject        prometheus.Gauge
+	GgetObjectExt     prometheus.Gauge
+	GgetObjectMany    prometheus.Gauge
+	GgetObjectManyExt prometheus.Gauge
+}
+
+func NewMetrics() *Metrics {
+	return &Metrics{
+		GlookupByName:     prometheus.NewGauge(prometheus.GaugeOpts{Name: "lookup_by_name"}),
+		GlookupByType:     prometheus.NewGauge(prometheus.GaugeOpts{Name: "lookup_by_type"}),
+		GgetObject:        prometheus.NewGauge(prometheus.GaugeOpts{Name: "get_object"}),
+		GgetObjectExt:     prometheus.NewGauge(prometheus.GaugeOpts{Name: "get_object_ext"}),
+		GgetObjectMany:    prometheus.NewGauge(prometheus.GaugeOpts{Name: "get_object_many"}),
+		GgetObjectManyExt: prometheus.NewGauge(prometheus.GaugeOpts{Name: "get_object_many_ext"}),
+	}
+}
 
 const (
 	GET_FIRST CmpType = iota

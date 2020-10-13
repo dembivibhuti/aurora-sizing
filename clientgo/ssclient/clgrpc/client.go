@@ -9,6 +9,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/prometheus/client_golang/prometheus"
 	pb "github.com/somnath67643/aurora-sizing/clientgo/baseproto"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
@@ -17,6 +18,7 @@ type SSClient struct {
 	client      pb.ObjServiceClient
 	transClient pb.TransactionServiceClient
 	conn        *grpc.ClientConn
+	metrics     *model.Metrics
 }
 
 func timeTaken(msg string, t time.Time) {
@@ -40,6 +42,7 @@ func NewSSClient(addr string) *SSClient {
 		client:      pb.NewObjServiceClient(conn),
 		transClient: pb.NewTransactionServiceClient(conn),
 		conn:        conn,
+		metrics:     model.NewMetrics(),
 	}
 }
 
@@ -73,7 +76,9 @@ func (s *SSClient) LookupByName(prefix string, cmpType model.CmpType, nr int32) 
 	}
 	ch := make(chan string)
 	go func() {
-		defer timeTaken("LookupByName", time.Now())
+		guageTimer := prometheus.NewTimer(prometheus.ObserverFunc(s.metrics.GlookupByName.Set)) // TODO: add more labels
+		defer guageTimer.ObserveDuration()
+
 		for {
 			resp, err := strmCl.Recv()
 			if err == io.EOF { // also takes care of io.EOF
@@ -103,7 +108,8 @@ func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpTy
 	}
 	ch := make(chan string)
 	go func() {
-		defer timeTaken("LookupByType", time.Now())
+		guageTimer := prometheus.NewTimer(prometheus.ObserverFunc(s.metrics.GlookupByType.Set)) // TODO: add more labels
+		defer guageTimer.ObserveDuration()
 		for {
 			resp, err := strmCl.Recv()
 			if err == io.EOF {
