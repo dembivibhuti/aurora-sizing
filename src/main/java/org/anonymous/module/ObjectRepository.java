@@ -62,7 +62,9 @@ public class ObjectRepository implements AutoCloseable {
                     .executeUpdate();
             LOGGER.info(" created index by name ");
 
-
+            connection.prepareStatement(CREATE_TXN_ID_SEQ)
+                    .executeUpdate();
+            LOGGER.info(" created txn sequence ");
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -649,112 +651,119 @@ public class ObjectRepository implements AutoCloseable {
         return responseMessages;
     }
 
-    public boolean insertRec(Metadata sdbDisk, ByteString mem){
+    public boolean insertRec(Connection connection,CmdInsert cmdInsert, long nextTxnId ) throws SQLException {
         int rowsAffected = 0;
-        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRecStmt = connection
+        Metadata metadata = cmdInsert.getSdbDisk();
+        try (PreparedStatement insertRecStmt = connection
                 .prepareStatement(INSERT_RECORDS)) {
-            insertRecStmt.setString(1, sdbDisk.getSecurityName());
-            insertRecStmt.setString(2, sdbDisk.getSecurityName().toLowerCase());
-            insertRecStmt.setInt(3, sdbDisk.getSecurityType());
-            insertRecStmt.setLong(4, sdbDisk.getLastTxnId());
-            insertRecStmt.setTimestamp(5, Timestamp.valueOf(sdbDisk.getTimeUpdate()));
-            insertRecStmt.setLong(6, sdbDisk.getUpdateCount());
-            insertRecStmt.setInt(7, sdbDisk.getDateCreated());
-            insertRecStmt.setInt(8, sdbDisk.getDbIdUpdated());
-            insertRecStmt.setInt(9, sdbDisk.getVersionInfo());
+            insertRecStmt.setString(1, metadata.getSecurityName());
+            insertRecStmt.setString(2, metadata.getSecurityName().toLowerCase());
+            insertRecStmt.setInt(3, metadata.getSecurityType());
+            insertRecStmt.setLong(4, nextTxnId);
+            insertRecStmt.setTimestamp(5, Timestamp.valueOf(metadata.getTimeUpdate()));
+            insertRecStmt.setLong(6, metadata.getUpdateCount());
+            insertRecStmt.setInt(7, metadata.getDateCreated());
+            insertRecStmt.setInt(8, metadata.getDbIdUpdated());
+            insertRecStmt.setInt(9, metadata.getVersionInfo());
             insertRecStmt.setBytes(10, getSizedByteArray(100));
-            insertRecStmt.setBytes(11, mem.toByteArray());
+            insertRecStmt.setBytes(11, cmdInsert.getMem().toByteArray());
+
             rowsAffected = insertRecStmt.executeUpdate();
-            connection.commit();
-        } catch (SQLException throwables) {
-            LOGGER.error("Failed to insert record {} ", sdbDisk.getSecurityName(), throwables);
+
+        } catch (SQLException sqlException) {
+            throw sqlException;
         }
         return rowsAffected == 1;
     }
 
-    public boolean updateRec(Metadata oldSdbDisk, Metadata newSdbDisk, ByteString mem){
+    public boolean updateRec(Connection connection, CmdUpdate cmdUpdate, long nextTxnId) throws SQLException{
         int rowsAffected = 0;
-        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement updateRecStmt = connection
+        Metadata oldMetaData = cmdUpdate.getOldSdbDisk();
+        Metadata newMetaData = cmdUpdate.getNewSdbDisk();
+        try (PreparedStatement updateRecStmt = connection
                 .prepareStatement(UPDATE_RECORDS)) {
-            updateRecStmt.setInt(1, newSdbDisk.getSecurityType());
-            updateRecStmt.setLong(2, newSdbDisk.getLastTxnId());
-            updateRecStmt.setTimestamp(3, Timestamp.valueOf(newSdbDisk.getTimeUpdate()));
-            updateRecStmt.setLong(4, newSdbDisk.getUpdateCount());
-            updateRecStmt.setInt(5, newSdbDisk.getDateCreated());
-            updateRecStmt.setInt(6, newSdbDisk.getDbIdUpdated());
-            updateRecStmt.setInt(7, newSdbDisk.getVersionInfo());
+            updateRecStmt.setInt(1, newMetaData.getSecurityType());
+            updateRecStmt.setLong(2, nextTxnId);
+            updateRecStmt.setTimestamp(3, Timestamp.valueOf(newMetaData.getTimeUpdate()));
+            updateRecStmt.setLong(4, newMetaData.getUpdateCount());
+            updateRecStmt.setInt(5, newMetaData.getDateCreated());
+            updateRecStmt.setInt(6, newMetaData.getDbIdUpdated());
+            updateRecStmt.setInt(7, newMetaData.getVersionInfo());
             updateRecStmt.setBytes(8, getSizedByteArray(100));
-            updateRecStmt.setBytes(9, mem.toByteArray());
-            updateRecStmt.setString(10, oldSdbDisk.getSecurityName());
-            updateRecStmt.setLong(11, oldSdbDisk.getUpdateCount());
-            updateRecStmt.setInt(12, oldSdbDisk.getDbIdUpdated());
+            updateRecStmt.setBytes(9, cmdUpdate.getMem().toByteArray());
+            updateRecStmt.setString(10, oldMetaData.getSecurityName());
+            updateRecStmt.setLong(11, oldMetaData.getUpdateCount());
+            updateRecStmt.setInt(12, oldMetaData.getDbIdUpdated());
+
             rowsAffected = updateRecStmt.executeUpdate();
-            connection.commit();
-        } catch (SQLException throwables) {
-            LOGGER.error("Failed to update record {} ", oldSdbDisk.getSecurityName(), throwables);
+
+        } catch (SQLException sqlException) {
+            throw sqlException;
         }
         return rowsAffected == 1;
     }
 
-    public Optional<TransMsgResponse.MsgOnSuccess> deleteDataRecords(Metadata sdbDisk) {
-        TransMsgResponse.MsgOnSuccess msgOnSuccess = null;
-        try (Connection connection = rwConnectionProvider.getConnection();
-             PreparedStatement lookupStmt = connection.prepareStatement(
-                     DELETE_RECORDS)) {
-            lookupStmt.setString(1, sdbDisk.getSecurityName());
-            lookupStmt.setLong(2, sdbDisk.getUpdateCount());
-            lookupStmt.setInt(3, sdbDisk.getDbIdUpdated());
+    public boolean deleteDataRecords(Connection connection, CmdDeleteData cmdDeleteData) throws SQLException {
+        int rowsAffected = 0;
+        Metadata metadata = cmdDeleteData.getMetadata();
+        try (PreparedStatement deleteRecStmt = connection.prepareStatement(
+                DELETE_RECORDS)) {
+            deleteRecStmt.setString(1, metadata.getSecurityName());
+            deleteRecStmt.setLong(2, metadata.getUpdateCount());
+            deleteRecStmt.setInt(3, metadata.getDbIdUpdated());
 
+            rowsAffected = deleteRecStmt.executeUpdate();
 
-            int recordsDeleted = lookupStmt.executeUpdate();
-
-            if (recordsDeleted == 1) {
-                System.out.println("Deleted");
-                msgOnSuccess = TransMsgResponse.MsgOnSuccess.newBuilder().
-                        setNotSecSyncMessage(TransMsgResponse.MsgOnSuccess.NotSecSyncMessage
-                                .newBuilder().setAck(1).setTxnId((int)sdbDisk.getLastTxnId())).build();
-            }
-            connection.commit();
-        } catch (Exception throwables) {
-            throwables.printStackTrace();
-            LOGGER.error("Failed to delete record {} ", sdbDisk.getSecurityName(), throwables);
+        } catch (SQLException sqlException) {
+            throw sqlException;
         }
-        return Optional.ofNullable(msgOnSuccess);
+        return rowsAffected == 1;
     }
 
-    public Optional<TransMsgResponse.MsgOnSuccess> renameDataRecords(Metadata oldSdbDisk, Metadata newSdbDisk) {
+    public boolean renameDataRecords(Connection connection, CmdRenameData cmdRenameData, long nextTxnId) throws SQLException {
         TransMsgResponse.MsgOnSuccess msgOnSuccess = null;
-        try (Connection connection = rwConnectionProvider.getConnection();
-             PreparedStatement lookupStmt = connection.prepareStatement(
-                     RENAME_RECORDS)) {
-            lookupStmt.setString(1, newSdbDisk.getSecurityName());
-            lookupStmt.setString(2, newSdbDisk.getSecurityName().toLowerCase());
-            lookupStmt.setLong(3, newSdbDisk.getLastTxnId());
-            lookupStmt.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
-            lookupStmt.setLong(5, newSdbDisk.getUpdateCount());
-            lookupStmt.setInt(6, newSdbDisk.getDateCreated());
-            lookupStmt.setInt(7, newSdbDisk.getDbIdUpdated());
-            lookupStmt.setInt(8, newSdbDisk.getVersionInfo());
-            lookupStmt.setBytes(9, getSizedByteArray(100));   // will change
-            lookupStmt.setString(10, oldSdbDisk.getSecurityName());
-            lookupStmt.setLong(11, oldSdbDisk.getUpdateCount());
-            lookupStmt.setInt(12, oldSdbDisk.getDbIdUpdated());
+        int rowsAffected = 0;
+        Metadata oldMetadata = cmdRenameData.getOldMetadata();
+        Metadata newMetadata = cmdRenameData.getNewMetadata();
+        try (PreparedStatement renameRecStmt = connection.prepareStatement(
+                RENAME_RECORDS)) {
+            renameRecStmt.setString(1, newMetadata.getSecurityName());
+            renameRecStmt.setString(2, newMetadata.getSecurityName().toLowerCase());
+            renameRecStmt.setLong(3, nextTxnId);
+            renameRecStmt.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
+            renameRecStmt.setLong(5, newMetadata.getUpdateCount());
+            renameRecStmt.setInt(6, newMetadata.getDateCreated());
+            renameRecStmt.setInt(7, newMetadata.getDbIdUpdated());
+            renameRecStmt.setInt(8, newMetadata.getVersionInfo());
+            renameRecStmt.setBytes(9, getSizedByteArray(100));   // will change
+            renameRecStmt.setString(10, oldMetadata.getSecurityName());
+            renameRecStmt.setLong(11, oldMetadata.getUpdateCount());
+            renameRecStmt.setInt(12, oldMetadata.getDbIdUpdated());
 
-            int recordsRenamed = lookupStmt.executeUpdate();
+            rowsAffected = renameRecStmt.executeUpdate();
 
-            if (recordsRenamed == 1) {
-                System.out.println("Renamed");
-                msgOnSuccess = TransMsgResponse.MsgOnSuccess.newBuilder().
-                        setNotSecSyncMessage(TransMsgResponse.MsgOnSuccess.NotSecSyncMessage
-                                .newBuilder().setAck(1).setTxnId((int)newSdbDisk.getLastTxnId())).build();
-            }
-            connection.commit();
-        } catch (Exception throwables) {
-            throwables.printStackTrace();
-            LOGGER.error("Failed to rename record {} ", oldSdbDisk.getSecurityName(), throwables);
+        }  catch (SQLException sqlException) {
+            throw sqlException;
         }
-        return Optional.ofNullable(msgOnSuccess);
+        return rowsAffected == 1;
     }
+
+    public boolean commitTransaction(Connection connection) throws SQLException {
+        boolean success = true;
+        try {
+            connection.commit();
+        }  catch (SQLException sqlException) {
+            success = false;
+            throw sqlException;
+        }
+        return success;
+    }
+
+    public Connection getConnectionObjRepo() throws SQLException {
+        LOGGER.info("Connection Created");
+        return rwConnectionProvider.getConnection();
+    }
+
 
     public void close() {
         executorService.shutdown();

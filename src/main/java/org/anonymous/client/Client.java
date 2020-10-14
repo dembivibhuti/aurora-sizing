@@ -2,12 +2,14 @@ package org.anonymous.client;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
 import org.anonymous.grpc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.CompletableFuture;
 
 public class Client {
     private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
@@ -49,6 +51,11 @@ public class Client {
         objSvcStub.withWaitForReady();
         getObjectByNameExt(objSvcStub);
 
+        // Transaction Service
+        CompletableFuture<Void> future = new CompletableFuture();
+        TransactionServiceGrpc.TransactionServiceStub asyncStub = TransactionServiceGrpc.newStub(channel);
+        transactionTest(asyncStub, future);
+        future.join();
         channel.shutdown();
 
     }
@@ -57,7 +64,6 @@ public class Client {
         CmdConnectResponse response = stub.connect(CmdConnect.newBuilder().setAppName("test").build());
         LOGGER.info("Response received from connect: \n" + response);
     }
-
 
     private static void lookupByName(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {
         CmdLookupByNameResponse response = stub.lookupByName(CmdLookupByName.newBuilder().setCount(count).setMessageType(CmdType.CMD_NAME_LOOKUP).setGetType(GetType.METADATA_GET_GREATER).setSecurityNamePrefix("test").build());
@@ -79,7 +85,6 @@ public class Client {
             LOGGER.info("Caught exception in Streaming Server-side Lookup by name stream", e);
         }
     }
-
 
     private static void lookupByNameStreamAll(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdLookupByName request = CmdLookupByName.newBuilder().setCount(0).setMessageType(CmdType.CMD_NAME_LOOKUP).setGetType(GetType.METADATA_GET_GREATER).setSecurityNamePrefix("test").build();
@@ -161,5 +166,69 @@ public class Client {
     private static void getObjectByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdGetByNameResponse response = stub.getObject(CmdGetByName.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-0").build());
         System.out.println("Response received from getObjectByName: \n" + response.getSecurity());
+    }
+
+    private static void transactionTest(TransactionServiceGrpc.TransactionServiceStub stub, CompletableFuture<Void> future) throws InterruptedException {
+        StreamObserver<TransMsgResponse> streamObserver = new StreamObserver<TransMsgResponse>() {
+            @Override
+            public void onNext(TransMsgResponse transMsgResponse) {
+                LOGGER.info("Response Received from server:");
+                System.out.println(transMsgResponse);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                LOGGER.info("Error in response");
+                future.completeExceptionally(throwable);
+            }
+
+            @Override
+            public void onCompleted() {
+                LOGGER.info("Transaction Completed");
+                LOGGER.info("Thread Name " + Thread.currentThread().getName());
+                future.complete(null);
+            }
+        };
+        StreamObserver<CmdTransactionRequest> requestObserver = stub.transaction(streamObserver);
+        // request generated for header
+        CmdTransHeader header = CmdTransHeader.newBuilder().setTransName("test-transaction").build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setHeader(header).setTransTypeValue(0).build());
+        Thread.sleep(500);
+
+        // request generated for insert
+        Metadata sdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0001-01-01 00:00:00").
+                setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
+        CmdInsert insert = CmdInsert.newBuilder().setSdbDisk(sdb).build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setInsert(insert).setTransTypeValue(1).build());
+        Thread.sleep(500);
+
+        //request generated for update
+        Metadata sdb1 = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0001-01-01 00:00:00").
+                setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
+        Metadata sdb2 = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
+                .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
+        CmdUpdate update = CmdUpdate.newBuilder().setOldSdbDisk(sdb1).setNewSdbDisk(sdb2).build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setUpdate(update).setTransTypeValue(2).build());
+        Thread.sleep(500);
+
+        //request generated for rename
+        Metadata oldSdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
+                .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
+        Metadata newSdb = Metadata.newBuilder().setSecurityName("renamedRecord").setDbIdUpdated(4).setUpdateCount(2).setVersionInfo(7).setLastTxnId(33333).setDateCreated(8).build();
+        CmdRenameData renameData = CmdRenameData.newBuilder().setOldMetadata(oldSdb).setNewMetadata(newSdb).build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setRename(renameData).setTransTypeValue(3).build());
+        Thread.sleep(500);
+
+        //request generated for delete
+        Metadata sdb4 = Metadata.newBuilder().setSecurityName("renamedRecord").setTimeUpdate("0").setVersionInfo(7).setUpdateCount(2)
+                .setDbIdUpdated(4).setLastTxnId(33333).build();
+        CmdDeleteData deleteData = CmdDeleteData.newBuilder().setMetadata(sdb4).build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setDelete(deleteData).setTransTypeValue(4).build());
+        Thread.sleep(500);
+
+        // request generated for trailer
+        CmdTrailer trailer = CmdTrailer.newBuilder().build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setTrailer(trailer).setTransTypeValue(5).build());
+        requestObserver.onCompleted();
     }
 }
