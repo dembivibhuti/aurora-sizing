@@ -15,10 +15,9 @@ import (
 )
 
 type SSClient struct {
-	client      pb.ObjServiceClient
-	transClient pb.TransactionServiceClient
-	conn        *grpc.ClientConn
-	metrics     *model.Metrics
+	client  pb.ObjServiceClient
+	conn    *grpc.ClientConn
+	metrics *model.Metrics
 }
 
 func timeTaken(msg string, t time.Time) {
@@ -39,10 +38,9 @@ func mustGetConn(addr string) *grpc.ClientConn {
 func NewSSClient(addr string) *SSClient {
 	conn := mustGetConn(addr)
 	return &SSClient{
-		client:      pb.NewObjServiceClient(conn),
-		transClient: pb.NewTransactionServiceClient(conn),
-		conn:        conn,
-		metrics:     model.NewMetrics(),
+		client:  pb.NewObjServiceClient(conn),
+		conn:    conn,
+		metrics: model.NewMetrics(),
 	}
 }
 
@@ -229,6 +227,13 @@ func (s *SSClient) GetObjectExt(sname string) (*model.ObjectExt, error) {
 	}, nil
 }
 
+func (s *SSClient) BeginTxn() model.Transactor {
+	return &GrpcTransactor{
+		transClient: pb.NewTransactionServiceClient(s.conn),
+	}
+}
+
+/*
 func (s *SSClient) InsertRecord(metadata *pb.Metadata, cmdType pb.CmdType, nr int32) (*pb.CmdInsertResponse, error) {
 	ctx := context.Background()
 	resp, err := s.transClient.InsertRecord(ctx, &pb.CmdInsert{
@@ -287,3 +292,4 @@ func (s *SSClient) DeleteRecord(metadata *pb.Metadata, cmdType pb.CmdType, nr in
 	}
 	return resp, nil
 }
+*/

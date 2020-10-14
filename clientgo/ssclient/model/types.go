@@ -55,3 +55,7 @@ type ObjectExt struct {
 	Metadata *Metadata
 	Mem      []byte
 }
+
+type TxnResp struct {
+	// TODO: (mfrw) leave it empty for now
+}
