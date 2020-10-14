@@ -49,16 +49,6 @@ public class Client {
         objSvcStub.withWaitForReady();
         getObjectByNameExt(objSvcStub);
 
-        TransactionServiceGrpc.TransactionServiceBlockingStub transSvcStub = TransactionServiceGrpc.newBlockingStub(channel);
-
-        insertRecordTest(transSvcStub);
-        transSvcStub.withWaitForReady();
-        updateRecordTest(transSvcStub);
-        transSvcStub.withWaitForReady();
-        renameRecordTest(transSvcStub);
-        transSvcStub.withWaitForReady();
-        deleteRecordTest(transSvcStub);
-
         channel.shutdown();
 
     }
@@ -68,35 +58,6 @@ public class Client {
         LOGGER.info("Response received from connect: \n" + response);
     }
 
-    private static void insertRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
-        Metadata sdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0001-01-01 00:00:00").
-                setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
-        CmdInsertResponse response = stub.insertRecord(CmdInsert.newBuilder().setMetadata(sdb).build());
-        LOGGER.info("Response received from insertRecordTest: Ack is...... \n" + response);
-    }
-    private static void updateRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
-        Metadata sdb1 = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0001-01-01 00:00:00").
-                setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
-        Metadata sdb2 = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
-                .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
-        CmdUpdateResponse response = stub.updateRecord(CmdUpdate.newBuilder().setOldMetadata(sdb1).setNewMetadata(sdb2).build());
-        LOGGER.info("Response received from updateRecordTest: Ack is...... \n" + response);
-    }
-
-    private static void deleteRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
-        Metadata sdb = Metadata.newBuilder().setSecurityName("renamedRecord").setTimeUpdate("0").setVersionInfo(7).setUpdateCount(2)
-                .setDbIdUpdated(4).setLastTxnId(33333).build();
-        CmdDeleteResponse response = stub.deleteRecord(CmdDelete.newBuilder().setMetadata(sdb).build());
-       LOGGER.info("Response received from deleteRecordTest: \n" + response);
-    }
-
-    private static void renameRecordTest(TransactionServiceGrpc.TransactionServiceBlockingStub stub) {
-        Metadata oldSdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
-                .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
-        Metadata newSdb = Metadata.newBuilder().setSecurityName("renamedRecord").setDbIdUpdated(4).setUpdateCount(2).setVersionInfo(7).setLastTxnId(33333).setDateCreated(8).build();
-        CmdRenameResponse response = stub.renameRecord(CmdRename.newBuilder().setOldMetadata(oldSdb).setNewMetadata(newSdb).build());
-        LOGGER.info("Response received from renameRecordTest: \n" + response);
-    }
 
     private static void lookupByName(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {
         CmdLookupByNameResponse response = stub.lookupByName(CmdLookupByName.newBuilder().setCount(count).setMessageType(CmdType.CMD_NAME_LOOKUP).setGetType(GetType.METADATA_GET_GREATER).setSecurityNamePrefix("test").build());

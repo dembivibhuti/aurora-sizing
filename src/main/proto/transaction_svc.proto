@@ -3,18 +3,10 @@ option java_multiple_files = true;
 option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
 package org.anonymous.grpc;
 
-import "cmd_connect.proto";
-import "cmd_connect_ext.proto";
-import "cmd_insert.proto";
-import "cmd_update.proto";
-import "cmd_delete.proto";
-import "cmd_rename.proto";
+import "cmd_trans_msg_request.proto";
+import "cmd_trans_msg_response.proto";
+
 
 service TransactionService {
-  rpc connect(CmdConnect) returns (CmdConnectResponse);
-  rpc connect_ext(CmdConnectExt) returns (CmdConnectExtResponse);
-  rpc insert_record(CmdInsert) returns (CmdInsertResponse);
-  rpc update_record(CmdUpdate) returns (CmdUpdateResponse);
-  rpc delete_record(CmdDelete) returns (CmdDeleteResponse);
-  rpc rename_record(CmdRename) returns (CmdRenameResponse);
+  rpc transaction(stream CmdTransactionRequest) returns (TransMsgResponse);
 }
