@@ -53,7 +53,7 @@ public class Store {
 
     public static final String RENAME_RECORDS = "update objects set name = ?, nameLower = ?, lastTransaction = ?, timeUpdated = ?, updateCount = ?, dateCreated = ?, dbIdUpdated = ?,versionInfo = ?, sdbDiskMem = ? where name = ? and updateCount = ? and dbIdUpdated = ?";
 
-    public static final String CREATE_TXN_ID_SEQ = "CREATE SEQUENCE txn_id_seq START 1";
+   public static final String CREATE_TXN_ID_SEQ = "CREATE SEQUENCE txn_id_seq START 1";
 
     public static final String GET_NXT_TXN_ID = "SELECT nextval('txn_id_seq')";
 

@@ -62,9 +62,9 @@ public class ObjectRepository implements AutoCloseable {
                     .executeUpdate();
             LOGGER.info(" created index by name ");
 
-            connection.prepareStatement(CREATE_TXN_ID_SEQ)
+           /* connection.prepareStatement(CREATE_TXN_ID_SEQ)
                     .executeUpdate();
-            LOGGER.info(" created txn sequence ");
+            LOGGER.info(" created txn sequence "); */
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -142,6 +142,46 @@ public class ObjectRepository implements AutoCloseable {
             completableFuture.completeExceptionally(ex);
         }
     }
+    
+    public void insertRecsFromCSV(int totalRecords) {
+        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
+                .prepareStatement(INSERT_RECORDS)) {
+
+            byte[] sdbMem = getSizedByteArray(100);
+            byte[] mem = getSizedByteArray(32000);
+
+            Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
+            for (int i = 0; i < numberOfRecsPerThread; i++) {
+
+                int randTypeId = randIntStream.next();
+                String name = String.format("testSec-%d-%d", randIntStream.next(), i);
+
+                long spanId = secInsertTimeKeeper.start();
+                insertRec.setString(1, name);
+                insertRec.setInt(2, randTypeId);
+                insertRec.setLong(3, i);
+                insertRec.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
+                insertRec.setLong(5, 0);
+                insertRec.setInt(6, 0);
+                insertRec.setInt(7, 0);
+                insertRec.setInt(8, 0);
+                insertRec.setBytes(9, sdbMem);
+                insertRec.setBytes(10, mem);
+                insertRec.setString(11, name.toLowerCase());
+                insertRec.executeUpdate();
+                connection.commit();
+
+                secInsertTimeKeeper.stop(spanId);
+            }
+            completableFuture.complete("");
+            LOGGER.info("Inserted another {} records", numberOfRecsPerThread);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            completableFuture.completeExceptionally(ex);
+        }
+    }
+
 
     private byte[] getSizedByteArray(int size) {
         String string = "asdf";

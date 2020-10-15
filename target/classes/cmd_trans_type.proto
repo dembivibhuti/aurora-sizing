@@ -1,0 +1,13 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+enum TransType {
+	HEADER = 0;
+	INSERT = 1;
+	UPDATE = 2;
+	RENAME = 3;
+	DELETE = 4;
+	TRAILER = 5;
+}

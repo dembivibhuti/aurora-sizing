@@ -25,6 +25,7 @@ public class Client {
         connect(objSvcStub);
         objSvcStub.withWaitForReady();
         // Lookup calls
+        /*
         lookupByName(objSvcStub, 100);
         objSvcStub.withWaitForReady();
         lookupByType(objSvcStub, 100);
@@ -49,7 +50,7 @@ public class Client {
         // Get Object By Name Calls
         getObjectByName(objSvcStub);
         objSvcStub.withWaitForReady();
-        getObjectByNameExt(objSvcStub);
+        getObjectByNameExt(objSvcStub); */
 
         // Transaction Service
         CompletableFuture<Void> future = new CompletableFuture();

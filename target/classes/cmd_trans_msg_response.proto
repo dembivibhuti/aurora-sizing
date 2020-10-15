@@ -1,0 +1,57 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+import "error_type.proto";
+
+message TransMsgResponse {
+  message MsgOnSuccess {
+    message SecSyncMessage {
+      uint32 message_size = 1;
+      int32 ack = 2;
+      int32 source_db_id = 3;
+      int32 source_txn_id = 4;
+      int32 destination_txn_id = 5;
+    }
+
+    message NotSecSyncMessage {
+      uint32 message_size = 1;
+      int32 ack = 2;
+      int32 txn_id = 3;
+    }
+
+    oneof MessageResponse {
+      SecSyncMessage sec_sync_message = 1;
+      NotSecSyncMessage not_sec_sync_message = 2;
+    }
+  }
+
+  message MsgOnFailure {
+    message SecSyncMessage {
+      uint32 message_size = 1;
+      ErrorType error_message_type = 2;
+      int32 source_db_id = 3;
+      int32 source_txn_id = 4;
+      string error_message = 5;
+    }
+
+    message NotSecSyncMessage {
+      uint32 message_size = 1;
+      int32 ack = 2;
+      int32 txn_id = 3;
+      ErrorType error_message_type = 4;
+      string error_message = 5;
+    }
+
+    oneof MessageResponse {
+      SecSyncMessage sec_sync_message = 1;
+      NotSecSyncMessage not_sec_sync_message = 2;
+    }
+  }
+
+  oneof RequestReponse {
+    MsgOnFailure msg_on_failure = 1;
+    MsgOnSuccess msg_on_success = 2;
+  }
+}

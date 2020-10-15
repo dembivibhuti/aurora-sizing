@@ -25,7 +25,7 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
     @Override
     public StreamObserver<CmdTransactionRequest> transaction(StreamObserver<TransMsgResponse> responseObserver) {
         return new StreamObserver<CmdTransactionRequest>() {
-            long txnId;
+            long txnId=1L;
             Connection connection;
             {
                 try {
@@ -41,10 +41,11 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
                     switch (request.getTransSeqValue()){
                         case 0:
                             LOGGER.info("got request insertHeader()");
+                            /*
                             ResultSet resultSet = connection.prepareStatement(GET_NXT_TXN_ID)
                                     .executeQuery();
                             resultSet.next();
-                            txnId = resultSet.getLong(1);
+                            txnId = resultSet.getLong(1); */
                             break;
                         case 1:
                             LOGGER.info("got request insertRecord()");

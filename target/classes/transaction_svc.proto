@@ -1,0 +1,12 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+import "cmd_trans_msg_request.proto";
+import "cmd_trans_msg_response.proto";
+
+
+service TransactionService {
+  rpc transaction(stream CmdTransactionRequest) returns (TransMsgResponse);
+}
