@@ -103,109 +103,52 @@ func ssMain(scl model.SSClient) {
 			fmt.Printf("LookupByName/%d->GetObjectManyExt: %s\n", len(secnames), time.Since(start).String())
 		}
 
-		/*
-			insertRecord := func(n int32) {
-				metadata := &pb.Metadata{
-					SecurityName: "testSec-10",
-					SecurityType: 1,
-					UpdateCount:  1,
-					DateCreated:  1,
-					TimeUpdate:   "0001-01-01 00:00:00",
-					DbIdUpdated:  1,
-					LastTxnId:    1,
-					VersionInfo:  1,
-				}
-				//res, err := scl.InsertRecord(metadata, pb.CmdType_CMD_INSERT, n)
-				//if err != nil {
-				//log.Fatal(err)
-				//}
-				//fmt.Println("%v", res)
+		transaction := func(n int32) {
+			transactor := scl.BeginTxn()
+			metadata := &model.Metadata{
+				SecurityName: "testSec-10",
+				SecurityType: 1,
+				UpdateCount:  1,
+				DateCreated:  1,
+				TimeUpdated:  "0001-01-01 00:00:00",
+				DbIdUpdated:  1,
+				LastTxnId:    1,
+				VersionInfo:  1,
 			}
-
-			renameRecord := func(n int32) {
-				oldMetadata := &pb.Metadata{
-					SecurityName: "testSec-10",
-					SecurityType: 1,
-					UpdateCount:  1,
-					DateCreated:  1,
-					TimeUpdate:   "0001-01-01 00:00:00",
-					DbIdUpdated:  1,
-					LastTxnId:    1,
-					VersionInfo:  1,
-				}
-				newMetadata := &pb.Metadata{
-					SecurityName: "testSec-11",
-					SecurityType: 1,
-					UpdateCount:  1,
-					DateCreated:  1,
-					TimeUpdate:   "0001-01-01 00:00:00",
-					DbIdUpdated:  1,
-					LastTxnId:    1,
-					VersionInfo:  1,
-				}
-				//res, err := scl.RenameRecord(oldMetadata, newMetadata, pb.CmdType_CMD_RENAME, n)
-				//if err != nil {
-				//log.Fatal(err)
-				//}
-				//fmt.Println("%v", res)
+			mem := []byte{}
+			transactor.Insert(metadata, mem)
+			renameMetadata := &model.Metadata{
+				SecurityName: "testSec-11",
+				SecurityType: 1,
+				UpdateCount:  1,
+				DateCreated:  1,
+				TimeUpdated:  "0001-01-01 00:00:00",
+				DbIdUpdated:  1,
+				LastTxnId:    1,
+				VersionInfo:  1,
 			}
-
-			updateRecord := func(n int32) {
-				oldMetadata := &pb.Metadata{
-					SecurityName: "testSec-11",
-					SecurityType: 1,
-					UpdateCount:  1,
-					DateCreated:  1,
-					TimeUpdate:   "0001-01-01 00:00:00",
-					DbIdUpdated:  1,
-					LastTxnId:    1,
-					VersionInfo:  1,
-				}
-				newMetadata := &pb.Metadata{
-					SecurityName: "testSec-11",
-					SecurityType: 1,
-					UpdateCount:  1,
-					DateCreated:  1,
-					TimeUpdate:   "1111-11-11 00:00:00",
-					DbIdUpdated:  1,
-					LastTxnId:    1,
-					VersionInfo:  1,
-				}
-				//res, err := scl.UpdateRecord(oldMetadata, newMetadata, pb.CmdType_CMD_UPDATE, n)
-				//if err != nil {
-				//log.Fatal(err)
-				//}
-				//fmt.Println("%v", res)
+			transactor.Rename(metadata, renameMetadata)
+			updateMetadata := &model.Metadata{
+				SecurityName: "testSec-11",
+				SecurityType: 1,
+				UpdateCount:  1,
+				DateCreated:  1,
+				TimeUpdated:  "1111-11-11 00:00:00",
+				DbIdUpdated:  1,
+				LastTxnId:    1,
+				VersionInfo:  1,
 			}
-
-			deleteRecord := func(n int32) {
-				metadata := &pb.Metadata{
-					SecurityName: "testSec-11",
-					SecurityType: 1,
-					UpdateCount:  1,
-					DateCreated:  1,
-					TimeUpdate:   "1111-11-11 00:00:00",
-					DbIdUpdated:  1,
-					LastTxnId:    1,
-					VersionInfo:  1,
-				}
-				//res, err := scl.DeleteRecord(metadata, pb.CmdType_CMD_DELETE, n, 1)
-				//if err != nil {
-				//log.Fatal(err)
-				//}
-				//fmt.Println("%v", res)
-			}
-		*/
+			transactor.Update(renameMetadata, updateMetadata, mem)
+			transactor.Delete(updateMetadata, n)
+			transactor.End()
+		}
 
 		increments := []int32{1, 10, 100, 1_000, 10_000, 100_000, 1_000_000} // go can have numebers 100 -> 1_0_0
 		for _, i := range increments {
 			runNTimesWithArg(3, lookupOnly, i)
 			runNTimesWithArg(3, lookupWithGetObject, i)
 			runNTimesWithArg(3, lookupWithGetMany, i)
-			//runNTimesWithArg(1, insertRecord, i)
-			//runNTimesWithArg(1, renameRecord, i)
-			//runNTimesWithArg(1, updateRecord, i)
-			//runNTimesWithArg(1, deleteRecord, i)
+			runNTimesWithArg(1, transaction, i)
 		}
 	})
 }

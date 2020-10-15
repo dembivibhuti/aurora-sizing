@@ -191,15 +191,15 @@ public class Client {
         };
         StreamObserver<CmdTransactionRequest> requestObserver = stub.transaction(streamObserver);
         // request generated for header
-        CmdTransHeader header = CmdTransHeader.newBuilder().setTransName("test-transaction").build();
-        requestObserver.onNext(CmdTransactionRequest.newBuilder().setHeader(header).setTransTypeValue(0).build());
+        CmdHeader header = CmdHeader.newBuilder().setTransName("test-transaction").build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setHeader(header).setTransSeqValue(0).build());
         Thread.sleep(500);
 
         // request generated for insert
         Metadata sdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0001-01-01 00:00:00").
                 setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
-        CmdInsert insert = CmdInsert.newBuilder().setSdbDisk(sdb).build();
-        requestObserver.onNext(CmdTransactionRequest.newBuilder().setInsert(insert).setTransTypeValue(1).build());
+        CmdInsert insert = CmdInsert.newBuilder().setMetadata(sdb).build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setInsert(insert).setTransSeqValue(1).build());
         Thread.sleep(500);
 
         //request generated for update
@@ -207,28 +207,28 @@ public class Client {
                 setLastTxnId(11111).setDbIdUpdated(7).setUpdateCount(5).setVersionInfo(11).build();
         Metadata sdb2 = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
                 .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
-        CmdUpdate update = CmdUpdate.newBuilder().setOldSdbDisk(sdb1).setNewSdbDisk(sdb2).build();
-        requestObserver.onNext(CmdTransactionRequest.newBuilder().setUpdate(update).setTransTypeValue(2).build());
+        CmdUpdate update = CmdUpdate.newBuilder().setOldMetadata(sdb1).setNewMetadata(sdb2).build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setUpdate(update).setTransSeqValue(2).build());
         Thread.sleep(500);
 
         //request generated for rename
         Metadata oldSdb = Metadata.newBuilder().setSecurityName("newRecord").setTimeUpdate("0002-02-02 00:00:00").setLastTxnId(222222).setVersionInfo(22)
                 .setDbIdUpdated(17).setUpdateCount(15).setVersionInfo(10).build();
         Metadata newSdb = Metadata.newBuilder().setSecurityName("renamedRecord").setDbIdUpdated(4).setUpdateCount(2).setVersionInfo(7).setLastTxnId(33333).setDateCreated(8).build();
-        CmdRenameData renameData = CmdRenameData.newBuilder().setOldMetadata(oldSdb).setNewMetadata(newSdb).build();
-        requestObserver.onNext(CmdTransactionRequest.newBuilder().setRename(renameData).setTransTypeValue(3).build());
+        CmdRename renameData = CmdRename.newBuilder().setOldMetadata(oldSdb).setNewMetadata(newSdb).build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setRename(renameData).setTransSeqValue(3).build());
         Thread.sleep(500);
 
         //request generated for delete
         Metadata sdb4 = Metadata.newBuilder().setSecurityName("renamedRecord").setTimeUpdate("0").setVersionInfo(7).setUpdateCount(2)
                 .setDbIdUpdated(4).setLastTxnId(33333).build();
-        CmdDeleteData deleteData = CmdDeleteData.newBuilder().setMetadata(sdb4).build();
-        requestObserver.onNext(CmdTransactionRequest.newBuilder().setDelete(deleteData).setTransTypeValue(4).build());
+        CmdDelete deleteData = CmdDelete.newBuilder().setMetadata(sdb4).build();
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setDelete(deleteData).setTransSeqValue(4).build());
         Thread.sleep(500);
 
         // request generated for trailer
         CmdTrailer trailer = CmdTrailer.newBuilder().build();
-        requestObserver.onNext(CmdTransactionRequest.newBuilder().setTrailer(trailer).setTransTypeValue(5).build());
+        requestObserver.onNext(CmdTransactionRequest.newBuilder().setTrailer(trailer).setTransSeqValue(5).build());
         requestObserver.onCompleted();
     }
 }

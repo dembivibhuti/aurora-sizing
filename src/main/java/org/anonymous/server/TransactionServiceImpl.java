@@ -38,7 +38,7 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
             @Override
             public void onNext(CmdTransactionRequest request) {
                 try{
-                    switch (request.getTransTypeValue()){
+                    switch (request.getTransSeqValue()){
                         case 0:
                             LOGGER.info("got request insertHeader()");
                             ResultSet resultSet = connection.prepareStatement(GET_NXT_TXN_ID)

@@ -7,7 +7,7 @@ import "cmd_type.proto";
 import "metadata.proto";
 
 
-message CmdDeleteData {
+message CmdDelete {
 	int32 msg_size = 1;
 	CmdType msg_type = 2;
 	Metadata metadata = 3;

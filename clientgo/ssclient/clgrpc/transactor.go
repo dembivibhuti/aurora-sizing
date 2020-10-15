@@ -1,6 +1,8 @@
 package clgrpc
 
 import (
+	"context"
+	"fmt"
 	pb "github.com/somnath67643/aurora-sizing/clientgo/baseproto"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
@@ -30,7 +32,7 @@ func (g *GrpcTransactor) Insert(metadata *model.Metadata, mem []byte) error {
 }
 
 func (g *GrpcTransactor) Rename(oldMetadata *model.Metadata, newMetadata *model.Metadata) error {
-	rnm := &pb.CmdRenameData{
+	rnm := &pb.CmdRename{
 		OldMetadata: convertModelMetadataToGrpcMetadata(oldMetadata),
 		NewMetadata: convertModelMetadataToGrpcMetadata(newMetadata),
 	}
@@ -63,7 +65,7 @@ func (g *GrpcTransactor) Update(oldMetadata *model.Metadata, newMetadata *model.
 }
 
 func (g *GrpcTransactor) Delete(metadata *model.Metadata, ignoreflags int32) error {
-	del := &pb.CmdDeleteData{
+	del := &pb.CmdDelete{
 		Metadata:      convertModelMetadataToGrpcMetadata(metadata),
 		IgnoreErrFlag: ignoreflags,
 	}
@@ -79,10 +81,50 @@ func (g *GrpcTransactor) Delete(metadata *model.Metadata, ignoreflags int32) err
 }
 
 func (g *GrpcTransactor) End() (error, *model.TxnResp) {
-	//TODO: (gakshit): impl
-	// 1. Send a header ..
-	//	1a. create a header -> len(buffer) + 2 (header + trailer + len)
-	// 2. loop through the buffer and stream them
-	// 3. Send a trailer ..
-	return nil, nil
+	tClient, err := g.transClient.Transaction(context.Background())
+	if err != nil {
+		return err, nil
+	}
+	header := &pb.CmdHeader{
+		TransName: "abc",
+		TransType: 0,
+	}
+
+	headerMsg := &pb.CmdTransactionRequest_Header{
+		Header: header,
+	}
+	req := &pb.CmdTransactionRequest{
+		TransSeq:       pb.TransType_HEADER,
+		MessageRequest: headerMsg,
+	}
+	err = tClient.Send(req)
+	if err != nil {
+		return err, nil
+	}
+
+	for _, val := range g.buffer {
+		err = tClient.Send(val)
+		if err != nil {
+			return err, nil
+		}
+	}
+	trailer := &pb.CmdTrailer{}
+	trailerMsg := &pb.CmdTransactionRequest_Trailer{
+		Trailer: trailer,
+	}
+	trailerReq := &pb.CmdTransactionRequest{
+		TransSeq:       pb.TransType_TRAILER,
+		MessageRequest: trailerMsg,
+	}
+	err = tClient.Send(trailerReq)
+	if err != nil {
+		return err, nil
+	}
+	resp, err := tClient.CloseAndRecv()
+	fmt.Println(resp)
+	if err != nil {
+		return err, nil
+	}
+
+	return nil, &model.TxnResp{}
 }

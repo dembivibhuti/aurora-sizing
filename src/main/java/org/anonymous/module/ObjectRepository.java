@@ -653,7 +653,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public boolean insertRec(Connection connection,CmdInsert cmdInsert, long nextTxnId ) throws SQLException {
         int rowsAffected = 0;
-        Metadata metadata = cmdInsert.getSdbDisk();
+        Metadata metadata = cmdInsert.getMetadata();
         try (PreparedStatement insertRecStmt = connection
                 .prepareStatement(INSERT_RECORDS)) {
             insertRecStmt.setString(1, metadata.getSecurityName());
@@ -678,8 +678,8 @@ public class ObjectRepository implements AutoCloseable {
 
     public boolean updateRec(Connection connection, CmdUpdate cmdUpdate, long nextTxnId) throws SQLException{
         int rowsAffected = 0;
-        Metadata oldMetaData = cmdUpdate.getOldSdbDisk();
-        Metadata newMetaData = cmdUpdate.getNewSdbDisk();
+        Metadata oldMetaData = cmdUpdate.getOldMetadata();
+        Metadata newMetaData = cmdUpdate.getNewMetadata();
         try (PreparedStatement updateRecStmt = connection
                 .prepareStatement(UPDATE_RECORDS)) {
             updateRecStmt.setInt(1, newMetaData.getSecurityType());
@@ -703,7 +703,7 @@ public class ObjectRepository implements AutoCloseable {
         return rowsAffected == 1;
     }
 
-    public boolean deleteDataRecords(Connection connection, CmdDeleteData cmdDeleteData) throws SQLException {
+    public boolean deleteDataRecords(Connection connection, CmdDelete cmdDeleteData) throws SQLException {
         int rowsAffected = 0;
         Metadata metadata = cmdDeleteData.getMetadata();
         try (PreparedStatement deleteRecStmt = connection.prepareStatement(
@@ -720,7 +720,7 @@ public class ObjectRepository implements AutoCloseable {
         return rowsAffected == 1;
     }
 
-    public boolean renameDataRecords(Connection connection, CmdRenameData cmdRenameData, long nextTxnId) throws SQLException {
+    public boolean renameDataRecords(Connection connection, CmdRename cmdRenameData, long nextTxnId) throws SQLException {
         TransMsgResponse.MsgOnSuccess msgOnSuccess = null;
         int rowsAffected = 0;
         Metadata oldMetadata = cmdRenameData.getOldMetadata();
