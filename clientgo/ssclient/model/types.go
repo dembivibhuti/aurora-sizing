@@ -50,11 +50,11 @@ const (
 type Metadata struct {
 	SecurityName string
 	SecurityType int32
-	UpdateCount  int32
+	UpdateCount  int64
 	DateCreated  int32
-	TimeUpdated  int32
+	TimeUpdated  string
 	DbIdUpdated  int32
-	LastTxnId    int32
+	LastTxnId    int64
 	VersionInfo  int32
 }
 

@@ -12,3 +12,16 @@ func convertCmpTypeToGrpcGetType(t model.CmpType) pb.GetType {
 func convertGrpcGetTypeToCmpType(t pb.GetType) model.CmpType {
 	return model.CmpType(int(t))
 }
+
+func convertModelMetadataToGrpcMetadata(m *model.Metadata) *pb.Metadata {
+	return &pb.Metadata{
+		SecurityName: m.SecurityName,
+		SecurityType: m.SecurityType,
+		UpdateCount:  m.UpdateCount,
+		DateCreated:  m.DateCreated,
+		TimeUpdate:   m.TimeUpdated,
+		DbIdUpdated:  m.DbIdUpdated,
+		LastTxnId:    m.LastTxnId,
+		VersionInfo:  m.VersionInfo,
+	}
+}
