@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"time"
 
 	"google.golang.org/grpc"
 
+	gprom "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	pb "github.com/somnath67643/aurora-sizing/clientgo/baseproto"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
@@ -27,6 +30,9 @@ func timeTaken(msg string, t time.Time) {
 func mustGetConn(addr string) *grpc.ClientConn {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
+	opts = append(opts, grpc.WithUnaryInterceptor(gprom.UnaryClientInterceptor))
+	opts = append(opts, grpc.WithStreamInterceptor(gprom.StreamClientInterceptor))
+	gprom.EnableClientHandlingTimeHistogram()
 	//	opts = append(opts, grpc.WithBlock())
 	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
@@ -53,7 +59,16 @@ func (s *SSClient) Init() {
 }
 
 func (s *SSClient) EnableMetrics(addr string) {
-
+	s.metrics.Register(prometheus.DefaultRegisterer)
+	http.Handle("/metrics", promhttp.HandlerFor(
+		prometheus.DefaultGatherer,
+		promhttp.HandlerOpts{
+			EnableOpenMetrics: true,
+		},
+	))
+	go func() {
+		log.Fatal(http.ListenAndServe(addr, nil)) // Start the http server for prometheus
+	}()
 }
 
 func (s *SSClient) UseService(dbname string, closure func()) error {

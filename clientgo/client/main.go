@@ -21,6 +21,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
 	defer sscl.Close()
+	sscl.EnableMetrics(":9090")
 	ssMain(sscl)
 }
 
@@ -42,7 +43,7 @@ func randDigit(n int) string {
 	return StringWithCharset(n, "123456789")
 }
 
-func ssMain(scl ssclient.SSClient) {
+func ssMain(scl model.SSClient) {
 	scl.UseService("tdmsqa_nyc_bm_lta3", func() {
 
 		lookupOnly := func(n int32) {

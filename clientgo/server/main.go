@@ -89,14 +89,6 @@ func (o *objServer) ChangeInitDataExt(_ context.Context, _ *pb.CmdChangeInitData
 	panic("not implemented") // TODO: Implement
 }
 
-func (o *objServer) DeleteRecord(ctx context.Context, in *pb.CmdDelete) (*pb.CmdDeleteResponse, error) {
-	return deleteRecord(ctx, in)
-}
-
-func (o *objServer) RenameData(_ context.Context, _ *pb.CmdRenameData) (*pb.CmdRenameDataResponse, error) {
-	panic("not implemented") // TODO: Implement
-}
-
 func (o *objServer) mustEmbedUnimplementedObjServiceServer() {
 	panic("not implemented") // TODO: Implement
 }
@@ -182,6 +174,7 @@ func getObjectManyByNameExtStream(in *pb.CmdGetManyByNameExt, stream pb.ObjServi
 	return nil
 }
 
+/*
 func deleteRecord(ctx context.Context, in *pb.CmdDelete) (*pb.CmdDeleteResponse, error) {
 	syncMsg := &pb.TransMsgResponse_MsgOnSuccess_SecSyncMessage{
 		MessageSize:      uint32(in.MsgSize),
@@ -210,3 +203,4 @@ func deleteRecord(ctx context.Context, in *pb.CmdDelete) (*pb.CmdDeleteResponse,
 	}
 	return resp, nil
 }
+*/
