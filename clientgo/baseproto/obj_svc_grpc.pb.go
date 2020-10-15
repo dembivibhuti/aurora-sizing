@@ -31,8 +31,6 @@ type ObjServiceClient interface {
 	GetObjectManyByNameExtStream(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (ObjService_GetObjectManyByNameExtStreamClient, error)
 	ChangeInitData(ctx context.Context, in *CmdChangeInitData, opts ...grpc.CallOption) (*CmdChangeInitDataResponse, error)
 	ChangeInitDataExt(ctx context.Context, in *CmdChangeInitDataExt, opts ...grpc.CallOption) (*CmdChangeInitDataExtResponse, error)
-	DeleteData(ctx context.Context, in *CmdDeleteData, opts ...grpc.CallOption) (*CmdDeleteDataResponse, error)
-	RenameData(ctx context.Context, in *CmdRenameData, opts ...grpc.CallOption) (*CmdRenameDataResponse, error)
 }
 
 type objServiceClient struct {
@@ -261,24 +259,6 @@ func (c *objServiceClient) ChangeInitDataExt(ctx context.Context, in *CmdChangeI
 	return out, nil
 }
 
-func (c *objServiceClient) DeleteData(ctx context.Context, in *CmdDeleteData, opts ...grpc.CallOption) (*CmdDeleteDataResponse, error) {
-	out := new(CmdDeleteDataResponse)
-	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/delete_data", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *objServiceClient) RenameData(ctx context.Context, in *CmdRenameData, opts ...grpc.CallOption) (*CmdRenameDataResponse, error) {
-	out := new(CmdRenameDataResponse)
-	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/rename_data", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // ObjServiceServer is the server API for ObjService service.
 // All implementations must embed UnimplementedObjServiceServer
 // for forward compatibility
@@ -297,8 +277,6 @@ type ObjServiceServer interface {
 	GetObjectManyByNameExtStream(*CmdGetManyByNameExt, ObjService_GetObjectManyByNameExtStreamServer) error
 	ChangeInitData(context.Context, *CmdChangeInitData) (*CmdChangeInitDataResponse, error)
 	ChangeInitDataExt(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error)
-	DeleteData(context.Context, *CmdDeleteData) (*CmdDeleteDataResponse, error)
-	RenameData(context.Context, *CmdRenameData) (*CmdRenameDataResponse, error)
 	mustEmbedUnimplementedObjServiceServer()
 }
 
@@ -347,12 +325,6 @@ func (UnimplementedObjServiceServer) ChangeInitData(context.Context, *CmdChangeI
 }
 func (UnimplementedObjServiceServer) ChangeInitDataExt(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeInitDataExt not implemented")
-}
-func (UnimplementedObjServiceServer) DeleteData(context.Context, *CmdDeleteData) (*CmdDeleteDataResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteData not implemented")
-}
-func (UnimplementedObjServiceServer) RenameData(context.Context, *CmdRenameData) (*CmdRenameDataResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RenameData not implemented")
 }
 func (UnimplementedObjServiceServer) mustEmbedUnimplementedObjServiceServer() {}
 
@@ -631,42 +603,6 @@ func _ObjService_ChangeInitDataExt_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ObjService_DeleteData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdDeleteData)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ObjServiceServer).DeleteData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/DeleteData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ObjServiceServer).DeleteData(ctx, req.(*CmdDeleteData))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ObjService_RenameData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CmdRenameData)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ObjServiceServer).RenameData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/RenameData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ObjServiceServer).RenameData(ctx, req.(*CmdRenameData))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _ObjService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "org.anonymous.grpc.ObjService",
 	HandlerType: (*ObjServiceServer)(nil),
@@ -710,14 +646,6 @@ var _ObjService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "change_init_data_ext",
 			Handler:    _ObjService_ChangeInitDataExt_Handler,
-		},
-		{
-			MethodName: "delete_data",
-			Handler:    _ObjService_DeleteData_Handler,
-		},
-		{
-			MethodName: "rename_data",
-			Handler:    _ObjService_RenameData_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
