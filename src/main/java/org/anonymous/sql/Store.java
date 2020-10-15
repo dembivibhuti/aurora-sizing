@@ -4,11 +4,11 @@ public class Store {
 
     public static final String DROP_TABLE = "drop table objects";
     public static final String CREATE_TABLE = "create table objects ( \n" + "name varchar NOT NULL, \n"
-            + "nameLower varchar NOT NULL, \n"
             + "typeId integer NOT NULL, \n" + "lastTransaction bigint NOT NULL, \n"
             + "timeUpdated timestamp NOT NULL, \n" + "updateCount bigint NOT NULL, \n"
             + "dateCreated integer NOT NULL, \n" + "dbIdUpdated integer NOT NULL, \n"
-            + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL )";
+            + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL, \n"
+            + "nameLower varchar NOT NULL )";
 
     public static final String CREATE_RECORD_INDEX_BY_TYPEID_NAME = "create unique index object_typeid_name on objects(typeId, nameLower)";
     public static final String CREATE_RECORD_INDEX_BY_LOWER_NAME = "create unique index object_lower_name on objects(nameLower)";
