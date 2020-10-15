@@ -657,16 +657,18 @@ public class ObjectRepository implements AutoCloseable {
         try (PreparedStatement insertRecStmt = connection
                 .prepareStatement(INSERT_RECORDS)) {
             insertRecStmt.setString(1, metadata.getSecurityName());
-            insertRecStmt.setString(2, metadata.getSecurityName().toLowerCase());
-            insertRecStmt.setInt(3, metadata.getSecurityType());
-            insertRecStmt.setLong(4, nextTxnId);
-            insertRecStmt.setTimestamp(5, Timestamp.valueOf(metadata.getTimeUpdate()));
-            insertRecStmt.setLong(6, metadata.getUpdateCount());
-            insertRecStmt.setInt(7, metadata.getDateCreated());
-            insertRecStmt.setInt(8, metadata.getDbIdUpdated());
-            insertRecStmt.setInt(9, metadata.getVersionInfo());
-            insertRecStmt.setBytes(10, getSizedByteArray(100));
-            insertRecStmt.setBytes(11, cmdInsert.getMem().toByteArray());
+            insertRecStmt.setInt(2, metadata.getSecurityType());
+            insertRecStmt.setLong(3, nextTxnId);
+            insertRecStmt.setTimestamp(4, Timestamp.valueOf(metadata.getTimeUpdate()));
+            insertRecStmt.setLong(5, metadata.getUpdateCount());
+            insertRecStmt.setInt(6, metadata.getDateCreated());
+            insertRecStmt.setInt(7, metadata.getDbIdUpdated());
+            insertRecStmt.setInt(8, metadata.getVersionInfo());
+            insertRecStmt.setBytes(9, getSizedByteArray(100));
+            insertRecStmt.setBytes(10, cmdInsert.getMem().toByteArray());
+            insertRecStmt.setString(11, metadata.getSecurityName().toLowerCase());
+
+
 
             rowsAffected = insertRecStmt.executeUpdate();
 
