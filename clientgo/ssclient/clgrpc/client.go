@@ -249,6 +249,7 @@ func (s *SSClient) GetObjectExt(sname string) (*model.ObjectExt, error) {
 func (s *SSClient) BeginTxn() model.Transactor {
 	return &GrpcTransactor{
 		transClient: pb.NewTransactionServiceClient(s.conn),
+		buffer:      make([]*pb.CmdTransactionRequest, 0),
 	}
 }
 
