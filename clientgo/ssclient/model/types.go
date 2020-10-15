@@ -24,6 +24,17 @@ func NewMetrics() *Metrics {
 	}
 }
 
+func (m *Metrics) Register(r prometheus.Registerer) {
+	r.MustRegister(
+		m.GlookupByName,
+		m.GlookupByType,
+		m.GgetObject,
+		m.GgetObjectExt,
+		m.GgetObjectMany,
+		m.GgetObjectManyExt,
+	)
+}
+
 const (
 	GET_FIRST CmpType = iota
 	GET_LAST

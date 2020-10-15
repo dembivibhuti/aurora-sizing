@@ -5,7 +5,7 @@ import (
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
 
-// GrpcTransactor implements the ssclient.Transactor interface
+// GrpcTransactor implements the model.Transactor interface
 type GrpcTransactor struct {
 	transClient pb.TransactionServiceClient
 }

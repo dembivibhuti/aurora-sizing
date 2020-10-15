@@ -52,6 +52,10 @@ func (s *SSClient) Init() {
 	// don't need any initialization here
 }
 
+func (s *SSClient) EnableMetrics(addr string) {
+
+}
+
 func (s *SSClient) UseService(dbname string, closure func()) error {
 	ctx := context.Background()
 	_, err := s.client.Connect(ctx, &pb.CmdConnect{AppName: dbname})

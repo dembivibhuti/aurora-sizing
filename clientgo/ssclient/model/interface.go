@@ -1,5 +1,14 @@
 package model
 
+type SSClient interface {
+	Reader
+	BeginTxn() Transactor
+	Init()
+	Close()
+	UseService(dbname string, closure func()) error
+	EnableMetrics(addr string)
+}
+
 type Reader interface {
 	LookupByName(prefix string, cmpType CmpType, nr int32) (<-chan string, error)
 	LookupByType(prefix string, stype uint32, cmpType CmpType, nr int32) (<-chan string, error)

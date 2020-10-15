@@ -15,16 +15,8 @@ const (
 	BSTREAM
 )
 
-type SSClient interface {
-	model.Reader
-	BeginTxn() model.Transactor
-	Init()
-	Close()
-	UseService(dbname string, closure func()) error
-}
-
-func NewSSClient(addr string, typ ClientType) SSClient {
-	var cl SSClient
+func NewSSClient(addr string, typ ClientType) model.SSClient {
+	var cl model.SSClient
 	switch typ {
 	case GRPC:
 		cl = clgrpc.NewSSClient(addr)
