@@ -14,6 +14,7 @@ type GrpcTransactor struct {
 }
 
 func (g *GrpcTransactor) Insert(metadata *model.Metadata, mem []byte) error {
+	fmt.Println("Insert Received")
 	ins := &pb.CmdInsert{
 		Metadata: convertModelMetadataToGrpcMetadata(metadata),
 		Mem:      mem,
@@ -32,6 +33,7 @@ func (g *GrpcTransactor) Insert(metadata *model.Metadata, mem []byte) error {
 }
 
 func (g *GrpcTransactor) Rename(oldMetadata *model.Metadata, newMetadata *model.Metadata) error {
+	fmt.Println("Rename Received")
 	rnm := &pb.CmdRename{
 		OldMetadata: convertModelMetadataToGrpcMetadata(oldMetadata),
 		NewMetadata: convertModelMetadataToGrpcMetadata(newMetadata),
@@ -48,6 +50,7 @@ func (g *GrpcTransactor) Rename(oldMetadata *model.Metadata, newMetadata *model.
 }
 
 func (g *GrpcTransactor) Update(oldMetadata *model.Metadata, newMetadata *model.Metadata, mem []byte) error {
+	fmt.Println("Update Received")
 	upd := &pb.CmdUpdate{
 		OldMetadata: convertModelMetadataToGrpcMetadata(oldMetadata),
 		NewMetadata: convertModelMetadataToGrpcMetadata(newMetadata),
@@ -65,6 +68,7 @@ func (g *GrpcTransactor) Update(oldMetadata *model.Metadata, newMetadata *model.
 }
 
 func (g *GrpcTransactor) Delete(metadata *model.Metadata, ignoreflags int32) error {
+	fmt.Println("Delete Received")
 	del := &pb.CmdDelete{
 		Metadata:      convertModelMetadataToGrpcMetadata(metadata),
 		IgnoreErrFlag: ignoreflags,
@@ -121,7 +125,7 @@ func (g *GrpcTransactor) End() (error, *model.TxnResp) {
 		return err, nil
 	}
 	resp, err := tClient.CloseAndRecv()
-	fmt.Println(resp)
+	fmt.Println("Response for Transaction:", resp)
 	if err != nil {
 		return err, nil
 	}

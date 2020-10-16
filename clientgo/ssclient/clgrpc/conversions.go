@@ -25,3 +25,16 @@ func convertModelMetadataToGrpcMetadata(m *model.Metadata) *pb.Metadata {
 		VersionInfo:  m.VersionInfo,
 	}
 }
+func convertGrpcMetadataToModelMetadata(m *pb.Metadata) *model.Metadata {
+	return &model.Metadata{
+		SecurityName: m.SecurityName,
+		SecurityType: m.SecurityType,
+		UpdateCount:  m.UpdateCount,
+		DateCreated:  m.DateCreated,
+		TimeUpdated:  m.TimeUpdate,
+		DbIdUpdated:  m.DbIdUpdated,
+		LastTxnId:    m.LastTxnId,
+		VersionInfo:  m.VersionInfo,
+	}
+
+}

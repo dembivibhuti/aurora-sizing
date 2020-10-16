@@ -150,6 +150,7 @@ func (s *SSClient) GetObject(sname string) (*model.Object, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("GetObject : %s | Response : %d\n", sname, resp.Status)
 	var obj *model.Object
 	switch v := resp.Response.(type) {
 	case *pb.CmdGetByNameResponse_ErrorType:
@@ -216,13 +217,14 @@ func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, e
 				break
 			}
 			v := resp.GetMsgOnSuccess()
+			fmt.Printf("Has Succeeded: %t | Metadata: %s \n", v.HasSucceeded, v.Metadata)
 			if v == nil {
 				continue
 			}
 
 			obj := &model.ObjectExt{
 				Mem:      v.GetMem(),
-				Metadata: nil,
+				Metadata: convertGrpcMetadataToModelMetadata(v.Metadata),
 			}
 			ch <- obj
 		}
