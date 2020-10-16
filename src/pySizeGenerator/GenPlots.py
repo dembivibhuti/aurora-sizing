@@ -67,6 +67,7 @@ def generatePlot(classId, data):
    global plotTemplate
    plotString = plotTemplate
    plotString = plotString.replace( '<<ClassName>>', str(classId) )
+   data.sort(key = lambda x: x[0])
    dataStr = ",".join( [ "[" + str(d[0]) + "," + str(d[1]) + "]" for d in data] )
    plotString = plotString.replace('<<DATA>>', dataStr)
    return plotString

@@ -127,6 +127,7 @@ def writeOutput(finalSizes):
 	f.close()
 
 def main():
+	random.seed(1)
 	[bucketTable, initialSizeTable] = readCsvsToTable()
 	classIds = getClasses(bucketTable, initialSizeTable)
 	finalSizes = []
