@@ -4,23 +4,35 @@ import "github.com/prometheus/client_golang/prometheus"
 
 type CmpType int
 
+const (
+	GET_FIRST CmpType = iota
+	GET_LAST
+	GET_EQUAL
+	GET_LESS
+	GET_LE
+	GET_GREATER
+	GET_GE
+	GET_NEXT
+	GET_PREV
+)
+
 type Metrics struct {
-	GlookupByName     prometheus.Gauge
-	GlookupByType     prometheus.Gauge
+	GlookupByName     *prometheus.GaugeVec
+	GlookupByType     *prometheus.GaugeVec
 	GgetObject        prometheus.Gauge
 	GgetObjectExt     prometheus.Gauge
-	GgetObjectMany    prometheus.Gauge
-	GgetObjectManyExt prometheus.Gauge
+	GgetObjectMany    *prometheus.GaugeVec
+	GgetObjectManyExt *prometheus.GaugeVec
 }
 
 func NewMetrics() *Metrics {
 	return &Metrics{
-		GlookupByName:     prometheus.NewGauge(prometheus.GaugeOpts{Name: "lookup_by_name"}),
-		GlookupByType:     prometheus.NewGauge(prometheus.GaugeOpts{Name: "lookup_by_type"}),
+		GlookupByName:     prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "lookup_by_name"}, []string{"number"}),
+		GlookupByType:     prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "lookup_by_type"}, []string{"number"}),
 		GgetObject:        prometheus.NewGauge(prometheus.GaugeOpts{Name: "get_object"}),
 		GgetObjectExt:     prometheus.NewGauge(prometheus.GaugeOpts{Name: "get_object_ext"}),
-		GgetObjectMany:    prometheus.NewGauge(prometheus.GaugeOpts{Name: "get_object_many"}),
-		GgetObjectManyExt: prometheus.NewGauge(prometheus.GaugeOpts{Name: "get_object_many_ext"}),
+		GgetObjectMany:    prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "get_object_many"}, []string{"number"}),
+		GgetObjectManyExt: prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "get_object_many_ext"}, []string{"number"}),
 	}
 }
 
@@ -34,18 +46,6 @@ func (m *Metrics) Register(r prometheus.Registerer) {
 		m.GgetObjectManyExt,
 	)
 }
-
-const (
-	GET_FIRST CmpType = iota
-	GET_LAST
-	GET_EQUAL
-	GET_LESS
-	GET_LE
-	GET_GREATER
-	GET_GE
-	GET_NEXT
-	GET_PREV
-)
 
 type Metadata struct {
 	SecurityName string
