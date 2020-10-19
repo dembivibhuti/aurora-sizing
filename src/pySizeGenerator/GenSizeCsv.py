@@ -38,8 +38,11 @@ def maxSizeAllowed(classId):
 def convertBucketToSizes(bucketTable, excludes, maxSize):
 	outputTable = []; #list of {ClassId, Size, Count}
 	for row in bucketTable:
-		outputTable.append( [row['AverageSize'], row['PeakRecordsCount'] ] )
-		excludes.add(row['AverageSize']);
+		asize = row[AverageSize]
+		while(asize in excludes):
+			asize += 1
+		outputTable.append( [asize, row['PeakRecordsCount'] ] )
+		excludes.add(asize);
 		
 		recordsToAdd = row['TotalRecords'] - row['PeakRecordsCount']
 		distinctsRemaining = row['DistinctSizesCount'] - 1
@@ -127,11 +130,11 @@ def writeOutput(finalSizes):
 	f.close()
 
 def main():
-	random.seed(1)
 	[bucketTable, initialSizeTable] = readCsvsToTable()
 	classIds = getClasses(bucketTable, initialSizeTable)
 	finalSizes = []
 	for classId in classIds:
+		random.seed(1)
 		[cBucket, cInitial] = getClassTable(bucketTable, initialSizeTable, classId)
 		excludes = set([ x['Size'] for x in initialSizeTable ]);
 		bucketGeneratedSizes = convertBucketToSizes( cBucket, excludes, maxSizeAllowed(classId));
