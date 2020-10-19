@@ -133,6 +133,7 @@ def main():
 	[bucketTable, initialSizeTable] = readCsvsToTable()
 	classIds = getClasses(bucketTable, initialSizeTable)
 	finalSizes = []
+	ctr = 1
 	for classId in classIds:
 		random.seed(1)
 		[cBucket, cInitial] = getClassTable(bucketTable, initialSizeTable, classId)
@@ -141,6 +142,8 @@ def main():
 		sizesForThisClass = combineSizes(bucketGeneratedSizes,cInitial)
 		sizesForThisClass = [ [classId] + list(x) for x in sizesForThisClass]
 		finalSizes += sizesForThisClass
+		print( "Done ", ctr, "/", len(classIds), " classes." )
+		ctr += 1
 	writeOutput(finalSizes)
 
 main();	
