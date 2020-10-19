@@ -89,7 +89,7 @@ func (g *GrpcTransactor) End() (error, *model.TxnResp) {
 	if err != nil {
 		return err, nil
 	}
-	header := &pb.CmdHeader{
+	header := &pb.CmdTransHeader{
 		TransName: "abc",
 		TransType: 0,
 	}

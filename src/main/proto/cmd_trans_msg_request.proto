@@ -14,7 +14,7 @@ import "cmd_trailer.proto";
 message CmdTransactionRequest {
 	TransType trans_seq = 1;
 	oneof MessageRequest{
-		CmdHeader header= 2;
+		CmdTransHeader header= 2;
 		CmdInsert insert = 3;
 		CmdUpdate update = 4;
 		CmdDelete delete = 5;

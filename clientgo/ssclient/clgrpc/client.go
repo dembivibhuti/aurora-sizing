@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"google.golang.org/grpc"
@@ -93,7 +94,9 @@ func (s *SSClient) LookupByName(prefix string, cmpType model.CmpType, nr int32) 
 	}
 	ch := make(chan string)
 	go func() {
-		guageTimer := prometheus.NewTimer(prometheus.ObserverFunc(s.metrics.GlookupByName.Set)) // TODO: add more labels
+		guageTimer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+			s.metrics.GlookupByName.With(prometheus.Labels{"number": strconv.Itoa(int(nr))}).Set(float64(v))
+		})) // TODO: add more labels
 		defer guageTimer.ObserveDuration()
 
 		for {
@@ -125,7 +128,9 @@ func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpTy
 	}
 	ch := make(chan string)
 	go func() {
-		guageTimer := prometheus.NewTimer(prometheus.ObserverFunc(s.metrics.GlookupByType.Set)) // TODO: add more labels
+		guageTimer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+			s.metrics.GlookupByType.With(prometheus.Labels{"number": strconv.Itoa(int(nr))}).Set(float64(v))
+		})) // TODO: add more labels
 		defer guageTimer.ObserveDuration()
 		for {
 			resp, err := strmCl.Recv()
@@ -144,8 +149,9 @@ func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpTy
 }
 
 func (s *SSClient) GetObject(sname string) (*model.Object, error) {
-	defer timeTaken("GetObject", time.Now())
 	ctx := context.Background()
+	guageTime := prometheus.NewTimer(prometheus.ObserverFunc(s.metrics.GgetObject.Set))
+	defer guageTime.ObserveDuration()
 	resp, err := s.client.GetObject(ctx, &pb.CmdGetByName{SecurityName: sname})
 	if err != nil {
 		return nil, err

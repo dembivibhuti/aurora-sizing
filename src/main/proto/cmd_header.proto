@@ -4,7 +4,7 @@ option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
 package org.anonymous.grpc;
 
 
-message CmdHeader {
+message CmdTransHeader {
 	string trans_name = 1;
 	uint32 sec_type = 2;
 	uint32 trans_type = 3;
