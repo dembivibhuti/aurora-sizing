@@ -38,7 +38,7 @@ def maxSizeAllowed(classId):
 def convertBucketToSizes(bucketTable, excludes, maxSize):
 	outputTable = []; #list of {ClassId, Size, Count}
 	for row in bucketTable:
-		asize = row[AverageSize]
+		asize = row['AverageSize']
 		while(asize in excludes):
 			asize += 1
 		outputTable.append( [asize, row['PeakRecordsCount'] ] )
