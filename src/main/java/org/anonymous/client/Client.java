@@ -29,9 +29,7 @@ public class Client {
         objSvcStub.withWaitForReady();
         lookupByType(objSvcStub, 100);
         objSvcStub.withWaitForReady();
-        lookupByNameStream(objSvcStub, 10000);
-        objSvcStub.withWaitForReady();
-        lookupByNameStreamAll(objSvcStub);
+        lookupByNameStream(objSvcStub, 100);
         objSvcStub.withWaitForReady();
         lookupByTypeStream(objSvcStub, 100);
         objSvcStub.withWaitForReady();
@@ -83,22 +81,6 @@ public class Client {
             }
         } catch (Exception e) {
             LOGGER.info("Caught exception in Streaming Server-side Lookup by name stream", e);
-        }
-    }
-
-    private static void lookupByNameStreamAll(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdLookupByName request = CmdLookupByName.newBuilder().setCount(0).setMessageType(CmdType.CMD_NAME_LOOKUP).setGetType(GetType.METADATA_GET_GREATER).setSecurityNamePrefix("test").build();
-        Iterator<CmdLookupByNameResponseStream> it;
-        try {
-            it = stub.lookupByNameStream(request);
-            System.out.println("Response received from lookupByNameStreamALL:");
-            while (it.hasNext()) {
-                CmdLookupByNameResponseStream response = it.next();
-                String objname = response.getSecurityName();
-                System.out.println(objname);
-            }
-        } catch (Exception e) {
-            LOGGER.info("Caught exception in Streaming Server-side Lookup by name stream ALL", e);
         }
     }
 
@@ -191,7 +173,7 @@ public class Client {
         };
         StreamObserver<CmdTransactionRequest> requestObserver = stub.transaction(streamObserver);
         // request generated for header
-        CmdHeader header = CmdHeader.newBuilder().setTransName("test-transaction").build();
+        CmdTransHeader header = CmdTransHeader.newBuilder().setTransName("test-transaction").build();
         requestObserver.onNext(CmdTransactionRequest.newBuilder().setHeader(header).setTransSeqValue(0).build());
         Thread.sleep(500);
 

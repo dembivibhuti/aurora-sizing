@@ -243,11 +243,7 @@ public class ObjectRepository implements AutoCloseable {
                 .prepareStatement(String.format(LOOKUP_OBJECTS, exp.first, exp.second))) {
 
             lookupStmt.setString(1, name.toLowerCase());
-            if( 0 < limit ){
-                lookupStmt.setInt(2, limit);
-            } else {
-                lookupStmt.setString(2,"ALL");
-            }
+            lookupStmt.setInt(2, limit);
 
             ResultSet rs = lookupStmt.executeQuery();
 
