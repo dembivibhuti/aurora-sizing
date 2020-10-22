@@ -27,6 +27,7 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
     public StreamObserver<CmdTransactionRequest> transaction(StreamObserver<TransMsgResponse> responseObserver) {
         return new StreamObserver<CmdTransactionRequest>() {
             Optional<Long> txnId = Optional.empty();
+            int transpartIndex = 0;
             Connection connection;
             {
                 try {
@@ -87,8 +88,17 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
                                 throw new SQLException();
                             }
                     }
-
-                    // insert trans log record - insert Header + tarns part
+                    if(request.getTransSeqValue() == 0){
+                        if(!objectRepository.insertHeaderLog(connection, request.getHeader(), txnId.get())){
+                            throw new SQLException();
+                        }
+                    }
+                    else if(request.getTransSeqValue() != 5){
+                        if(!objectRepository.insertTranspartLog(connection, request, txnId.get(), transpartIndex)) {
+                            throw new SQLException();
+                        }
+                        transpartIndex++;
+                    }
                 } catch (SQLException sqlException) {
                     onError(sqlException);
                 }
