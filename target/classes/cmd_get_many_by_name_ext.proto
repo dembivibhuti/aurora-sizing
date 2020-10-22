@@ -1,0 +1,57 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+import "error_type.proto";
+import "metadata.proto";
+import "cmd_type.proto";
+
+message CmdGetManyByNameExt {
+	CmdType message_type = 1;
+	int32 message_version = 2;
+	int32 argument_flags = 3;
+	int32 max_trade_ids = 4;
+	uint32 count = 5;
+	repeated string security_names = 6;
+}
+
+message CmdGetManyByNameExtResponse {
+	uint32 count = 1;
+	message ResponseMessage {
+		message MsgOnSuccess {
+			bool has_succeeded = 1;
+			Metadata metadata = 2;
+			uint32 mem_size = 3;
+			bytes mem = 4;
+		}
+		message MsgOnFailure {
+			bool has_succeeded = 1;
+			ErrorType error_type = 2;
+			string error_text = 3;
+		}
+		oneof RequestResponse {
+			MsgOnSuccess msg_on_success = 2;
+			MsgOnFailure msg_on_failure = 3;
+		}
+	}
+	repeated ResponseMessage resp = 2;
+}
+
+message CmdGetManyByNameExtResponseStream {
+	message MsgOnSuccess {
+		bool has_succeeded = 1;
+		Metadata metadata = 2;
+		uint32 mem_size = 3;
+		bytes mem = 4;
+	}
+	message MsgOnFailure {
+		bool has_succeeded = 1;
+		ErrorType error_type = 2;
+		string error_text = 3;
+	}
+	oneof RequestResponse {
+		MsgOnSuccess msg_on_success = 2;
+		MsgOnFailure msg_on_failure = 3;
+	}
+}

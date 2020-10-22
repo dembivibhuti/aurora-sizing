@@ -19,7 +19,9 @@ import java.util.stream.Stream;
 
 import static org.anonymous.sql.Store.*;
 
-
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import java.io.FileReader;
 
 public class ObjectRepository implements AutoCloseable {
 
@@ -142,6 +144,52 @@ public class ObjectRepository implements AutoCloseable {
             completableFuture.completeExceptionally(ex);
         }
     }
+    
+    public void insertObjectsFromCSV(int totalSecurities, List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
+
+        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
+                .prepareStatement(INSERT_RECORDS)) {
+                    
+            for( String[] row: allData )   {
+                int numObjects = Integer.parseInt(row[2]);
+                int objMemSize = Integer.parseInt(row[1]);
+                
+                byte[] objPropertyMem = getSizedByteArray(100);
+                byte[] mem = getSizedByteArray(objMemSize);
+                int objClassId = Integer.parseInt(row[0]);
+                
+                Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
+                Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
+                
+                for (int i = 0; i < numObjects; i++) {
+
+                String name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
+                Timestamp timeStampCreated = new Timestamp(randIntStream.next()* 1000L);
+                
+                long spanId = secInsertTimeKeeper.start();
+                insertRec.setString(1, name);
+                insertRec.setInt(2, objClassId);
+                insertRec.setLong(3, randLongStream.next());
+                insertRec.setTimestamp(4, timeStampCreated);
+                insertRec.setLong(5, randLongStream.next());
+                insertRec.setInt(6, (short) (timeStampCreated.getTime()/1000));
+                insertRec.setInt(7, randIntStream.next());
+                insertRec.setInt(8, randIntStream.next());
+                insertRec.setBytes(9, objPropertyMem);
+                insertRec.setBytes(10, mem);
+                insertRec.setString(11, name.toLowerCase());
+                insertRec.executeUpdate();
+                connection.commit();
+
+                secInsertTimeKeeper.stop(spanId);
+            }
+            LOGGER.info("Inserted another {} records", numObjects);
+            }     
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
 
     private byte[] getSizedByteArray(int size) {
         String string = "asdf";
