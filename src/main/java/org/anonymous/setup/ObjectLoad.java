@@ -15,7 +15,11 @@ public class ObjectLoad {
         try {
             ObjectRepository objectRepository = new ObjectRepository(holder.roConnectionProvider, holder.rwConnectionProvider);
             TimeKeeper timekeeper = new TimeKeeper("load");
-            objectRepository.load(7812500, 1000, timekeeper).join();
+            int recordCount = Integer.parseInt(System.getProperty("obj.count"));
+            int objSize = Integer.parseInt(System.getProperty("obj.size"));
+            System.out.println("recordCount= " + recordCount);
+            System.out.println("objSize= " + objSize);
+            objectRepository.load(recordCount, 1000, objSize, timekeeper).join();
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {

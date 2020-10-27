@@ -73,7 +73,7 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public CompletableFuture load(int recordCount, int threadCount, TimeKeeper secInsertTimeKeeper) {
+    public CompletableFuture load(int recordCount, int threadCount, int objSize, TimeKeeper secInsertTimeKeeper) {
         int numberOfRecsPerThread = recordCount / threadCount;
         CompletableFuture[] all = new CompletableFuture[threadCount + 1]; // extra 1 for the remaining records
 
@@ -84,7 +84,7 @@ public class ObjectRepository implements AutoCloseable {
             all[batchId] = completableFuture;
             executorService.submit(() -> {
                 StopWatch.start(String.format("sec.insert.batch.%d", batchId));
-                insertRecs(numberOfRecsPerThread, completableFuture, secInsertTimeKeeper);
+                insertRecs(numberOfRecsPerThread, completableFuture, objSize, secInsertTimeKeeper);
                 StopWatch.stop(String.format("sec.insert.batch.%d", batchId));
             });
         }
@@ -95,7 +95,7 @@ public class ObjectRepository implements AutoCloseable {
             all[threadCount] = completableFuture;
             executorService.submit(() -> {
                 StopWatch.stop(String.format("sec.insert.batch.%d", threadCount));
-                insertRecs(remainingRecs, completableFuture, secInsertTimeKeeper);
+                insertRecs(remainingRecs, completableFuture, objSize, secInsertTimeKeeper);
                 StopWatch.stop(String.format("sec.insert.batch.%d", threadCount));
             });
         } else {
@@ -105,13 +105,13 @@ public class ObjectRepository implements AutoCloseable {
         return CompletableFuture.allOf(all);
     }
 
-    private void insertRecs(int numberOfRecsPerThread, CompletableFuture completableFuture, TimeKeeper secInsertTimeKeeper) {
+    private void insertRecs(int numberOfRecsPerThread, CompletableFuture completableFuture, int objSize, TimeKeeper secInsertTimeKeeper) {
 
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
                 .prepareStatement(INSERT_RECORDS)) {
 
             byte[] sdbMem = getSizedByteArray(100);
-            byte[] mem = getSizedByteArray(32000);
+            byte[] mem = getSizedByteArray(objSize);
 
             Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
             for (int i = 0; i < numberOfRecsPerThread; i++) {
