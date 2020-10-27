@@ -48,15 +48,13 @@ func ssMain(scl model.SSClient) {
 
 		lookupOnly := func(n int32) {
 			start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 100) //  250GB/32KB = 7812500
+			res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n) //  250GB/32KB = 7812500
 			if err != nil {
 				log.Fatal(err)
 			}
 			secnames := []string{}
-			fmt.Println("LookupByName Response:")
 			for k := range res {
 				secnames = append(secnames, k)
-				fmt.Printf("Security: %s\n", k)
 			}
 			fmt.Printf("LookupByName/No of Records: %d, Time Taken: %s\n", len(secnames), time.Since(start))
 			fmt.Println("======================================================")
@@ -64,13 +62,17 @@ func ssMain(scl model.SSClient) {
 
 		lookupWithGetObject := func(n int32) {
 			s3start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 100)
+			res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
-			timesPerGet := []time.Duration{}
-			fmt.Println("GetObject Response: SUCCESS = 0; FAILURE = 1;")
+			lookupRes := make([]string, 0, n)
 			for k := range res {
+				lookupRes = append(lookupRes, k)
+			}
+
+			timesPerGet := []time.Duration{}
+			for _, k := range lookupRes {
 				start := time.Now()
 				resp, err := scl.GetObject(k)
 				if err != nil {
@@ -91,7 +93,7 @@ func ssMain(scl model.SSClient) {
 		sectype := []int{}
 		lookupWithGetMany := func(n int32) {
 			start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 100)
+			res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -115,14 +117,14 @@ func ssMain(scl model.SSClient) {
 			start := time.Now()
 			fmt.Println("Lookup by Type Response:")
 			for _, stype := range sectype {
-				res, err := scl.LookupByType("test", uint32(stype), model.GET_GREATER, 100)
+				res, err := scl.LookupByType("testSec-"+randDigit(5), uint32(stype), model.GET_GREATER, n)
 				if err != nil {
 					log.Fatal(err)
 				}
 				secnames := []string{}
 				for k := range res {
 					secnames = append(secnames, k)
-					fmt.Printf("Lookup By Type: %d | Security Name: %s \n", stype, k)
+					//fmt.Printf("Lookup By Type: %d | Security Name: %s \n", stype, k)
 				}
 			}
 			fmt.Printf("LookupByType Time Taken:%s\n", time.Since(start).String())
@@ -170,13 +172,15 @@ func ssMain(scl model.SSClient) {
 			fmt.Println("======================================================")
 		}
 
-		increments := []int32{1} //, 10}//, 100, 1_000, 10_000, 100_000, 1_000_000} // go can have numebers 100 -> 1_0_0
-		for _, i := range increments {
-			runNTimesWithArg(1, lookupOnly, i)
-			runNTimesWithArg(1, lookupWithGetObject, i)
-			runNTimesWithArg(1, lookupWithGetMany, i)
-			runNTimesWithArg(1, lookupByType, i)
-			runNTimesWithArg(1, transaction, i)
+		increments := []int32{100, 1_000, 10_000} //, 100_000, 1_000_000} // go can have numebers 100 -> 1_0_0
+		for {
+			for _, i := range increments {
+				runNTimesWithArg(1, lookupOnly, i)
+				runNTimesWithArg(1, lookupWithGetObject, i)
+				runNTimesWithArg(1, lookupWithGetMany, i)
+				runNTimesWithArg(0, lookupByType, i)
+				runNTimesWithArg(0, transaction, i)
+			}
 		}
 	})
 }
