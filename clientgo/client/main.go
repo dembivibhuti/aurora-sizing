@@ -22,7 +22,30 @@ func main() {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
 	defer sscl.Close()
 	sscl.EnableMetrics(":9090")
-	ssMain(sscl)
+	pairityWithSaral(sscl)
+	//ssMain(sscl)
+}
+
+func pairityWithSaral(scl model.SSClient) {
+	var n int32 = 10_000 // send a huge number for lookup
+	secnames := make([]string, 0, n)
+	res, err := scl.LookupByName("testSec-", model.GET_GREATER, n)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for k := range res {
+		secnames = append(secnames, k)
+	}
+	// infinite for loop
+	for {
+		for _, k := range secnames {
+			resp, err := scl.GetObject(k)
+			if err != nil {
+				log.Println(err)
+			}
+			_ = resp
+		}
+	}
 }
 
 func runNTimesWithArg(n int, fn func(n int32), arg int32) {
