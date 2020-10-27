@@ -47,12 +47,12 @@ func ssMain(scl model.SSClient) {
 	scl.UseService("tdmsqa_nyc_bm_lta3", func() {
 
 		lookupOnly := func(n int32) {
+			secnames := make([]string, 0, n)
 			start := time.Now()
 			res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n) //  250GB/32KB = 7812500
 			if err != nil {
 				log.Fatal(err)
 			}
-			secnames := []string{}
 			for k := range res {
 				secnames = append(secnames, k)
 			}
@@ -61,17 +61,17 @@ func ssMain(scl model.SSClient) {
 		}
 
 		lookupWithGetObject := func(n int32) {
+			lookupRes := make([]string, 0, n)
+			timesPerGet := make([]time.Duration, 0, n)
 			s3start := time.Now()
 			res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
-			lookupRes := make([]string, 0, n)
 			for k := range res {
 				lookupRes = append(lookupRes, k)
 			}
 
-			timesPerGet := []time.Duration{}
 			for _, k := range lookupRes {
 				start := time.Now()
 				resp, err := scl.GetObject(k)
@@ -92,13 +92,13 @@ func ssMain(scl model.SSClient) {
 
 		sectype := []int{}
 		lookupWithGetMany := func(n int32) {
+			secnames := make([]string, 0, n)
 			start := time.Now()
 			res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
 			fmt.Println("GetObjectManyExt Response:")
-			secnames := []string{}
 			for k := range res {
 				secnames = append(secnames, k)
 			}
