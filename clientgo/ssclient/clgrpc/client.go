@@ -129,7 +129,7 @@ func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpTy
 	ch := make(chan string)
 	go func() {
 		guageTimer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
-			s.metrics.GlookupByType.With(prometheus.Labels{"number": strconv.Itoa(int(nr))}).Set(float64(v))
+			s.metrics.GlookupByType.With(prometheus.Labels{"number": strconv.Itoa(int(nr))}).Set(v)
 		})) // TODO: add more labels
 		defer guageTimer.ObserveDuration()
 		for {
@@ -180,7 +180,10 @@ func (s *SSClient) GetObjectMany(snames []string) (<-chan *model.Object, error) 
 	}
 	ch := make(chan *model.Object)
 	go func() {
-		defer timeTaken("GetObjectMany", time.Now())
+		guageTimer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+			s.metrics.GgetObjectMany.With(prometheus.Labels{"number": strconv.Itoa(len(snames))}).Set(v)
+		}))
+		defer guageTimer.ObserveDuration()
 		for {
 			resp, err := strmCl.Recv()
 			if err == io.EOF {
@@ -212,7 +215,10 @@ func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, e
 	}
 	ch := make(chan *model.ObjectExt)
 	go func() {
-		defer timeTaken("GetObjectManyExt", time.Now())
+		guageTimer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+			s.metrics.GgetObjectManyExt.With(prometheus.Labels{"number": strconv.Itoa(len(snames))}).Set(v)
+		}))
+		defer guageTimer.ObserveDuration()
 		for {
 			resp, err := strmCl.Recv()
 			if err == io.EOF {
@@ -235,13 +241,14 @@ func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, e
 			ch <- obj
 		}
 		close(ch)
-
 	}()
 	return ch, nil
 }
 
 func (s *SSClient) GetObjectExt(sname string) (*model.ObjectExt, error) {
 	ctx := context.Background()
+	guageTime := prometheus.NewTimer(prometheus.ObserverFunc(s.metrics.GgetObjectExt.Set))
+	defer guageTime.ObserveDuration()
 	resp, err := s.client.GetObjectExt(ctx, &pb.CmdGetByNameExt{
 		SecurityName: sname,
 	})
