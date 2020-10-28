@@ -191,10 +191,9 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-    private byte[] getSizedByteArray(int size) {
-        String string = "asdf";
+    private static byte[] getSizedByteArray(int size) {
         byte[] result = new byte[size];
-        System.arraycopy(string.getBytes(), 0, result, size - string.length(), string.length());
+        Arrays.fill(result, (byte)1);
         return result;
     }
 

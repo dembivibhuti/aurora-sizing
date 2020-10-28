@@ -23,7 +23,7 @@ public class GrpcServer {
                 LOGGER.info("Starting in-Mem DB Mode");
                 objectRepositiory.runDDL(false);
                 TimeKeeper timekeeper = new TimeKeeper("load");
-                objectRepositiory.load(6, 6, timekeeper).join();
+                objectRepositiory.load(6, 6, 32000, timekeeper).join();
             } else {
                 LOGGER.info("Starting in Aurora Mode");
             }
