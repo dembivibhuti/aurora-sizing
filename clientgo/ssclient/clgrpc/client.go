@@ -151,8 +151,8 @@ func (s *SSClient) LookupByType(prefix string, stype uint32, cmpType model.CmpTy
 func (s *SSClient) GetObject(sname string) (*model.Object, error) {
 	ctx := context.Background()
 	guageTime := prometheus.NewTimer(prometheus.ObserverFunc(s.metrics.GgetObject.Set))
-	defer guageTime.ObserveDuration()
 	resp, err := s.client.GetObject(ctx, &pb.CmdGetByName{SecurityName: sname})
+	guageTime.ObserveDuration()
 	if err != nil {
 		return nil, err
 	}
