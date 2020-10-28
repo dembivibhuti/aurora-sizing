@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TimeKeeper {
 
-    public static final int MAX_SPANS_FOR_CONDENSE = 2000;
     private final String op;
     private Instant resetTime = Instant.now();
 
@@ -49,6 +48,8 @@ public class TimeKeeper {
 
         long spanCount = clicks.get();
         long counter = 0;
+        long start = 0;
+        long end = 0;
 
         while (counter < spanCount) {
             span = durations.poll();
