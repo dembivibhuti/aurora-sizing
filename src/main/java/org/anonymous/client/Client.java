@@ -60,7 +60,7 @@ public class Client {
 
     private static void connect(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdConnectResponse response = stub.connect(CmdConnect.newBuilder().setAppName("test").build());
-        LOGGER.info("Response received from connect: \n" + response);
+        LOGGER.trace("Response received from connect: \n" + response);
     }
 
     private static void lookupByName(ObjServiceGrpc.ObjServiceBlockingStub stub, final int count) {
@@ -80,7 +80,7 @@ public class Client {
                 System.out.println(objname);
             }
         } catch (Exception e) {
-            LOGGER.info("Caught exception in Streaming Server-side Lookup by name stream", e);
+            LOGGER.error("Caught exception in Streaming Server-side Lookup by name stream", e);
         }
     }
 
@@ -101,7 +101,7 @@ public class Client {
                 System.out.println(objname);
             }
         } catch (Exception e) {
-            LOGGER.info("Caught exception in Streaming Server-side Lookup by type stream", e);
+            LOGGER.error("Caught exception in Streaming Server-side Lookup by type stream", e);
         }
     }
 
@@ -119,7 +119,7 @@ public class Client {
                 System.out.println(response.next().getMessageResponseCase()); //gives 0 on success
             }
         } catch (Exception e) {
-            LOGGER.info("Caught exception in Streaming Server-side Get Many by Name stream", e);
+            LOGGER.error("Caught exception in Streaming Server-side Get Many by Name stream", e);
         }
     }
 
@@ -137,7 +137,7 @@ public class Client {
                 System.out.println(response.next().getMsgOnSuccess().getHasSucceeded());
             }
         }catch (Exception e) {
-            LOGGER.info("Caught exception in Streaming Server-side Get Many by Name Ext stream", e);
+            LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Ext stream", e);
         }
     }
 

@@ -24,7 +24,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     @Override
     public void connect(org.anonymous.grpc.CmdConnect request,
                         io.grpc.stub.StreamObserver<org.anonymous.grpc.CmdConnectResponse> responseObserver) {
-        LOGGER.info("got request connect()");
+        LOGGER.trace("got request connect()");
         long span = Statistics.connect.start();
         responseObserver.onNext(CmdConnectResponse.newBuilder().setMsgSize(1).setVerAndRev(-1).setFeatureFlag(1).build());
         responseObserver.onCompleted();
@@ -33,20 +33,20 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void lookupByName(CmdLookupByName request, StreamObserver<CmdLookupByNameResponse> responseObserver) {
-        LOGGER.info("got request lookupByName()");
+        LOGGER.trace("got request lookupByName()");
         long span = Statistics.lookupByName.start();
 
         try {
             int limit = request.getCount();
-            LOGGER.info("limit = " + limit);
+            LOGGER.trace("limit = " + limit);
             int typeid = request.getGetType().getNumber();
-            LOGGER.info("typeid = " + typeid);
+            LOGGER.trace("typeid = " + typeid);
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
             }
 
-            LOGGER.info("prefix = " + prefix);
+            LOGGER.trace("prefix = " + prefix);
 
             CmdLookupByNameResponse.Builder responseBuilder = CmdLookupByNameResponse.newBuilder();
             objectRepository.lookup(prefix, typeid, limit).stream().forEach(key -> responseBuilder.addSecurityNames(key));
@@ -54,7 +54,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in lookupByName()", e);
+            LOGGER.error("Caught Exception in lookupByName()", e);
         } finally {
             Statistics.lookupByName.stop(span);
         }
@@ -62,7 +62,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void lookupByNameStream(CmdLookupByName request, StreamObserver<CmdLookupByNameResponseStream> responseObserver) {
-        LOGGER.info("got request lookupByNameStream()");
+        LOGGER.trace("got request lookupByNameStream()");
         long start = System.currentTimeMillis();
         long span = Statistics.lookupByNameStream.start();
         try {
@@ -76,9 +76,9 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             List<String> results = objectRepository.lookup(prefix, typeid, limit);
             results.stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             responseObserver.onCompleted();
-            LOGGER.info("elapsed time = " + (System.currentTimeMillis() - start ) / 1000 );
+            LOGGER.trace("elapsed time = " + (System.currentTimeMillis() - start ) / 1000 );
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in lookupByNameStream()", e);
+            LOGGER.error("Caught Exception in lookupByNameStream()", e);
         } finally {
             Statistics.lookupByNameStream.stop(span);
 
@@ -87,7 +87,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void lookupByType(CmdNameLookupByType request, StreamObserver<CmdNameLookupByTypeResponse> responseObserver) {
-        LOGGER.info("got request lookupByType()");
+        LOGGER.trace("got request lookupByType()");
         long span = Statistics.lookupByType.start();
         try {
             int limit = request.getCount();
@@ -103,7 +103,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in lookupByType()", e);
+            LOGGER.error("Caught Exception in lookupByType()", e);
         } finally {
             Statistics.lookupByType.stop(span);
         }
@@ -111,7 +111,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void lookupByTypeStream(CmdNameLookupByType request, StreamObserver<CmdNameLookupByTypeResponseStream> responseObserver) {
-        LOGGER.info("got request lookupByTypeStream()");
+        LOGGER.trace("got request lookupByTypeStream()");
         long span = Statistics.lookupByTypeStream.start();
         try {
             int limit = request.getCount();
@@ -127,7 +127,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in lookupByTypeStream()", e);
+            LOGGER.error("Caught Exception in lookupByTypeStream()", e);
         } finally {
             Statistics.lookupByTypeStream.stop(span);
         }
@@ -135,7 +135,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void getObject(CmdGetByName request, StreamObserver<CmdGetByNameResponse> responseObserver) {
-        LOGGER.info("got request getObject()");
+        LOGGER.trace("got request getObject()");
         long span = Statistics.getObject.start();
         try {
             CmdGetByNameResponse response;
@@ -151,7 +151,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in getObject()", e);
+            LOGGER.error("Caught Exception in getObject()", e);
         } finally {
             Statistics.getObject.stop(span);
         }
@@ -159,7 +159,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void getObjectManyByName(CmdGetManyByName request, StreamObserver<CmdGetManyByNameResponse> responseObserver) {
-        LOGGER.info("got request getObjectManyByName()");
+        LOGGER.trace("got request getObjectManyByName()");
         long span = Statistics.getObjectManyByName.start();
         try {
             List<ByteString> secMemList = objectRepository.getManyMemByName(request.getSecurityNamesList());
@@ -175,7 +175,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in getObjectManyByName()", e);
+            LOGGER.error("Caught Exception in getObjectManyByName()", e);
         } finally {
             Statistics.getObjectManyByName.stop(span);
         }
@@ -183,7 +183,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void getObjectManyByNameStream(CmdGetManyByName request, StreamObserver<CmdGetManyByNameResponseStream> responseObserver) {
-        LOGGER.info("got request getObjectManyByNameStream()");
+        LOGGER.trace("got request getObjectManyByNameStream()");
         long span = Statistics.getObjectManyByNameStream.start();
         try {
             List<ByteString> secMemList = objectRepository.getManyMemByName(request.getSecurityNamesList());
@@ -194,7 +194,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             }
             responseObserver.onCompleted();
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in getObjectManyByNameStream()", e);
+            LOGGER.error("Caught Exception in getObjectManyByNameStream()", e);
         } finally {
             Statistics.getObjectManyByNameStream.stop(span);
         }
@@ -202,10 +202,10 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void getObjectManyByNameExt(CmdGetManyByNameExt request, StreamObserver<CmdGetManyByNameExtResponse> responseObserver) {
-        LOGGER.info("got request getObjectManyByNameExt()");
+        LOGGER.trace("got request getObjectManyByNameExt()");
         long span = Statistics.getObjectManyByNameExt.start();
         try {
-            List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessageList = objectRepository.getManySDBByName(request.getSecurityNamesList());
+            List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessageList = objectRepository.getManyFullSecurities(request.getSecurityNamesList());
             CmdGetManyByNameExtResponse.Builder responseBuilder = CmdGetManyByNameExtResponse.newBuilder();
             int totalRows = 0;
             for (CmdGetManyByNameExtResponse.ResponseMessage sdb : responseMessageList) {
@@ -216,7 +216,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in getObjectManyByNameExt()", e);
+            LOGGER.error("Caught Exception in getObjectManyByNameExt()", e);
         } finally {
             Statistics.getObjectManyByNameExt.stop(span);
         }
@@ -224,14 +224,14 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void getObjectManyByNameExtStream(CmdGetManyByNameExt request, StreamObserver<CmdGetManyByNameExtResponseStream> responseObserver) {
-        LOGGER.info("got request getObjectManyByNameExtStream()");
+        LOGGER.trace("got request getObjectManyByNameExtStream()");
         long span = Statistics.getObjectManyByNameExtStream.start();
         try {
             List<CmdGetManyByNameExtResponseStream> responseMessageList = objectRepository.getManySDBByNameStream(request.getSecurityNamesList());
             responseMessageList.forEach(responseObserver::onNext);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in getObjectManyByNameExtStream()", e);
+            LOGGER.trace("Caught Exception in getObjectManyByNameExtStream()", e);
         } finally {
             Statistics.getObjectManyByNameExtStream.stop(span);
         }
@@ -239,11 +239,11 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void getObjectExt(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver) {
-        LOGGER.info("got request getObjectExt()");
+        LOGGER.trace("got request getObjectExt()");
         long span = Statistics.getObjectExt.start();
         try {
             CmdGetByNameExtResponse response;
-            Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getSDBRecordsByKey(request.getSecurityName());
+            Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getFullObject(request.getSecurityName());
 
             if(msgOnSuccess.isPresent()){
                 response = CmdGetByNameExtResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
@@ -256,7 +256,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            LOGGER.info("Caught Exception in getObjectExt()", e);
+            LOGGER.error("Caught Exception in getObjectExt()", e);
         } finally {
             Statistics.getObjectExt.stop(span);
         }

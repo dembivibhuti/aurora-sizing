@@ -360,17 +360,16 @@ public class ObjectRepository implements AutoCloseable {
         });
         return completableFuture;
     }
-    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getSDBRecordsByKey(final String secKey) {
+    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
         CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement lookupStmt = connection.prepareStatement(
                      GET_ALL_RECORDS)) {
             lookupStmt.setString(1, secKey.toLowerCase());
             ResultSet rs = lookupStmt.executeQuery();
-
-            while (rs.next()) {
+            if(rs.next()) {
                 msgOnSuccess = CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
-                        setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem"))).
+                        setMem(ByteString.copyFrom(rs.getBytes("mem"))).
                         setMetadata(Metadata.newBuilder().
                                 setSecurityName(rs.getString("name")).
                                 setSecurityType(rs.getInt("typeId")).
@@ -383,7 +382,6 @@ public class ObjectRepository implements AutoCloseable {
                         build();
             }
             rs.close();
-
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -617,7 +615,7 @@ public class ObjectRepository implements AutoCloseable {
         return secMem;
     }
 
-    public List<CmdGetManyByNameExtResponse.ResponseMessage> getManySDBByName(ProtocolStringList securityNameList) {
+    public List<CmdGetManyByNameExtResponse.ResponseMessage> getManyFullSecurities(ProtocolStringList securityNameList) {
         List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessages = new ArrayList<>();
         String sql = String.format(GET_MANY_RECORDS, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
         try (Connection connection = roConnectionProvider.getConnection();
@@ -638,7 +636,7 @@ public class ObjectRepository implements AutoCloseable {
                             .setVersionInfo(rs.getInt("versionInfo")).build();
                     CmdGetManyByNameExtResponse.ResponseMessage.MsgOnSuccess msgOnSuccess = CmdGetManyByNameExtResponse.ResponseMessage.MsgOnSuccess.newBuilder()
                             .setMetadata(metadata)
-                            .setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem")))
+                            .setMem(ByteString.copyFrom(rs.getBytes("mem")))
                             .setHasSucceeded(true).build();
                     responseMessages.add(CmdGetManyByNameExtResponse.ResponseMessage.newBuilder().setMsgOnSuccess(msgOnSuccess).build());
                 } catch (SQLException throwables) {
@@ -677,7 +675,7 @@ public class ObjectRepository implements AutoCloseable {
                             .setVersionInfo(rs.getInt("versionInfo")).build();
                     CmdGetManyByNameExtResponseStream.MsgOnSuccess msgOnSuccess = CmdGetManyByNameExtResponseStream.MsgOnSuccess.newBuilder()
                             .setMetadata(metadata)
-                            .setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem")))
+                            .setMem(ByteString.copyFrom(rs.getBytes("mem")))
                             .setHasSucceeded(true).build();
                     responseMessages.add(CmdGetManyByNameExtResponseStream.newBuilder().setMsgOnSuccess(msgOnSuccess).build());
                 } catch (SQLException throwables) {
