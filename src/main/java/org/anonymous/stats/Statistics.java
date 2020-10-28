@@ -39,23 +39,22 @@ public class Statistics {
         new Thread(() -> {
 
             while (true) {
-
                 try {
                     Thread.sleep(INTERVAL * 1000 );
-                } catch (InterruptedException e) {
-                    LOGGER.error("", e);
+                    log(connect);
+                    log(lookupByName);
+                    log(lookupByNameStream);
+                    log(lookupByType);
+                    log(lookupByTypeStream);
+                    log(getObject);
+                    log(getObjectManyByName);
+                    log(getObjectManyByNameStream);
+                    log(getObjectManyByNameExt);
+                    log(getObjectManyByNameExtStream);
+                    log(getObjectExt);
+                } catch (Throwable e) {
+                    //LOGGER.error("", e);
                 }
-                log(connect);
-                log(lookupByName);
-                log(lookupByNameStream);
-                log(lookupByType);
-                log(lookupByTypeStream);
-                log(getObject);
-                log(getObjectManyByName);
-                log(getObjectManyByNameStream);
-                log(getObjectManyByNameExt);
-                log(getObjectManyByNameExtStream);
-                log(getObjectExt);
             }
         }).start();
     }
