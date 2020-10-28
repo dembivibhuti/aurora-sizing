@@ -48,8 +48,6 @@ public class TimeKeeper {
 
         long spanCount = clicks.get();
         long counter = 0;
-        long start = 0;
-        long end = 0;
 
         while (counter < spanCount) {
             span = durations.poll();
