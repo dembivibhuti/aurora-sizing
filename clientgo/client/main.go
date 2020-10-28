@@ -19,11 +19,18 @@ var (
 func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
+	// infinite for loop
+	for {
+		startTest()
+	}
+	//ssMain(sscl)
+}
+
+func startTest() {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
 	defer sscl.Close()
 	sscl.EnableMetrics(":9090")
 	pairityWithSaral(sscl)
-	//ssMain(sscl)
 }
 
 func pairityWithSaral(scl model.SSClient) {
@@ -36,8 +43,7 @@ func pairityWithSaral(scl model.SSClient) {
 	for k := range res {
 		secnames = append(secnames, k)
 	}
-	// infinite for loop
-	for {
+	for i := 0; i < 1000; i++ {
 		for _, k := range secnames {
 			resp, err := scl.GetObject(k)
 			if err != nil {
