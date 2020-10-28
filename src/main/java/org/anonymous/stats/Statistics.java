@@ -28,9 +28,12 @@ public class Statistics {
             LOGGER.info("Peak Time Per '" + timekeeper.getOp() + "' = " + ( (double)result.peak.getNano() / 1000000 ));
             LOGGER.info("Floor Time Per '" + timekeeper.getOp() + "' = " + ( (double)result.floor.getNano() / 1000000 ));
             LOGGER.info("Total Number of Ops " + result.opsCount);
+            LOGGER.info("Through Put ( ops / sec )  " + (double)result.opsCount / INTERVAL );
             LOGGER.info("** Time is in millis ====================================================================");
         }
     }
+
+    public static final int INTERVAL = 30;
 
     static {
         new Thread(() -> {
@@ -38,7 +41,7 @@ public class Statistics {
             while (true) {
 
                 try {
-                    Thread.sleep(30000);
+                    Thread.sleep(INTERVAL * 1000 );
                 } catch (InterruptedException e) {
                     LOGGER.error("", e);
                 }
