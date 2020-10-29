@@ -36,7 +36,6 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
                     throwables.printStackTrace();
                 }
             }
-
             ResultSet resultSet;
             {
                 try {
@@ -88,7 +87,6 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
                                 throw new SQLException();
                             }
                     }
-
                     // insert trans log record - insert Header + tarns part
                     if(request.getTransSeqValue() == 0){
                         if(!objectRepository.insertHeaderLog(connection, request.getHeader(), txnId.get())){
