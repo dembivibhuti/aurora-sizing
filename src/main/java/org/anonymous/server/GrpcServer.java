@@ -40,20 +40,24 @@ public class GrpcServer {
 
             int port = Integer.parseInt(System.getProperty("port"));
 
-            MonitoringServerInterceptor monitoringInterceptor =
+            /* MonitoringServerInterceptor monitoringInterceptor =
                     MonitoringServerInterceptor.create(Configuration.allMetrics());
 
             Server server = ServerBuilder.forPort(port)
                     .addService(ServerInterceptors.intercept(new ObjServiceImpl(objectRepositiory), monitoringInterceptor))
                     .addService(ServerInterceptors.intercept(new TransactionServiceImpl(objectRepositiory), monitoringInterceptor))
+                    .build();*/
+
+            Server server = ServerBuilder.forPort(port)
+                    .addService(new ObjServiceImpl(objectRepositiory))
+                    .addService(new TransactionServiceImpl(objectRepositiory))
                     .build();
 
             LOGGER.info("Listening on {}", port);
 
-            startMetricsServer();
+            //startMetricsServer();
 
             server.start();
-
             server.awaitTermination();
         } catch (Exception e) {
             LOGGER.error("unexpected error", e);
