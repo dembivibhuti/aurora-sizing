@@ -2,7 +2,6 @@ package org.anonymous.server;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
-import io.prometheus.client.Gauge;
 import org.anonymous.grpc.*;
 import org.anonymous.grpc.ObjServiceGrpc.ObjServiceImplBase;
 import org.anonymous.module.ObjectRepository;
@@ -16,7 +15,7 @@ import java.util.Optional;
 public class ObjServiceImpl extends ObjServiceImplBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjServiceImpl.class);
-    private static final Gauge gaugeTimer = Gauge.build().name("get_object").help("Get Object").labelNames("grpc_method").register();
+    //private static final Gauge gaugeTimer = Gauge.build().name("get_object").help("Get Object").labelNames("grpc_method").register();
     private static ObjectRepository objectRepository;
 
     ObjServiceImpl(ObjectRepository objectRepositiory) {
@@ -138,7 +137,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     @Override
     public void getObject(CmdGetByName request, StreamObserver<CmdGetByNameResponse> responseObserver) {
         LOGGER.trace("got request getObject()");
-        Gauge.Timer timer = gaugeTimer.labels("get_object").startTimer();
+        //Gauge.Timer timer = gaugeTimer.labels("get_object").startTimer();
         long span = Statistics.getObject.start();
         try {
             CmdGetByNameResponse response;
@@ -157,7 +156,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.error("Caught Exception in getObject()", e);
         } finally {
             Statistics.getObject.stop(span);
-            timer.setDuration();
+            //timer.setDuration();
         }
     }
 
