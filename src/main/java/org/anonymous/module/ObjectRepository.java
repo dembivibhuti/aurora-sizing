@@ -19,7 +19,9 @@ import java.util.stream.Stream;
 
 import static org.anonymous.sql.Store.*;
 
-
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import java.io.FileReader;
 
 public class ObjectRepository implements AutoCloseable {
 
@@ -79,7 +81,7 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public CompletableFuture load(int recordCount, int threadCount, TimeKeeper secInsertTimeKeeper) {
+    public CompletableFuture load(int recordCount, int threadCount, int objSize, TimeKeeper secInsertTimeKeeper) {
         int numberOfRecsPerThread = recordCount / threadCount;
         CompletableFuture[] all = new CompletableFuture[threadCount + 1]; // extra 1 for the remaining records
 
@@ -90,7 +92,7 @@ public class ObjectRepository implements AutoCloseable {
             all[batchId] = completableFuture;
             executorService.submit(() -> {
                 StopWatch.start(String.format("sec.insert.batch.%d", batchId));
-                insertRecs(numberOfRecsPerThread, completableFuture, secInsertTimeKeeper);
+                insertRecs(numberOfRecsPerThread, completableFuture, objSize, secInsertTimeKeeper);
                 StopWatch.stop(String.format("sec.insert.batch.%d", batchId));
             });
         }
@@ -101,7 +103,7 @@ public class ObjectRepository implements AutoCloseable {
             all[threadCount] = completableFuture;
             executorService.submit(() -> {
                 StopWatch.stop(String.format("sec.insert.batch.%d", threadCount));
-                insertRecs(remainingRecs, completableFuture, secInsertTimeKeeper);
+                insertRecs(remainingRecs, completableFuture, objSize, secInsertTimeKeeper);
                 StopWatch.stop(String.format("sec.insert.batch.%d", threadCount));
             });
         } else {
@@ -111,13 +113,13 @@ public class ObjectRepository implements AutoCloseable {
         return CompletableFuture.allOf(all);
     }
 
-    private void insertRecs(int numberOfRecsPerThread, CompletableFuture completableFuture, TimeKeeper secInsertTimeKeeper) {
+    private void insertRecs(int numberOfRecsPerThread, CompletableFuture completableFuture, int objSize, TimeKeeper secInsertTimeKeeper) {
 
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
                 .prepareStatement(INSERT_RECORDS)) {
 
             byte[] sdbMem = getSizedByteArray(100);
-            byte[] mem = getSizedByteArray(32000);
+            byte[] mem = getSizedByteArray(objSize);
 
             Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
             for (int i = 0; i < numberOfRecsPerThread; i++) {
@@ -150,11 +152,56 @@ public class ObjectRepository implements AutoCloseable {
             completableFuture.completeExceptionally(ex);
         }
     }
+    
+    public void insertObjectsFromCSV(int totalSecurities, List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
 
-    private byte[] getSizedByteArray(int size) {
-        String string = "asdf";
+        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
+                .prepareStatement(INSERT_RECORDS)) {
+                    
+            for( String[] row: allData )   {
+                int numObjects = Integer.parseInt(row[2]);
+                int objMemSize = Integer.parseInt(row[1]);
+                
+                byte[] objPropertyMem = getSizedByteArray(100);
+                byte[] mem = getSizedByteArray(objMemSize);
+                int objClassId = Integer.parseInt(row[0]);
+                
+                Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
+                Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
+                
+                for (int i = 0; i < numObjects; i++) {
+
+                String name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
+                Timestamp timeStampCreated = new Timestamp(randIntStream.next()* 1000L);
+                
+                long spanId = secInsertTimeKeeper.start();
+                insertRec.setString(1, name);
+                insertRec.setInt(2, objClassId);
+                insertRec.setLong(3, randLongStream.next());
+                insertRec.setTimestamp(4, timeStampCreated);
+                insertRec.setLong(5, randLongStream.next());
+                insertRec.setInt(6, (short) (timeStampCreated.getTime()/1000));
+                insertRec.setInt(7, randIntStream.next());
+                insertRec.setInt(8, randIntStream.next());
+                insertRec.setBytes(9, objPropertyMem);
+                insertRec.setBytes(10, mem);
+                insertRec.setString(11, name.toLowerCase());
+                insertRec.executeUpdate();
+                connection.commit();
+
+                secInsertTimeKeeper.stop(spanId);
+            }
+            LOGGER.info("Inserted another {} records", numObjects);
+            }     
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+
+    private static byte[] getSizedByteArray(int size) {
         byte[] result = new byte[size];
-        System.arraycopy(string.getBytes(), 0, result, size - string.length(), string.length());
+        Arrays.fill(result, (byte)1);
         return result;
     }
 
@@ -321,17 +368,16 @@ public class ObjectRepository implements AutoCloseable {
         });
         return completableFuture;
     }
-    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getSDBRecordsByKey(final String secKey) {
+    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
         CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement lookupStmt = connection.prepareStatement(
                      GET_ALL_RECORDS)) {
             lookupStmt.setString(1, secKey.toLowerCase());
             ResultSet rs = lookupStmt.executeQuery();
-
-            while (rs.next()) {
+            if(rs.next()) {
                 msgOnSuccess = CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
-                        setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem"))).
+                        setMem(ByteString.copyFrom(rs.getBytes("mem"))).
                         setMetadata(Metadata.newBuilder().
                                 setSecurityName(rs.getString("name")).
                                 setSecurityType(rs.getInt("typeId")).
@@ -344,7 +390,6 @@ public class ObjectRepository implements AutoCloseable {
                         build();
             }
             rs.close();
-
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -578,7 +623,7 @@ public class ObjectRepository implements AutoCloseable {
         return secMem;
     }
 
-    public List<CmdGetManyByNameExtResponse.ResponseMessage> getManySDBByName(ProtocolStringList securityNameList) {
+    public List<CmdGetManyByNameExtResponse.ResponseMessage> getManyFullSecurities(ProtocolStringList securityNameList) {
         List<CmdGetManyByNameExtResponse.ResponseMessage> responseMessages = new ArrayList<>();
         String sql = String.format(GET_MANY_RECORDS, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
         try (Connection connection = roConnectionProvider.getConnection();
@@ -599,7 +644,7 @@ public class ObjectRepository implements AutoCloseable {
                             .setVersionInfo(rs.getInt("versionInfo")).build();
                     CmdGetManyByNameExtResponse.ResponseMessage.MsgOnSuccess msgOnSuccess = CmdGetManyByNameExtResponse.ResponseMessage.MsgOnSuccess.newBuilder()
                             .setMetadata(metadata)
-                            .setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem")))
+                            .setMem(ByteString.copyFrom(rs.getBytes("mem")))
                             .setHasSucceeded(true).build();
                     responseMessages.add(CmdGetManyByNameExtResponse.ResponseMessage.newBuilder().setMsgOnSuccess(msgOnSuccess).build());
                 } catch (SQLException throwables) {
@@ -638,7 +683,7 @@ public class ObjectRepository implements AutoCloseable {
                             .setVersionInfo(rs.getInt("versionInfo")).build();
                     CmdGetManyByNameExtResponseStream.MsgOnSuccess msgOnSuccess = CmdGetManyByNameExtResponseStream.MsgOnSuccess.newBuilder()
                             .setMetadata(metadata)
-                            .setMem(ByteString.copyFrom(rs.getBytes("sdbDiskMem")))
+                            .setMem(ByteString.copyFrom(rs.getBytes("mem")))
                             .setHasSucceeded(true).build();
                     responseMessages.add(CmdGetManyByNameExtResponseStream.newBuilder().setMsgOnSuccess(msgOnSuccess).build());
                 } catch (SQLException throwables) {

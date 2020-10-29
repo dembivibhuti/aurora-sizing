@@ -29,7 +29,7 @@ public class SchemaUtil {
             ObjectRepository objectRepository = new ObjectRepository(holder.roConnectionProvider, holder.rwConnectionProvider);
             objectRepository.runDDL(false);
             TimeKeeper timekeeper = new TimeKeeper("load");
-            objectRepository.load(6, 6, timekeeper).join();
+            objectRepository.load(6, 6, 32000, timekeeper).join();
         } catch (SQLException ex) {
             ex.printStackTrace();
         } finally {

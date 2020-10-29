@@ -11,18 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TimeKeeper {
 
-    public static final int MAX_SPANS_FOR_CONDENSE = 30;
     private final String op;
     private Instant resetTime = Instant.now();
 
     private AtomicLong clicks = new AtomicLong(0);
-    private Duration avgDuration = Duration.ZERO;
-    private int opsCount = 0;
-
-
-    private Duration peak = Duration.ZERO;
-    private Duration floor = ChronoUnit.FOREVER.getDuration();
-
     private Map<Long, Instant> starts = new ConcurrentHashMap<>();
     private Queue<Duration> durations = new ConcurrentLinkedDeque<>();
 
@@ -50,49 +42,43 @@ public class TimeKeeper {
         return span;
     }
 
-    public void condense() {
+    public Result getStats() {
         Duration span;
-        Duration totalDuration = Duration.ZERO;
-        int spanCount = 0;
+        Result result = new Result();
 
-        while ((span = durations.poll()) != null && spanCount <= MAX_SPANS_FOR_CONDENSE) {
-            totalDuration = totalDuration.plus(span);
+        long spanCount = clicks.get();
+        long counter = 0;
 
-            if (span.compareTo(peak) > 0) {
-                peak = span;
+        while (counter < spanCount) {
+            span = durations.poll();
+            result.totalDuration = result.totalDuration.plus(span);
+
+            if (span.compareTo(result.peak) > 0) {
+                result.peak = span;
             }
 
-            if (span.compareTo(floor) < 0) {
-                floor = span;
+            if (span.compareTo(result.floor) < 0) {
+                result.floor = span;
             }
-
-            spanCount++;
+            counter++;
+            clicks.decrementAndGet();
         }
-        if (spanCount > 0) {
-            avgDuration = totalDuration.dividedBy(spanCount);
-            opsCount = spanCount;
-            resetTime = Instant.now();
+
+        if (spanCount > 0 ) {
+            result.avgDuration = result.totalDuration.dividedBy(spanCount);
         }
+
+        result.opsCount = spanCount;
+        return result;
+
     }
 
-    public Duration peak() {
-        return peak;
-    }
-
-    public Duration floor() {
-        return floor;
-    }
-
-    public Duration avg() {
-        return avgDuration;
-    }
-
-    public long opsCount() {
-        return opsCount;
-    }
-
-    public Duration lifetime() {
-        return Duration.between(resetTime, Instant.now());
+    public static class Result {
+        public Duration totalDuration = Duration.ZERO;
+        public Duration peak = Duration.ZERO;
+        public Duration floor = ChronoUnit.FOREVER.getDuration();
+        public Duration avgDuration = Duration.ZERO;
+        public long opsCount;
     }
 
     public static String humanReadableFormat(Duration duration) {

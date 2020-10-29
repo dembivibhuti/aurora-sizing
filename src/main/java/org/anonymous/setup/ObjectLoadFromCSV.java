@@ -6,20 +6,27 @@ import org.anonymous.util.TimeKeeper;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
+import java.io.FileReader;
 
-public class ObjectLoad {
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+
+
+public class ObjectLoadFromCSV {
     private final static ConnectionProvider.Holder holder = ConnectionProvider.create();
 
     public static void main(String[] args) {
-
         try {
             ObjectRepository objectRepository = new ObjectRepository(holder.roConnectionProvider, holder.rwConnectionProvider);
             TimeKeeper timekeeper = new TimeKeeper("load");
-            int recordCount = Integer.parseInt(System.getProperty("obj.count"));
-            int objSize = Integer.parseInt(System.getProperty("obj.size"));
-            System.out.println("recordCount= " + recordCount);
-            System.out.println("objSize= " + objSize);
-            objectRepository.load(recordCount, 1000, objSize, timekeeper).join();
+            
+            FileReader filereader = new FileReader("/home/ec2-user/environment/aurora-sizing/TestData.csv"); 
+            CSVReader csvReader = new CSVReaderBuilder(filereader) .withSkipLines(1).build(); 
+            List<String[]> allData = csvReader.readAll(); 
+  
+            //objectRepository.insertObjectsFromCSV(9, allData, timekeeper);
+            objectRepository.insertObjectsFromCSV(9, allData, timekeeper);
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {

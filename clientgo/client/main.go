@@ -19,10 +19,39 @@ var (
 func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
+	// infinite for loop
+	for {
+		startTest()
+	}
+	//ssMain(sscl)
+}
+
+func startTest() {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
 	defer sscl.Close()
 	sscl.EnableMetrics(":9090")
-	ssMain(sscl)
+	pairityWithSaral(sscl)
+}
+
+func pairityWithSaral(scl model.SSClient) {
+	var n int32 = 10_000 // send a huge number for lookup
+	secnames := make([]string, 0, n)
+	res, err := scl.LookupByName("testSec-", model.GET_GREATER, n)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for k := range res {
+		secnames = append(secnames, k)
+	}
+	for i := 0; i < 1000; i++ {
+		for _, k := range secnames {
+			resp, err := scl.GetObject(k)
+			if err != nil {
+				log.Println(err)
+			}
+			_ = resp
+		}
+	}
 }
 
 func runNTimesWithArg(n int, fn func(n int32), arg int32) {
@@ -47,30 +76,32 @@ func ssMain(scl model.SSClient) {
 	scl.UseService("tdmsqa_nyc_bm_lta3", func() {
 
 		lookupOnly := func(n int32) {
+			secnames := make([]string, 0, n)
 			start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 100) //  250GB/32KB = 7812500
+			res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n) //  250GB/32KB = 7812500
 			if err != nil {
 				log.Fatal(err)
 			}
-			secnames := []string{}
-			fmt.Println("LookupByName Response:")
 			for k := range res {
 				secnames = append(secnames, k)
-				fmt.Printf("Security: %s\n", k)
 			}
 			fmt.Printf("LookupByName/No of Records: %d, Time Taken: %s\n", len(secnames), time.Since(start))
 			fmt.Println("======================================================")
 		}
 
 		lookupWithGetObject := func(n int32) {
+			lookupRes := make([]string, 0, n)
+			timesPerGet := make([]time.Duration, 0, n)
 			s3start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 100)
+			res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
-			timesPerGet := []time.Duration{}
-			fmt.Println("GetObject Response: SUCCESS = 0; FAILURE = 1;")
 			for k := range res {
+				lookupRes = append(lookupRes, k)
+			}
+
+			for _, k := range lookupRes {
 				start := time.Now()
 				resp, err := scl.GetObject(k)
 				if err != nil {
@@ -90,13 +121,13 @@ func ssMain(scl model.SSClient) {
 
 		sectype := []int{}
 		lookupWithGetMany := func(n int32) {
+			secnames := make([]string, 0, n)
 			start := time.Now()
-			res, err := scl.LookupByName("test", model.GET_GREATER, 100)
+			res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n)
 			if err != nil {
 				log.Fatal(err)
 			}
 			fmt.Println("GetObjectManyExt Response:")
-			secnames := []string{}
 			for k := range res {
 				secnames = append(secnames, k)
 			}
@@ -115,14 +146,14 @@ func ssMain(scl model.SSClient) {
 			start := time.Now()
 			fmt.Println("Lookup by Type Response:")
 			for _, stype := range sectype {
-				res, err := scl.LookupByType("test", uint32(stype), model.GET_GREATER, 100)
+				res, err := scl.LookupByType("testSec-"+randDigit(5), uint32(stype), model.GET_GREATER, n)
 				if err != nil {
 					log.Fatal(err)
 				}
 				secnames := []string{}
 				for k := range res {
 					secnames = append(secnames, k)
-					fmt.Printf("Lookup By Type: %d | Security Name: %s \n", stype, k)
+					//fmt.Printf("Lookup By Type: %d | Security Name: %s \n", stype, k)
 				}
 			}
 			fmt.Printf("LookupByType Time Taken:%s\n", time.Since(start).String())
@@ -170,13 +201,15 @@ func ssMain(scl model.SSClient) {
 			fmt.Println("======================================================")
 		}
 
-		increments := []int32{1} //, 10}//, 100, 1_000, 10_000, 100_000, 1_000_000} // go can have numebers 100 -> 1_0_0
-		for _, i := range increments {
-			runNTimesWithArg(1, lookupOnly, i)
-			runNTimesWithArg(1, lookupWithGetObject, i)
-			runNTimesWithArg(1, lookupWithGetMany, i)
-			runNTimesWithArg(1, lookupByType, i)
-			runNTimesWithArg(1, transaction, i)
+		increments := []int32{100, 1_000, 10_000} //, 100_000, 1_000_000} // go can have numebers 100 -> 1_0_0
+		for {
+			for _, i := range increments {
+				runNTimesWithArg(1, lookupOnly, i)
+				runNTimesWithArg(1, lookupWithGetObject, i)
+				runNTimesWithArg(1, lookupWithGetMany, i)
+				runNTimesWithArg(0, lookupByType, i)
+				runNTimesWithArg(0, transaction, i)
+			}
 		}
 	})
 }

@@ -27,7 +27,7 @@ public class LoadObjectsDataAndLookup {
 
     public void loadObjectsAndLookup(int numberOfSec, int numberOfLookupOps, int lookupLimit) throws Exception {
         TimeKeeper timekeeper = new TimeKeeper("insert");
-        objectRepositiory.load(numberOfSec, 10, timekeeper).join();
+        objectRepositiory.load(numberOfSec, 10, 32000, timekeeper).join();
         log(timekeeper);
 
         timekeeper = new TimeKeeper("countRecs");
