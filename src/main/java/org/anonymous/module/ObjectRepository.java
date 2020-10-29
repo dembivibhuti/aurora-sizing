@@ -65,6 +65,14 @@ public class ObjectRepository implements AutoCloseable {
             connection.prepareStatement(CREATE_TXN_ID_SEQ)
                     .executeUpdate();
             LOGGER.info(" created txn sequence ");
+
+            connection.prepareStatement(CREATE_TRANS_HEADER_TABLE)
+                    .executeUpdate();
+            LOGGER.info(" created trans header table ");
+
+            connection.prepareStatement(CREATE_TRANS_PARTS_TABLE)
+                    .executeUpdate();
+            LOGGER.info(" created trans parts table ");
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -663,11 +671,7 @@ public class ObjectRepository implements AutoCloseable {
             insertRecStmt.setBytes(9, getSizedByteArray(100));
             insertRecStmt.setBytes(10, cmdInsert.getMem().toByteArray());
             insertRecStmt.setString(11, metadata.getSecurityName().toLowerCase());
-
-
-
             rowsAffected = insertRecStmt.executeUpdate();
-
         } catch (SQLException sqlException) {
             throw sqlException;
         }
@@ -762,6 +766,56 @@ public class ObjectRepository implements AutoCloseable {
         return rwConnectionProvider.getConnection();
     }
 
+    public boolean insertHeaderLog(Connection connection, CmdTransHeader header, long nextTxnId ) throws SQLException {
+        int rowsAffected = 0;
+        try (PreparedStatement insertLogStmt = connection
+                .prepareStatement(INSERT_TRANS_HEADER)) {
+            insertLogStmt.setLong(1, nextTxnId);
+            insertLogStmt.setInt(2, header.getDbId());
+            insertLogStmt.setLong(3, header.getSourceTransId());
+            insertLogStmt.setInt(4, header.getTransType());
+            insertLogStmt.setTimestamp(5, new Timestamp(0));
+            insertLogStmt.setString(6, header.getTransName());
+            insertLogStmt.setInt(7, header.getSecType());
+            insertLogStmt.setString(8, "");
+            insertLogStmt.setString(9, "");//no application name in proto
+            insertLogStmt.setString(10, "");//no username in proto
+            insertLogStmt.setString(11, "");
+            insertLogStmt.setString(12, "");
+            insertLogStmt.setLong(13, 0);//no network address in proto
+            insertLogStmt.setString(14, "");
+            insertLogStmt.setInt(15, header.getTransFlags());
+            insertLogStmt.setInt(16, header.getDetailParts());
+            insertLogStmt.setInt(17, 0);
+            insertLogStmt.setTimestamp(18, new Timestamp(System.currentTimeMillis()));
+            insertLogStmt.setBytes(19, new byte[0]);
+            rowsAffected = insertLogStmt.executeUpdate();
+        } catch (SQLException sqlException) {
+            throw sqlException;
+        }
+        return rowsAffected == 1;
+    }
+
+    public boolean insertTranspartLog(Connection connection, CmdTransactionRequest request, long nextTxnId, int transpartIndex ) throws SQLException {
+        int rowsAffected = 0;
+        try (PreparedStatement insertLogStmt = connection
+                .prepareStatement(INSERT_TRANS_PARTS)) {
+            insertLogStmt.setLong(1, nextTxnId);
+            insertLogStmt.setInt(2, transpartIndex);
+            insertLogStmt.setInt(3, 0);//find event code
+            insertLogStmt.setInt(4, request.getTransSeqValue());//find op code
+            insertLogStmt.setString(5, "0");
+            insertLogStmt.setBoolean(6, false);
+            insertLogStmt.setBoolean(7, false);
+            insertLogStmt.setBoolean(8, false);
+            insertLogStmt.setBoolean(9, false);
+            insertLogStmt.setBytes(10, new byte[0]);
+            rowsAffected = insertLogStmt.executeUpdate();
+        } catch (SQLException sqlException) {
+            throw sqlException;
+        }
+        return rowsAffected == 1;
+    }
 
     public void close() {
         executorService.shutdown();
