@@ -42,6 +42,12 @@
       <artifactId>grpc-netty</artifactId>
       <version>1.32.1</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/io.netty/netty-transport-native-epoll -->
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-epoll</artifactId>
+      <version>4.1.51.Final</version>
+    </dependency>
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-protobuf -->
     <dependency>
       <groupId>io.grpc</groupId>
