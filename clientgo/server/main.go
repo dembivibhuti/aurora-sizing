@@ -105,7 +105,7 @@ func connect(ctx context.Context, in *pb.CmdConnect) (*pb.CmdConnectResponse, er
 
 func getObject(ctx context.Context, in *pb.CmdGetByName) (*pb.CmdGetByNameResponse, error) {
 	resp := &pb.CmdGetByNameResponse{
-		Response: &pb.CmdGetByNameResponse_Security{Security: getRandomBytes(rand.Intn(32 * 1024))},
+		Response: &pb.CmdGetByNameResponse_Security{Security: getRandomBytes(560)},
 	}
 	return resp, nil
 }
