@@ -156,7 +156,6 @@ func (s *SSClient) GetObject(sname string) (*model.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("GetObject : %s | Response : %d\n", sname, resp.Status)
 	var obj *model.Object
 	switch v := resp.Response.(type) {
 	case *pb.CmdGetByNameResponse_ErrorType:
