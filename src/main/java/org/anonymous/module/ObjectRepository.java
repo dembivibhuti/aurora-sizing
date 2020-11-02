@@ -201,7 +201,7 @@ public class ObjectRepository implements AutoCloseable {
 
     private static byte[] getSizedByteArray(int size) {
         byte[] result = new byte[size];
-        Arrays.fill(result, (byte)1);
+        Arrays.fill(result, (byte)3);
         return result;
     }
 
