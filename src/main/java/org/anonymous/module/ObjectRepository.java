@@ -201,7 +201,7 @@ public class ObjectRepository implements AutoCloseable {
 
     private static byte[] getSizedByteArray(int size) {
         byte[] result = new byte[size];
-        Arrays.fill(result, (byte)3);
+        Arrays.fill(result, (byte)'a');
         return result;
     }
 
@@ -536,7 +536,7 @@ public class ObjectRepository implements AutoCloseable {
             }
             rs.close();
         } catch (SQLException throwables) {
-            LOGGER.error("error in getMemByKey()", throwables);
+            LOGGER.error("error in getMemByKeyInBytes()", throwables);
         }
         return Optional.ofNullable(arrayContainsMem);
     }
