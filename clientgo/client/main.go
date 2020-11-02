@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"sort"
 	"time"
+	"sync"
 
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
