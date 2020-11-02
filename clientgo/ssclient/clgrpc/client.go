@@ -60,6 +60,8 @@ func (s *SSClient) Init() {
 }
 
 func (s *SSClient) EnableMetrics(addr string) {
+
+	/*
 	s.metrics.Register(prometheus.DefaultRegisterer)
 	http.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
@@ -70,6 +72,7 @@ func (s *SSClient) EnableMetrics(addr string) {
 	go func() {
 		log.Fatal(http.ListenAndServe(addr, nil)) // Start the http server for prometheus
 	}()
+	*/
 }
 
 func (s *SSClient) UseService(dbname string, closure func()) error {
