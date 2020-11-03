@@ -75,6 +75,7 @@ public class ConnectionProvider implements AutoCloseable {
         rwprops.setProperty("poolName", "rwPool");
         rwprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
         rwprops.setProperty("maximumPoolSize", System.getProperty("rwMaximumPoolSize"));
+        rwprops.setProperty("minimumIdle", System.getProperty("rwMinimumIdle"));
         rwprops.setProperty("registerMbeans", "true");
         rwprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
         if (System.getProperty("dataSource.password") == null) {
@@ -104,6 +105,7 @@ public class ConnectionProvider implements AutoCloseable {
         roprops.setProperty("poolName", "roPool");
         roprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
         roprops.setProperty("maximumPoolSize", System.getProperty("roMaximumPoolSize"));
+        roprops.setProperty("minimumIdle", System.getProperty("roMinimumIdle"));
         roprops.setProperty("registerMbeans", "true");
         roprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
 
