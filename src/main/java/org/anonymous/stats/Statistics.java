@@ -8,18 +8,19 @@ public class Statistics {
 
     private static Logger LOGGER = LoggerFactory.getLogger(Statistics.class);
 
-    public static TimeKeeper connect = new TimeKeeper("connect");
-    public static TimeKeeper lookupByName = new TimeKeeper("lookupByName");
-    public static TimeKeeper lookupByNameStream = new TimeKeeper("lookupByNameStream");
-    public static TimeKeeper lookupByType = new TimeKeeper("lookupByType");
-    public static TimeKeeper lookupByTypeStream = new TimeKeeper("lookupByTypeStream");
-    public static TimeKeeper getObject = new TimeKeeper("getObject");
-    public static TimeKeeper getObjectDB = new TimeKeeper("getObjectDB");
-    public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName");
-    public static TimeKeeper getObjectManyByNameStream = new TimeKeeper("getObjectManyByNameStream");
-    public static TimeKeeper getObjectManyByNameExt = new TimeKeeper("getObjectManyByNameExt");
-    public static TimeKeeper getObjectManyByNameExtStream = new TimeKeeper("getObjectManyByNameExtStream");
-    public static TimeKeeper getObjectExt = new TimeKeeper("getObjectExt");
+
+    public static TimeKeeper connect = new TimeKeeper("connect", true);
+    public static TimeKeeper lookupByName = new TimeKeeper("lookupByName", true);
+    public static TimeKeeper lookupByNameStream = new TimeKeeper("lookupByNameStream", true );
+    public static TimeKeeper lookupByType = new TimeKeeper("lookupByType", true );
+    public static TimeKeeper lookupByTypeStream = new TimeKeeper("lookupByTypeStream", true );
+    public static TimeKeeper getObject = new TimeKeeper("getObject", true );
+    public static TimeKeeper getObjectDB = new TimeKeeper("getObjectDB", true );
+    public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName", true );
+    public static TimeKeeper getObjectManyByNameStream = new TimeKeeper("getObjectManyByNameStream", true );
+    public static TimeKeeper getObjectManyByNameExt = new TimeKeeper("getObjectManyByNameExt", true );
+    public static TimeKeeper getObjectManyByNameExtStream = new TimeKeeper("getObjectManyByNameExtStream", true );
+    public static TimeKeeper getObjectExt = new TimeKeeper("getObjectExt", true );
 
     public static void log(
             TimeKeeper timekeeper) {
