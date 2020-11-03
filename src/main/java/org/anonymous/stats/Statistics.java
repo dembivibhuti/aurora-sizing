@@ -8,19 +8,23 @@ public class Statistics {
 
     private static Logger LOGGER = LoggerFactory.getLogger(Statistics.class);
 
+    private static final boolean logToFile = Boolean.parseBoolean(System.getProperty("metricsFileDump"));
 
-    public static TimeKeeper connect = new TimeKeeper("connect", true);
-    public static TimeKeeper lookupByName = new TimeKeeper("lookupByName", true);
-    public static TimeKeeper lookupByNameStream = new TimeKeeper("lookupByNameStream", true );
-    public static TimeKeeper lookupByType = new TimeKeeper("lookupByType", true );
-    public static TimeKeeper lookupByTypeStream = new TimeKeeper("lookupByTypeStream", true );
-    public static TimeKeeper getObject = new TimeKeeper("getObject", true );
-    public static TimeKeeper getObjectDB = new TimeKeeper("getObjectDB", true );
-    public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName", true );
-    public static TimeKeeper getObjectManyByNameStream = new TimeKeeper("getObjectManyByNameStream", true );
-    public static TimeKeeper getObjectManyByNameExt = new TimeKeeper("getObjectManyByNameExt", true );
-    public static TimeKeeper getObjectManyByNameExtStream = new TimeKeeper("getObjectManyByNameExtStream", true );
-    public static TimeKeeper getObjectExt = new TimeKeeper("getObjectExt", true );
+    public static TimeKeeper connect = new TimeKeeper("connect", logToFile);
+    public static TimeKeeper lookupByName = new TimeKeeper("lookupByName", logToFile);
+    public static TimeKeeper lookupByNameStream = new TimeKeeper("lookupByNameStream", logToFile );
+    public static TimeKeeper lookupByType = new TimeKeeper("lookupByType", logToFile );
+    public static TimeKeeper lookupByTypeStream = new TimeKeeper("lookupByTypeStream", logToFile );
+
+    public static TimeKeeper getObject = new TimeKeeper("getObject", logToFile );
+    public static TimeKeeper getObjectDB = new TimeKeeper("getObjectDB", logToFile );
+
+    
+    public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName", logToFile );
+    public static TimeKeeper getObjectManyByNameStream = new TimeKeeper("getObjectManyByNameStream", logToFile );
+    public static TimeKeeper getObjectManyByNameExt = new TimeKeeper("getObjectManyByNameExt", logToFile );
+    public static TimeKeeper getObjectManyByNameExtStream = new TimeKeeper("getObjectManyByNameExtStream", logToFile );
+    public static TimeKeeper getObjectExt = new TimeKeeper("getObjectExt", logToFile );
 
     public static void log(
             TimeKeeper timekeeper) {
@@ -35,7 +39,7 @@ public class Statistics {
         }
     }
 
-    public static final int INTERVAL = 5;
+    public static final int INTERVAL = 20;
 
     static {
         new Thread(() -> {
