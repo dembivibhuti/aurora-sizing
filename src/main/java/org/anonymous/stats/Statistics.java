@@ -1,7 +1,6 @@
 package org.anonymous.stats;
 
 import com.opencsv.CSVWriter;
-import com.sun.beans.editors.DoubleEditor;
 import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
