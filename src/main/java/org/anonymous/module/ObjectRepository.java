@@ -529,6 +529,7 @@ public class ObjectRepository implements AutoCloseable {
     public Optional<byte[]> getMemByKeyInBytes(final String secKey) {
         byte[] arrayContainsMem = null;
         long span = Statistics.getObjectDB.start();
+        long start = System.currentTimeMillis();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(GET_MEM)) {
             lookupStmt.setString(1, secKey.toLowerCase());
@@ -540,6 +541,7 @@ public class ObjectRepository implements AutoCloseable {
         } catch (SQLException throwables) {
             LOGGER.error("error in getMemByKeyInBytes()", throwables);
         }
+        LOGGER.info("DB Time in Millis = " +  (System.currentTimeMillis() - start));
         Statistics.getObjectDB.stop(span);
         return Optional.ofNullable(arrayContainsMem);
     }
