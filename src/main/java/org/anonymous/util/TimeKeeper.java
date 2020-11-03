@@ -1,11 +1,15 @@
 package org.anonymous.util;
 
-import java.util.Map;
+import com.opencsv.CSVWriter;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,8 +22,25 @@ public class TimeKeeper {
     private Map<Long, Instant> starts = new ConcurrentHashMap<>();
     private Queue<Duration> durations = new ConcurrentLinkedDeque<>();
 
-    public TimeKeeper(String op) {
+    private final boolean logToFile;
+    private static final CSVWriter writer;
+
+    static {
+        File statsDump = new File("stats-dump.csv");
+        FileWriter outputfile = null;
+        try {
+            outputfile = new FileWriter(statsDump);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        writer = new CSVWriter(outputfile);
+        String[] header = { "Op-Type", "Span-Durations", "Group", "Group-Peak", "Group-Floor", "Group-Average" };
+        writer.writeNext(header);
+    }
+
+    public TimeKeeper(String op, boolean logToFile) {
         this.op = op;
+        this.logToFile = logToFile;
     }
 
     public long start() {
@@ -48,9 +69,11 @@ public class TimeKeeper {
         long spanCount = clicks.get();
         long counter = 0;
 
+        List<String[]> dataForCSV = new ArrayList<>();
+        String groupId = UUID.randomUUID().toString();
+
         while (counter < spanCount) {
             span = durations.poll();
-            System.out.printf(" Durations in - " + getOp() + span.getNano());
             result.totalDuration = result.totalDuration.plus(span);
 
             if (span.compareTo(result.peak) > 0) {
@@ -62,6 +85,11 @@ public class TimeKeeper {
             }
             counter++;
             clicks.decrementAndGet();
+
+            if ( logToFile ) {
+                String[] data = {getOp(), Integer.toString(span.getNano()), groupId, "", "", "" };
+                dataForCSV.add(data);
+            }
         }
 
         if (spanCount > 0 ) {
@@ -69,8 +97,15 @@ public class TimeKeeper {
         }
 
         result.opsCount = spanCount;
-        return result;
 
+        if ( logToFile ) {
+            String[] data = {getOp(), "", groupId, Integer.toString(result.peak.getNano()), Integer.toString(result.floor.getNano()), Integer.toString(result.avgDuration.getNano())};
+            dataForCSV.add(data);
+            synchronized (TimeKeeper.class) {
+                writer.writeAll(dataForCSV);
+            }
+        }
+        return result;
     }
 
     public static class Result {
@@ -87,5 +122,13 @@ public class TimeKeeper {
 
     public String getOp() {
         return op;
+    }
+
+    public void finalize() {
+        try {
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
