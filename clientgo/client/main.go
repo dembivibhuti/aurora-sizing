@@ -54,12 +54,15 @@ func pairityWithSaral(scl model.SSClient) {
 			wg.Add(1)
 			go func(name string) {
 				defer wg.Done()
-				resp, err := scl.GetObject(name)
+
+				//resp, err := scl.GetObject(name)
+				resp, err := scl.GetObjectExt(name)
 				if err != nil {
 					log.Println(err)
 				}
 				_ = resp
-				<-sem
+
+                <-sem
 			}(k)
 		}
 	}

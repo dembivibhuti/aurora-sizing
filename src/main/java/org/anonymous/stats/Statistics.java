@@ -20,14 +20,20 @@ public class Statistics {
     public static TimeKeeper getObjectDBGetConnection = new TimeKeeper("getObjectDBGetConnection", logToFile );
     public static TimeKeeper getObjectDBPreparedStatementMake = new TimeKeeper("getObjectDBPreparedStatementMake", logToFile );
     public static TimeKeeper getObjectDBResultSetFetch = new TimeKeeper("getObjectDBResultSetFetch", logToFile );
-    public static TimeKeeper getObjectDBPreparedCloseResource = new TimeKeeper("getObjectDBPreparedCloseResource", logToFile );
+    public static TimeKeeper getObjectDBCloseResource = new TimeKeeper("getObjectDBCloseResource", logToFile );
+
+    public static TimeKeeper getObjectExt = new TimeKeeper("getObjectExt", logToFile );
+    public static TimeKeeper getObjectExtDBGetConnection = new TimeKeeper("getObjectExtDBGetConnection", logToFile );
+    public static TimeKeeper getObjectExtDBPreparedStatementMake = new TimeKeeper("getObjectExtDBPreparedStatementMake", logToFile );
+    public static TimeKeeper getObjectExtDBResultSetFetch = new TimeKeeper("getObjectExtDBResultSetFetch", logToFile );
+    public static TimeKeeper getObjectExtDBCloseResource = new TimeKeeper("getObjectExtDBCloseResource", logToFile );
 
     
     public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName", logToFile );
     public static TimeKeeper getObjectManyByNameStream = new TimeKeeper("getObjectManyByNameStream", logToFile );
     public static TimeKeeper getObjectManyByNameExt = new TimeKeeper("getObjectManyByNameExt", logToFile );
     public static TimeKeeper getObjectManyByNameExtStream = new TimeKeeper("getObjectManyByNameExtStream", logToFile );
-    public static TimeKeeper getObjectExt = new TimeKeeper("getObjectExt", logToFile );
+
 
     public static void log(
             TimeKeeper timekeeper) {
@@ -65,13 +71,20 @@ public class Statistics {
                     log(getObjectDBGetConnection);
                     log(getObjectDBPreparedStatementMake);
                     log(getObjectDBResultSetFetch);
-                    log(getObjectDBPreparedCloseResource);
+                    log(getObjectDBCloseResource);
+
+                    log(getObjectExt);
+                    log(getObjectExtDBGetConnection);
+                    log(getObjectExtDBPreparedStatementMake);
+                    log(getObjectExtDBResultSetFetch);
+                    log(getObjectExtDBCloseResource);
 
                     log(getObjectManyByName);
                     log(getObjectManyByNameStream);
                     log(getObjectManyByNameExt);
                     log(getObjectManyByNameExtStream);
-                    log(getObjectExt);
+
+
 
                 } catch (Throwable e) {
                     //LOGGER.error("", e);
