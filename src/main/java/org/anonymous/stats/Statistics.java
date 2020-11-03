@@ -1,13 +1,19 @@
 package org.anonymous.stats;
 
 import com.opencsv.CSVWriter;
+import com.zaxxer.hikari.HikariPoolMXBean;
 import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.JMX;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 
 public class Statistics {
 
@@ -40,6 +46,8 @@ public class Statistics {
     public static TimeKeeper getObjectManyByNameExtStream = new TimeKeeper("getObjectManyByNameExtStream", logToFile );
 
     private static final CSVWriter writer;
+    private static HikariPoolMXBean rwPoolProxy;
+    private static HikariPoolMXBean roPoolProxy;
 
     static {
         File statsDump = new File("stats-consolidated-dump.csv");
@@ -52,6 +60,19 @@ public class Statistics {
         writer = new CSVWriter(outputfile);
         String[] header = { "Op-Type", "Average-Time", "Peak-Time", "Floor-Time", "Total Ops", "Through Put ( ops / sec )" };
         writer.writeNext(header);
+        writer.flushQuietly();
+
+        try {
+            MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            ObjectName rwPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (rwPool)");
+            ObjectName roPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (roPool)");
+
+            rwPoolProxy = JMX.newMXBeanProxy(mBeanServer, rwPoolName, HikariPoolMXBean.class);
+            roPoolProxy = JMX.newMXBeanProxy(mBeanServer, roPoolName, HikariPoolMXBean.class);
+        } catch (MalformedObjectNameException e) {
+            e.printStackTrace();
+        }
+
     }
 
 
@@ -72,10 +93,26 @@ public class Statistics {
             LOGGER.info("Through Put ( ops / sec )  " +  throughput);
             LOGGER.info("** Time is in millis ====================================================================");
 
+            LOGGER.info("");
+
+            LOGGER.info("RW Connection Pool Stats ");
+            LOGGER.info("Total Connections = " + rwPoolProxy.getTotalConnections());
+            LOGGER.info("Idle Connections = " + rwPoolProxy.getIdleConnections());
+            LOGGER.info("Active Connections = " + rwPoolProxy.getActiveConnections());
+            LOGGER.info("Threads Awaiting Connections = " + rwPoolProxy.getThreadsAwaitingConnection());
+
+            LOGGER.info("");
+
+            LOGGER.info("RO Connection Pool Stats ");
+            LOGGER.info("Total Connections = " + roPoolProxy.getTotalConnections());
+            LOGGER.info("Idle Connections = " + roPoolProxy.getIdleConnections());
+            LOGGER.info("Active Connections = " + roPoolProxy.getActiveConnections());
+            LOGGER.info("Threads Awaiting Connections = " + roPoolProxy.getThreadsAwaitingConnection());
 
             String[] data = { timekeeper.getOp(), Double.toString(avgTime), Double.toString(peakTime),
                     Double.toString(floorTime), Long.toString(result.opsCount), Double.toString(throughput) };
             writer.writeNext(data);
+            writer.flushQuietly();
         }
     }
 

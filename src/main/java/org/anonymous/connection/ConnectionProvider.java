@@ -73,6 +73,7 @@ public class ConnectionProvider implements AutoCloseable {
 
     private static Properties getRWProperties() {
         Properties rwprops = new Properties();
+        rwprops.setProperty("poolName", "rwPool");
         rwprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
         rwprops.setProperty("maximumPoolSize", System.getProperty("maximumPoolSize"));
         rwprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
@@ -100,6 +101,7 @@ public class ConnectionProvider implements AutoCloseable {
 
     private static Properties getROProperties() {
         Properties roprops = new Properties();
+        roprops.setProperty("poolName", "roPool");
         roprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
         roprops.setProperty("maximumPoolSize", System.getProperty("maximumPoolSize"));
         roprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
