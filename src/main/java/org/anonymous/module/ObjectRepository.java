@@ -526,9 +526,8 @@ public class ObjectRepository implements AutoCloseable {
         return completableFuture;
     }
 
-    public Optional<byte[]> getMemByKeyInBytes(final String secKey) {
+    /*public Optional<byte[]> getMemByKeyInBytes(final String secKey) {
         byte[] arrayContainsMem = null;
-        long span = Statistics.getObjectDB.start();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(GET_MEM)) {
             lookupStmt.setString(1, secKey.toLowerCase());
@@ -540,7 +539,38 @@ public class ObjectRepository implements AutoCloseable {
         } catch (SQLException throwables) {
             LOGGER.error("error in getMemByKeyInBytes()", throwables);
         }
-        Statistics.getObjectDB.stop(span);
+        return Optional.ofNullable(arrayContainsMem);
+    }*/
+
+    // Modified for more stats collection
+    public Optional<byte[]> getMemByKeyInBytes(final String secKey) {
+        byte[] arrayContainsMem = null;
+        try {
+            long span = Statistics.getObjectDBGetConnection.start();
+            Connection connection = roConnectionProvider.getConnection();
+            Statistics.getObjectDBGetConnection.stop(span);
+
+            span = Statistics.getObjectDBPreparedStatementMake.start();
+            PreparedStatement lookupStmt = connection.prepareStatement(GET_MEM);
+            lookupStmt.setString(1, secKey.toLowerCase());
+            Statistics.getObjectDBPreparedStatementMake.stop(span);
+
+            span = Statistics.getObjectDBResultSetFetch.start();
+            ResultSet rs = lookupStmt.executeQuery();
+            while (rs.next()) {
+                arrayContainsMem = rs.getBytes("mem");
+            }
+            Statistics.getObjectDBResultSetFetch.stop(span);
+
+            span = Statistics.getObjectDBPreparedCloseResource.start();
+            rs.close();
+            lookupStmt.close();
+            connection.close();
+            Statistics.getObjectDBPreparedCloseResource.stop(span);
+
+        } catch (SQLException sqlException) {
+            LOGGER.error("error in getMemByKeyInBytes()", sqlException);
+        }
         return Optional.ofNullable(arrayContainsMem);
     }
 

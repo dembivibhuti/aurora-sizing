@@ -17,7 +17,10 @@ public class Statistics {
     public static TimeKeeper lookupByTypeStream = new TimeKeeper("lookupByTypeStream", logToFile );
 
     public static TimeKeeper getObject = new TimeKeeper("getObject", logToFile );
-    public static TimeKeeper getObjectDB = new TimeKeeper("getObjectDB", logToFile );
+    public static TimeKeeper getObjectDBGetConnection = new TimeKeeper("getObjectDB", logToFile );
+    public static TimeKeeper getObjectDBPreparedStatementMake = new TimeKeeper("getObjectDB", logToFile );
+    public static TimeKeeper getObjectDBResultSetFetch = new TimeKeeper("getObjectDB", logToFile );
+    public static TimeKeeper getObjectDBPreparedCloseResource = new TimeKeeper("getObjectDB", logToFile );
 
     
     public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName", logToFile );
@@ -52,8 +55,13 @@ public class Statistics {
                     log(lookupByNameStream);
                     log(lookupByType);
                     log(lookupByTypeStream);
+
                     log(getObject);
-                    log(getObjectDB);
+                    log(getObjectDBGetConnection);
+                    log(getObjectDBPreparedStatementMake);
+                    log(getObjectDBResultSetFetch);
+                    log(getObjectDBPreparedCloseResource);
+
                     log(getObjectManyByName);
                     log(getObjectManyByNameStream);
                     log(getObjectManyByNameExt);
