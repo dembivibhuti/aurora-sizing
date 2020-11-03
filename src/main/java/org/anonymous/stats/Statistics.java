@@ -17,10 +17,10 @@ public class Statistics {
     public static TimeKeeper lookupByTypeStream = new TimeKeeper("lookupByTypeStream", logToFile );
 
     public static TimeKeeper getObject = new TimeKeeper("getObject", logToFile );
-    public static TimeKeeper getObjectDBGetConnection = new TimeKeeper("getObjectDB", logToFile );
-    public static TimeKeeper getObjectDBPreparedStatementMake = new TimeKeeper("getObjectDB", logToFile );
-    public static TimeKeeper getObjectDBResultSetFetch = new TimeKeeper("getObjectDB", logToFile );
-    public static TimeKeeper getObjectDBPreparedCloseResource = new TimeKeeper("getObjectDB", logToFile );
+    public static TimeKeeper getObjectDBGetConnection = new TimeKeeper("getObjectDBGetConnection", logToFile );
+    public static TimeKeeper getObjectDBPreparedStatementMake = new TimeKeeper("getObjectDBPreparedStatementMake", logToFile );
+    public static TimeKeeper getObjectDBResultSetFetch = new TimeKeeper("getObjectDBResultSetFetch", logToFile );
+    public static TimeKeeper getObjectDBPreparedCloseResource = new TimeKeeper("getObjectDBPreparedCloseResource", logToFile );
 
     
     public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName", logToFile );
