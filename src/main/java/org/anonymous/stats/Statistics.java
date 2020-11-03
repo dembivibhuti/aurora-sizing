@@ -50,6 +50,11 @@ public class Statistics {
             while (true) {
                 try {
                     Thread.sleep(INTERVAL * 1000 );
+
+                    LOGGER.info("");
+                    LOGGER.info("");
+
+
                     log(connect);
                     log(lookupByName);
                     log(lookupByNameStream);
@@ -67,6 +72,7 @@ public class Statistics {
                     log(getObjectManyByNameExt);
                     log(getObjectManyByNameExtStream);
                     log(getObjectExt);
+
                 } catch (Throwable e) {
                     //LOGGER.error("", e);
                 }
