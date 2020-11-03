@@ -34,7 +34,6 @@ public class ConnectionProvider implements AutoCloseable {
 
     public Connection getConnection() throws SQLException {
         Connection c = ds.getConnection();
-        c.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         return c;
     }
 
