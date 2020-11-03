@@ -15,7 +15,7 @@ public class ConnectionProvider implements AutoCloseable {
 
     public ConnectionProvider(Properties ps) {
         HikariConfig config = new HikariConfig(ps);
-        config.setMaximumPoolSize(2000);
+        //config.setMaximumPoolSize(2000);
         ds = new HikariDataSource(config);
     }
 
@@ -35,7 +35,6 @@ public class ConnectionProvider implements AutoCloseable {
 
     public Connection getConnection() throws SQLException {
         Connection c = ds.getConnection();
-        c.setAutoCommit(false);
         c.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         return c;
     }
@@ -102,6 +101,7 @@ public class ConnectionProvider implements AutoCloseable {
     private static Properties getROProperties() {
         Properties roprops = new Properties();
         roprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
+        roprops.setProperty("maximumPoolSize", System.getProperty("maximumPoolSize"));
         roprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
 
         if (System.getProperty("dataSource.password") == null) {
