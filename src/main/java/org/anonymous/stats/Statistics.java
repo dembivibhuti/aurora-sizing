@@ -1,8 +1,14 @@
 package org.anonymous.stats;
 
+import com.opencsv.CSVWriter;
+import com.sun.beans.editors.DoubleEditor;
 import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Statistics {
 
@@ -34,21 +40,47 @@ public class Statistics {
     public static TimeKeeper getObjectManyByNameExt = new TimeKeeper("getObjectManyByNameExt", logToFile );
     public static TimeKeeper getObjectManyByNameExtStream = new TimeKeeper("getObjectManyByNameExtStream", logToFile );
 
+    private static final CSVWriter writer;
+
+    static {
+        File statsDump = new File("stats-consolidated-dump.csv");
+        FileWriter outputfile = null;
+        try {
+            outputfile = new FileWriter(statsDump);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        writer = new CSVWriter(outputfile);
+        String[] header = { "Op-Type", "Average-Time", "Peak-Time", "Floor-Time", "Total Ops", "Through Put ( ops / sec )" };
+        writer.writeNext(header);
+    }
+
 
     public static void log(
             TimeKeeper timekeeper) {
         TimeKeeper.Result result = timekeeper.getStats();
         if(result.opsCount > 0 ) {
-            LOGGER.info("Average Time Per '" + timekeeper.getOp() + "' = " + ( (double)result.avgDuration.getNano() / 1000000 ));
-            LOGGER.info("Peak Time Per '" + timekeeper.getOp() + "' = " + ( (double)result.peak.getNano() / 1000000 ));
-            LOGGER.info("Floor Time Per '" + timekeeper.getOp() + "' = " + ( (double)result.floor.getNano() / 1000000 ));
+
+            double avgTime = ( (double)result.avgDuration.getNano() / 1000000 );
+            double peakTime = ( (double)result.peak.getNano() / 1000000 );
+            double floorTime = ( (double)result.floor.getNano() / 1000000 );
+            double throughput = (double)result.opsCount / INTERVAL;
+
+            LOGGER.info("Average Time Per '" + timekeeper.getOp() + "' = " + avgTime);
+            LOGGER.info("Peak Time Per '" + timekeeper.getOp() + "' = " + peakTime);
+            LOGGER.info("Floor Time Per '" + timekeeper.getOp() + "' = " + floorTime );
             LOGGER.info("Total Number of Ops " + result.opsCount);
-            LOGGER.info("Through Put ( ops / sec )  " + (double)result.opsCount / INTERVAL );
+            LOGGER.info("Through Put ( ops / sec )  " +  throughput);
             LOGGER.info("** Time is in millis ====================================================================");
+
+
+            String[] data = { timekeeper.getOp(), Double.toString(avgTime), Double.toString(peakTime),
+                    Double.toString(floorTime), Long.toString(result.opsCount), Double.toString(throughput) };
+            writer.writeNext(data);
         }
     }
 
-    public static final int INTERVAL = 20;
+    public static final int INTERVAL = 30;
 
     static {
         new Thread(() -> {
