@@ -561,19 +561,13 @@ public class ObjectRepository implements AutoCloseable {
             }
             Statistics.getObjectDBResultSetFetch.stop(span);
 
-            span = Statistics.getObjectDBCloseResource.start();
+
             // The Connection delegate will close all Statement, the closure of Statement will close the Resultset
             //rs.close();
             //lookupStmt.close();
 
-            executorService.submit(() -> {
-                try {
-                    connection.close();
-                } catch (SQLException sqlException) {
-                    sqlException.printStackTrace();
-                }
-            });
-
+            span = Statistics.getObjectDBCloseResource.start();
+            connection.close();
             Statistics.getObjectDBCloseResource.stop(span);
 
         } catch (SQLException sqlException) {
