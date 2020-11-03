@@ -23,9 +23,8 @@ public class TimeKeeper {
     }
 
     public long start() {
-        Instant now = Instant.now();
         long click = clicks.addAndGet(1);
-        starts.put(click, now);
+        starts.put(click, Instant.now());
         return click;
     }
 
@@ -51,6 +50,7 @@ public class TimeKeeper {
 
         while (counter < spanCount) {
             span = durations.poll();
+            System.out.printf(" Durations in - " + getOp() + span.getNano());
             result.totalDuration = result.totalDuration.plus(span);
 
             if (span.compareTo(result.peak) > 0) {

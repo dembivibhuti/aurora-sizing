@@ -34,7 +34,7 @@ public class Statistics {
         }
     }
 
-    public static final int INTERVAL = 10;
+    public static final int INTERVAL = 5;
 
     static {
         new Thread(() -> {
