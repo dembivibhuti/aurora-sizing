@@ -14,6 +14,7 @@ public class Statistics {
     public static TimeKeeper lookupByType = new TimeKeeper("lookupByType");
     public static TimeKeeper lookupByTypeStream = new TimeKeeper("lookupByTypeStream");
     public static TimeKeeper getObject = new TimeKeeper("getObject");
+    public static TimeKeeper getObjectDB = new TimeKeeper("getObjectDB");
     public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName");
     public static TimeKeeper getObjectManyByNameStream = new TimeKeeper("getObjectManyByNameStream");
     public static TimeKeeper getObjectManyByNameExt = new TimeKeeper("getObjectManyByNameExt");
@@ -33,7 +34,7 @@ public class Statistics {
         }
     }
 
-    public static final int INTERVAL = 30;
+    public static final int INTERVAL = 10;
 
     static {
         new Thread(() -> {
@@ -47,6 +48,7 @@ public class Statistics {
                     log(lookupByType);
                     log(lookupByTypeStream);
                     log(getObject);
+                    log(getObjectDB);
                     log(getObjectManyByName);
                     log(getObjectManyByNameStream);
                     log(getObjectManyByNameExt);

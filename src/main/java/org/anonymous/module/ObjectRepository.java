@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
 import org.anonymous.connection.ConnectionProvider;
 import org.anonymous.grpc.*;
+import org.anonymous.stats.Statistics;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
 import org.slf4j.Logger;
@@ -527,6 +528,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public Optional<byte[]> getMemByKeyInBytes(final String secKey) {
         byte[] arrayContainsMem = null;
+        long span = Statistics.getObjectDB.start();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(GET_MEM)) {
             lookupStmt.setString(1, secKey.toLowerCase());
@@ -538,6 +540,7 @@ public class ObjectRepository implements AutoCloseable {
         } catch (SQLException throwables) {
             LOGGER.error("error in getMemByKeyInBytes()", throwables);
         }
+        Statistics.getObjectDB.stop(span);
         return Optional.ofNullable(arrayContainsMem);
     }
 

@@ -6,8 +6,8 @@ import (
 	"log"
 	"math/rand"
 	"sort"
+	"sync"
 	"time"
-
 
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
@@ -44,15 +44,26 @@ func pairityWithSaral(scl model.SSClient) {
 	for k := range res {
 		secnames = append(secnames, k)
 	}
-	for i := 0; i < 1000; i++ {
+
+	var wg sync.WaitGroup
+	var sem = make(chan int, 1000)
+
+	for i := 0; i < 3000; i++ {
 		for _, k := range secnames {
-			resp, err := scl.GetObject(k)
-			if err != nil {
-				log.Println(err)
-			}
-			_ = resp
+			sem <- 1
+			wg.Add(1)
+			go func(name string) {
+				defer wg.Done()
+				resp, err := scl.GetObject(name)
+				if err != nil {
+					log.Println(err)
+				}
+				_ = resp
+				<-sem
+			}(k)
 		}
 	}
+	wg.Wait()
 }
 
 func runNTimesWithArg(n int, fn func(n int32), arg int32) {
