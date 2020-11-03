@@ -22,7 +22,7 @@ import static org.anonymous.sql.Store.*;
 
 public class ObjectRepository implements AutoCloseable {
 
-    private static final ExecutorService executorService = Executors.newCachedThreadPool();
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(100);
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private final ConnectionProvider roConnectionProvider;
     private final ConnectionProvider rwConnectionProvider;
@@ -565,7 +565,15 @@ public class ObjectRepository implements AutoCloseable {
             // The Connection delegate will close all Statement, the closure of Statement will close the Resultset
             //rs.close();
             //lookupStmt.close();
-            connection.close();
+
+            executorService.submit(() -> {
+                try {
+                    connection.close();
+                } catch (SQLException sqlException) {
+                    sqlException.printStackTrace();
+                }
+            });
+
             Statistics.getObjectDBCloseResource.stop(span);
 
         } catch (SQLException sqlException) {
