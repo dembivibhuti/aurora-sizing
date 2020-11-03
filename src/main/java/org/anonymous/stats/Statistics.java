@@ -93,22 +93,6 @@ public class Statistics {
             LOGGER.info("Through Put ( ops / sec )  " +  throughput);
             LOGGER.info("** Time is in millis ====================================================================");
 
-            LOGGER.info("");
-
-            LOGGER.info("RW Connection Pool Stats ");
-            LOGGER.info("Total Connections = " + rwPoolProxy.getTotalConnections());
-            LOGGER.info("Idle Connections = " + rwPoolProxy.getIdleConnections());
-            LOGGER.info("Active Connections = " + rwPoolProxy.getActiveConnections());
-            LOGGER.info("Threads Awaiting Connections = " + rwPoolProxy.getThreadsAwaitingConnection());
-
-            LOGGER.info("");
-
-            LOGGER.info("RO Connection Pool Stats ");
-            LOGGER.info("Total Connections = " + roPoolProxy.getTotalConnections());
-            LOGGER.info("Idle Connections = " + roPoolProxy.getIdleConnections());
-            LOGGER.info("Active Connections = " + roPoolProxy.getActiveConnections());
-            LOGGER.info("Threads Awaiting Connections = " + roPoolProxy.getThreadsAwaitingConnection());
-
             String[] data = { timekeeper.getOp(), Double.toString(avgTime), Double.toString(peakTime),
                     Double.toString(floorTime), Long.toString(result.opsCount), Double.toString(throughput) };
             writer.writeNext(data);
@@ -153,9 +137,26 @@ public class Statistics {
                     log(getObjectManyByNameExtStream);
 
 
+                    LOGGER.info("");
+
+                    LOGGER.info("RW Connection Pool Stats ");
+                    LOGGER.info("Total Connections = " + rwPoolProxy.getTotalConnections());
+                    LOGGER.info("Idle Connections = " + rwPoolProxy.getIdleConnections());
+                    LOGGER.info("Active Connections = " + rwPoolProxy.getActiveConnections());
+                    LOGGER.info("Threads Awaiting Connections = " + rwPoolProxy.getThreadsAwaitingConnection());
+
+                    LOGGER.info("");
+
+                    LOGGER.info("RO Connection Pool Stats ");
+                    LOGGER.info("Total Connections = " + roPoolProxy.getTotalConnections());
+                    LOGGER.info("Idle Connections = " + roPoolProxy.getIdleConnections());
+                    LOGGER.info("Active Connections = " + roPoolProxy.getActiveConnections());
+                    LOGGER.info("Threads Awaiting Connections = " + roPoolProxy.getThreadsAwaitingConnection());
+
+
 
                 } catch (Throwable e) {
-                    //LOGGER.error("", e);
+                    LOGGER.error("", e);
                 }
             }
         }).start();
