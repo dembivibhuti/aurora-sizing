@@ -156,7 +156,7 @@ public class Statistics {
 
 
                 } catch (Throwable e) {
-                    LOGGER.error("", e);
+                    //LOGGER.error("", e);
                 }
             }
         }).start();
