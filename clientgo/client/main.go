@@ -20,53 +20,58 @@ var (
 func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
-	// infinite for loop
-	for {
-		startTest()
+
+	enableMetrics()
+
+	var wg sync.WaitGroup
+	for i := 0; i < 500; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for { // infinite for loop
+				startTest()
+			}
+		}()
 	}
+	wg.Wait()
 	//ssMain(sscl)
 }
 
 func startTest() {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
 	defer sscl.Close()
-	sscl.EnableMetrics(":9090")
+	//sscl.EnableMetrics(":9090")
 	pairityWithSaral(sscl)
 }
 
 func pairityWithSaral(scl model.SSClient) {
 	var n int32 = 10_000 // send a huge number for lookup
-	secnames := make([]string, 0, n)
+
 	res, err := scl.LookupByName("testSec-", model.GET_GREATER, n)
 	if err != nil {
-		log.Fatal(err)
-	}
-	for k := range res {
-		secnames = append(secnames, k)
-	}
-
-	var wg sync.WaitGroup
-	var sem = make(chan int, 1000)
-
-	for i := 0; i < 3000; i++ {
-		for _, k := range secnames {
-			sem <- 1
-			wg.Add(1)
-			go func(name string) {
-				defer wg.Done()
-
-				//resp, err := scl.GetObject(name)
-				resp, err := scl.GetObjectExt(name)
-				if err != nil {
-					log.Println(err)
-				}
-				_ = resp
-
-                <-sem
-			}(k)
+		log.Println(err)
+	} else {
+		for objName := range res {
+			resp, err := scl.GetObjectExt(objName)
+			if err != nil {
+				log.Println(err)
+			}
+			_ = resp
 		}
 	}
-	wg.Wait()
+}
+
+func enableMetrics(addr string) {
+	s.metrics.Register(prometheus.DefaultRegisterer)
+	http.Handle("/metrics", promhttp.HandlerFor(
+		prometheus.DefaultGatherer,
+		promhttp.HandlerOpts{
+			EnableOpenMetrics: true,
+		},
+	))
+	go func() {
+		log.Fatal(http.ListenAndServe(addr, nil)) // Start the http server for prometheus
+	}()
 }
 
 func runNTimesWithArg(n int, fn func(n int32), arg int32) {
