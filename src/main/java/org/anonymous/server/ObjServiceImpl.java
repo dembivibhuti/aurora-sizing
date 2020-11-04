@@ -16,9 +16,9 @@ import java.util.Optional;
 public class ObjServiceImpl extends ObjServiceImplBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjServiceImpl.class);
-    private static final Gauge getObjectGaugeTimer = Gauge.build().name("get_object").help("Get Object").labelNames("grpc_method").register();
-    private static final Gauge getObjectExtGaugeTimer = Gauge.build().name("get_object_ext").help("Get Object Ext").labelNames("grpc_method").register();
-    private static final Gauge lookupByNameObjectExtGaugeTimer = Gauge.build().name("lookup_by_name").help("Lookup Object by Name").labelNames("grpc_method").register();
+    private static final Gauge getObjectGaugeTimer = Gauge.build().name("get_object_mw").help("Get Object on Middleware").labelNames("grpc_method").register();
+    private static final Gauge getObjectExtGaugeTimer = Gauge.build().name("get_object_ext_mw").help("Get Object Ext on Middleware").labelNames("grpc_method").register();
+    private static final Gauge lookupByNameObjectExtGaugeTimer = Gauge.build().name("lookup_by_name_mw").help("Lookup Object by Name on Middleware").labelNames("grpc_method").register();
     private static ObjectRepository objectRepository;
 
     ObjServiceImpl(ObjectRepository objectRepositiory) {
