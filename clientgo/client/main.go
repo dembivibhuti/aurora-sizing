@@ -9,6 +9,9 @@ import (
 	"sync"
 	"time"
 
+	gprom "github.com/grpc-ecosystem/go-grpc-prometheus"
+    "github.com/prometheus/client_golang/prometheus"
+
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
