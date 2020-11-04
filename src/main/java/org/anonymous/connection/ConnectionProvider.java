@@ -99,7 +99,7 @@ public class ConnectionProvider implements AutoCloseable {
             rwprops.setProperty("dataSource.sslmode", "verify-full");
             rwprops.setProperty("dataSource.sslfactory", "org.postgresql.ssl.DefaultJavaSSLFactory");
         }
-        rwprops.setProperty("autoCommit", "false");
+        rwprops.setProperty("autoCommit", "true");
         return rwprops;
     }
 
@@ -137,7 +137,7 @@ public class ConnectionProvider implements AutoCloseable {
             roprops.setProperty("dataSource.sslmode", "verify-full");
             roprops.setProperty("dataSource.sslfactory", "org.postgresql.ssl.DefaultJavaSSLFactory");
         }
-        roprops.setProperty("autoCommit", "false");
+        roprops.setProperty("autoCommit", "true");
         return roprops;
     }
 
