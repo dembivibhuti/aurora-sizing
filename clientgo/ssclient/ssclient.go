@@ -19,7 +19,7 @@ func NewSSClient(addr string, typ ClientType) model.SSClient {
 	var cl model.SSClient
 	switch typ {
 	case GRPC:
-		cl = clgrpc.NewSSClient(addr)
+		cl = clgrpc.NewSSClient(addr, metrics *model.Metrics)
 	//case TCP:
 	//cl = cltcp.NewSSClient(addr)
 	//case BSTREAM:

@@ -42,14 +42,14 @@ func mustGetConn(addr string) *grpc.ClientConn {
 	return conn
 }
 
-func NewSSClient(addr string) *SSClient {
+func NewSSClient(addr string, metrics *model.Metrics) *SSClient {
 	conn := mustGetConn(addr)
 	client := &SSClient{
 		client:  pb.NewObjServiceClient(conn),
 		conn:    conn,
-		metrics: model.NewMetrics(),
+		metrics: metrics,
 	}
-	client.registerMetrics()
+	//client.registerMetrics()
 	return client
 }
 
@@ -66,6 +66,7 @@ func (s *SSClient) registerMetrics() {
 }
 
 func (s *SSClient) EnableMetrics(addr string) {
+    client.registerMetrics()
 	http.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{

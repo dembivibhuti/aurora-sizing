@@ -24,13 +24,15 @@ func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
 
+    metrics := model.NewMetrics()
+    metrics.Register(prometheus.DefaultRegisterer)
 	var wg sync.WaitGroup
 	for i := 0; i < 500; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for { // infinite for loop
-				startTest()
+				startTest(metrics)
 			}
 		}()
 	}
@@ -40,8 +42,8 @@ func main() {
 	//ssMain(sscl)
 }
 
-func startTest() {
-	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
+func startTest(metrics *model.Metrics) {
+	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC, metrics)
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
 	pairityWithSaral(sscl)
