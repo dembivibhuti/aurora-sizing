@@ -609,8 +609,8 @@ public class ObjectRepository implements AutoCloseable {
             Statistics.getObjectExtDBResultSetFetch.stop(span);
 
             span = Statistics.getObjectExtDBCloseResource.start();
-            rs.close();
-            lookupStmt.close();
+            /*rs.close();
+            lookupStmt.close();*/
             connection.close();
             Statistics.getObjectExtDBCloseResource.stop(span);
 
