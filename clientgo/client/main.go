@@ -10,8 +10,7 @@ import (
 	"time"
 	"net/http"
 
-	gprom "github.com/grpc-ecosystem/go-grpc-prometheus"
-    "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
     "github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
@@ -25,7 +24,7 @@ func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
 
-	enableMetrics()
+	enableMetrics(":9090")
 
 	var wg sync.WaitGroup
 	for i := 0; i < 500; i++ {
