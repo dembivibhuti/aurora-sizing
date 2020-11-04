@@ -66,7 +66,7 @@ func (s *SSClient) registerMetrics() {
 }
 
 func (s *SSClient) EnableMetrics(addr string) {
-    client.registerMetrics()
+    s.registerMetrics()
 	http.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{
