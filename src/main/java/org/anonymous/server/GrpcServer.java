@@ -2,11 +2,7 @@ package org.anonymous.server;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.ServerInterceptors;
-import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.MetricsServlet;
-import me.dinowernli.grpc.prometheus.Configuration;
-import me.dinowernli.grpc.prometheus.MonitoringServerInterceptor;
 import org.anonymous.connection.ConnectionProvider;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.TimeKeeper;

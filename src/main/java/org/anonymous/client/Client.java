@@ -48,6 +48,11 @@ public class Client {
         getObjectByName(objSvcStub);
         objSvcStub.withWaitForReady();
         getObjectByNameExt(objSvcStub);
+        objSvcStub.withWaitForReady();
+
+//        //Get Index Record By Name Call
+        getIndexRecordByName(objSvcStub);
+        objSvcStub.withWaitForReady();
 
         // Transaction Service
         CompletableFuture<Void> future = new CompletableFuture();
@@ -148,6 +153,11 @@ public class Client {
     private static void getObjectByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdGetByNameResponse response = stub.getObject(CmdGetByName.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-0").build());
         System.out.println("Response received from getObjectByName: \n" + response.getSecurity());
+    }
+
+    private static void getIndexRecordByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdIdxGetByNameResponse response = stub.getIdxByName(CmdIdxGetByName.newBuilder().setMsgType(CmdType.CMD_INDEX_GET).setIdsName("test").build());
+        System.out.println("Response received from getIdxByName: \n" + response);
     }
 
     private static void transactionTest(TransactionServiceGrpc.TransactionServiceStub stub, CompletableFuture<Void> future) throws InterruptedException {

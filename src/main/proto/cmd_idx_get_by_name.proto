@@ -1,0 +1,32 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+import "cmd_type.proto";
+import "error_type.proto";
+
+message CmdIdxGetByName {
+	int32 msg_size = 1;
+	CmdType msg_type = 2;
+	string ids_name = 3;
+}
+
+message CmdIdxGetByNameResponse {
+	int32 msg_size = 1;
+	int32 status = 2;
+	message MsgOnSuccess {
+		bool has_succeeded = 1;
+		string name = 2;
+		string time = 3;
+	}
+	message MsgOnFailure {
+		bool has_failed = 1;
+		ErrorType error_type = 2;
+	}
+	oneof RequestResponse {
+		MsgOnSuccess msg_on_success = 3;
+		MsgOnFailure msg_on_failure = 4;
+	}
+
+}

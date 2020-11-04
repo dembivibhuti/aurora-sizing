@@ -72,6 +72,10 @@ public class ObjectRepository implements AutoCloseable {
             connection.prepareStatement(CREATE_TRANS_PARTS_TABLE)
                     .executeUpdate();
             LOGGER.info(" created trans parts table ");
+
+            connection.prepareStatement(CREATE_INDEX_TABLE)
+                    .executeUpdate();
+            LOGGER.info(" created index table ");
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -147,6 +151,21 @@ public class ObjectRepository implements AutoCloseable {
         } catch (Exception ex) {
             ex.printStackTrace();
             completableFuture.completeExceptionally(ex);
+        }
+    }
+
+    //added for testing purpose of index records
+    public void insertIndexTest(){
+        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
+                .prepareStatement(INSERT_INDEX_RECORDS)) {
+            insertRec.setString(1, "test");
+            insertRec.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
+            insertRec.setString(3, "X");
+            insertRec.executeUpdate();
+            connection.commit();
+
+        }catch (Exception e){
+            System.out.println("Error in inserting index records");
         }
     }
 
@@ -777,6 +796,26 @@ public class ObjectRepository implements AutoCloseable {
             throwables.printStackTrace();
         }
         return responseMessages;
+    }
+
+    public Optional<CmdIdxGetByNameResponse.MsgOnSuccess> getIdxRecords(final String indxKey) {
+        CmdIdxGetByNameResponse.MsgOnSuccess msgOnSuccess = null;
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement lookupStmt = connection.prepareStatement(
+                     GET_INDEX_RECORDS)) {
+            lookupStmt.setString(1, indxKey);
+            ResultSet rs = lookupStmt.executeQuery();
+            if(rs.next()) {
+                msgOnSuccess = CmdIdxGetByNameResponse.MsgOnSuccess.newBuilder().
+                                setName(rs.getString("creator_name")).
+                                setTime(rs.getString("timeUpdated")).build();
+
+            }
+            rs.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return Optional.ofNullable(msgOnSuccess);
     }
 
     public boolean insertRec(Connection connection, CmdInsert cmdInsert, long nextTxnId) throws SQLException {

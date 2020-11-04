@@ -77,8 +77,7 @@ public class Store {
             "   detail_bytes integer NOT NULL,\n" +
             "   db_actual_timestamp_utc timestamp NOT NULL,\n" +
             "   mem bytea NOT NULL,\n" +
-            "   PRIMARY KEY (txnlog_trans_id)\n" +
-            ")";
+            "   PRIMARY KEY (txnlog_trans_id)\n" + ")";
 
     public static final String INSERT_TRANS_HEADER = "INSERT INTO tdms_trans_header_primary VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -99,4 +98,14 @@ public class Store {
             ")";
 
     public static final String INSERT_TRANS_PARTS = "INSERT INTO tdms_trans_part_primary VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    public static final String CREATE_INDEX_TABLE = "CREATE TABLE index_records (\n" +
+            "   name varchar NOT NULL,\n" +
+            "   timeUpdated timestamp NOT NULL,\n" +
+            "   creator_name varchar(32) NOT NULL,\n" +
+            " PRIMARY KEY (name)\n" + ")";
+
+    public static final String GET_INDEX_RECORDS = "select creator_name, timeUpdated from index_records where name = ?";
+
+    public static final String INSERT_INDEX_RECORDS = "insert into index_records values (?, ?, ?)";
 }

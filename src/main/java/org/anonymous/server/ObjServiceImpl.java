@@ -264,4 +264,28 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             Statistics.getObjectExt.stop(span);
         }
     }
+
+    @Override
+    public void getIdxByName(CmdIdxGetByName request, StreamObserver<CmdIdxGetByNameResponse> responseObserver) {
+        LOGGER.trace("got request getIdx()");
+        try {
+            objectRepository.insertIndexTest();  // added for testing purpose (to be removed)
+            CmdIdxGetByNameResponse response;
+            Optional<CmdIdxGetByNameResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getIdxRecords(request.getIdsName());
+
+            if(msgOnSuccess.isPresent()){
+                response = CmdIdxGetByNameResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
+            }else{
+                LOGGER.error("Object Doesn't exist");
+                CmdIdxGetByNameResponse.MsgOnFailure msgOnFailure = CmdIdxGetByNameResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
+                response = CmdIdxGetByNameResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
+            }
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.error("Caught Exception in getIdx()", e);
+        }
+
+    }
 }

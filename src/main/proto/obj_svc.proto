@@ -13,6 +13,7 @@ import "cmd_get_many_by_name.proto";
 import "cmd_get_many_by_name_ext.proto";
 import "cmd_change_init_data.proto";
 import "cmd_change_init_data_ext.proto";
+import "cmd_idx_get_by_name.proto";
 
 service ObjService {
 	rpc connect(CmdConnect) returns (CmdConnectResponse);
@@ -29,4 +30,5 @@ service ObjService {
 	rpc get_object_many_by_name_ext_stream(CmdGetManyByNameExt) returns (stream CmdGetManyByNameExtResponseStream);
 	rpc change_init_data(CmdChangeInitData) returns (CmdChangeInitDataResponse);
 	rpc change_init_data_ext(CmdChangeInitDataExt) returns (CmdChangeInitDataExtResponse);
+	rpc get_idx_by_name(CmdIdxGetByName) returns (CmdIdxGetByNameResponse);
 }
