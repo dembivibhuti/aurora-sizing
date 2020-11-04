@@ -18,7 +18,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjServiceImpl.class);
     private static final Gauge getObjectGaugeTimer = Gauge.build().name("get_object_mw").help("Get Object on Middleware").labelNames("grpc_method").register();
     private static final Gauge getObjectExtGaugeTimer = Gauge.build().name("get_object_ext_mw").help("Get Object Ext on Middleware").labelNames("grpc_method").register();
-    private static final Gauge lookupByNameObjectExtGaugeTimer = Gauge.build().name("lookup_by_name_mw").help("Lookup Object by Name on Middleware").labelNames("grpc_method").register();
+    private static final Gauge lookupByNameObjectGaugeTimer = Gauge.build().name("lookup_by_name_mw").help("Lookup Object by Name on Middleware").labelNames("grpc_method").register();
     private static ObjectRepository objectRepository;
 
     ObjServiceImpl(ObjectRepository objectRepositiory) {
@@ -38,7 +38,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     @Override
     public void lookupByName(CmdLookupByName request, StreamObserver<CmdLookupByNameResponse> responseObserver) {
         LOGGER.trace("got request lookupByName()");
-        Gauge.Timer timer = lookupByNameObjectExtGaugeTimer.labels("lookup_by_name").startTimer();
+        Gauge.Timer timer = lookupByNameObjectGaugeTimer.labels("lookup_by_name").startTimer();
         long span = Statistics.lookupByName.start();
 
         try {
@@ -71,6 +71,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         LOGGER.trace("got request lookupByNameStream()");
         long start = System.currentTimeMillis();
         long span = Statistics.lookupByNameStream.start();
+        Gauge.Timer timer = lookupByNameObjectGaugeTimer.labels("lookup_by_name").startTimer();
         try {
             int limit = request.getCount();
             int typeid = request.getGetType().getNumber();
@@ -87,8 +88,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.error("Caught Exception in lookupByNameStream()", e);
         } finally {
             Statistics.lookupByNameStream.stop(span);
-
-        }
+            timer.setDuration();        }
     }
 
     @Override
