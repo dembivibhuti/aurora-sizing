@@ -24,7 +24,7 @@ func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
 
-	enableMetrics(":9090")
+	startMetricsServer(":9090")
 
 	var wg sync.WaitGroup
 	for i := 0; i < 500; i++ {
@@ -65,8 +65,7 @@ func pairityWithSaral(scl model.SSClient) {
 	}
 }
 
-func enableMetrics(addr string) {
-	s.metrics.Register(prometheus.DefaultRegisterer)
+func startMetricsServer(addr string) {
 	http.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{
