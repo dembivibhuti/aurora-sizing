@@ -2,6 +2,7 @@ package org.anonymous.server;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
+import io.prometheus.client.Gauge;
 import org.anonymous.grpc.*;
 import org.anonymous.grpc.ObjServiceGrpc.ObjServiceImplBase;
 import org.anonymous.module.ObjectRepository;
@@ -15,7 +16,9 @@ import java.util.Optional;
 public class ObjServiceImpl extends ObjServiceImplBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjServiceImpl.class);
-    //private static final Gauge gaugeTimer = Gauge.build().name("get_object").help("Get Object").labelNames("grpc_method").register();
+    private static final Gauge getObjectGaugeTimer = Gauge.build().name("get_object").help("Get Object").labelNames("grpc_method").register();
+    private static final Gauge getObjectExtGaugeTimer = Gauge.build().name("get_object_ext").help("Get Object Ext").labelNames("grpc_method").register();
+    private static final Gauge lookupByNameObjectExtGaugeTimer = Gauge.build().name("lookup_by_name").help("Lookup Object by Name").labelNames("grpc_method").register();
     private static ObjectRepository objectRepository;
 
     ObjServiceImpl(ObjectRepository objectRepositiory) {
@@ -35,6 +38,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     @Override
     public void lookupByName(CmdLookupByName request, StreamObserver<CmdLookupByNameResponse> responseObserver) {
         LOGGER.trace("got request lookupByName()");
+        Gauge.Timer timer = lookupByNameObjectExtGaugeTimer.labels("lookup_by_name").startTimer();
         long span = Statistics.lookupByName.start();
 
         try {
@@ -57,6 +61,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         } catch (Exception e) {
             LOGGER.error("Caught Exception in lookupByName()", e);
         } finally {
+            timer.setDuration();
             Statistics.lookupByName.stop(span);
         }
     }
@@ -137,7 +142,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     @Override
     public void getObject(CmdGetByName request, StreamObserver<CmdGetByNameResponse> responseObserver) {
         LOGGER.trace("got request getObject()");
-        //Gauge.Timer timer = gaugeTimer.labels("get_object").startTimer();
+        Gauge.Timer timer = getObjectGaugeTimer.labels("get_object").startTimer();
         long span = Statistics.getObject.start();
         try {
             CmdGetByNameResponse response;
@@ -156,7 +161,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.error("Caught Exception in getObject()", e);
         } finally {
             Statistics.getObject.stop(span);
-            //timer.setDuration();
+            timer.setDuration();
         }
     }
 
@@ -244,6 +249,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     public void getObjectExt(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver) {
         LOGGER.trace("got request getObjectExt()");
         long span = Statistics.getObjectExt.start();
+        Gauge.Timer timer = getObjectExtGaugeTimer.labels("get_object_ext").startTimer();
         try {
             CmdGetByNameExtResponse response;
             Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getFullObject(request.getSecurityName());
@@ -261,6 +267,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         } catch (Exception e) {
             LOGGER.error("Caught Exception in getObjectExt()", e);
         } finally {
+            timer.setDuration();
             Statistics.getObjectExt.stop(span);
         }
     }

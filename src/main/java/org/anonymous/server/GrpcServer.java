@@ -40,22 +40,22 @@ public class GrpcServer {
 
             int port = Integer.parseInt(System.getProperty("port"));
 
-            /* MonitoringServerInterceptor monitoringInterceptor =
+             MonitoringServerInterceptor monitoringInterceptor =
                     MonitoringServerInterceptor.create(Configuration.allMetrics());
 
             Server server = ServerBuilder.forPort(port)
                     .addService(ServerInterceptors.intercept(new ObjServiceImpl(objectRepositiory), monitoringInterceptor))
                     .addService(ServerInterceptors.intercept(new TransactionServiceImpl(objectRepositiory), monitoringInterceptor))
-                    .build();*/
+                    .build();
 
-            Server server = ServerBuilder.forPort(port)
+            /*Server server = ServerBuilder.forPort(port)
                     .addService(new ObjServiceImpl(objectRepositiory))
                     .addService(new TransactionServiceImpl(objectRepositiory))
-                    .build();
+                    .build();*/
 
             LOGGER.info("Listening on {}", port);
 
-            //startMetricsServer();
+            startMetricsServer();
 
             server.start();
             server.awaitTermination();
@@ -68,13 +68,16 @@ public class GrpcServer {
         new Thread(() -> {
 
             try {
-                org.eclipse.jetty.server.Server server1 = new org.eclipse.jetty.server.Server(9090);
+                int port = 9090;
+                org.eclipse.jetty.server.Server server1 = new org.eclipse.jetty.server.Server(port);
                 ServletContextHandler context = new ServletContextHandler();
                 context.setContextPath("/");
                 server1.setHandler(context);
                 context.addServlet(new ServletHolder(new MetricsServlet()), "/metrics");
                 server1.start();
                 server1.join();
+
+                LOGGER.info("Metrics Server parted on {}", port);
 
             } catch (IOException e) {
                 LOGGER.error("failed to start metrics server", e);
