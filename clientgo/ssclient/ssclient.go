@@ -15,11 +15,11 @@ const (
 	BSTREAM
 )
 
-func NewSSClient(addr string, typ ClientType) model.SSClient {
+func NewSSClient(addr string, typ ClientType, metrics *model.Metrics ) model.SSClient {
 	var cl model.SSClient
 	switch typ {
 	case GRPC:
-		cl = clgrpc.NewSSClient(addr, metrics *model.Metrics)
+		cl = clgrpc.NewSSClient(addr, metrics)
 	//case TCP:
 	//cl = cltcp.NewSSClient(addr)
 	//case BSTREAM:
