@@ -78,7 +78,7 @@ public class ConnectionProvider implements AutoCloseable {
         rwprops.setProperty("poolName", "rwPool");
         rwprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
         rwprops.setProperty("maximumPoolSize", System.getProperty("rwMaximumPoolSize"));
-        rwConnectionPoolMaxSize.set(Double.parseDouble(System.getProperty("rwMaximumPoolSize")));
+        rwConnectionPoolMaxSize.labels("connection_pool_props").set(Double.parseDouble(System.getProperty("rwMaximumPoolSize")));
         rwprops.setProperty("minimumIdle", System.getProperty("rwMinimumIdle"));
         rwprops.setProperty("registerMbeans", "true");
         rwprops.setProperty("transactionIsolation", "TRANSACTION_READ_COMMITTED");
@@ -113,7 +113,7 @@ public class ConnectionProvider implements AutoCloseable {
         roprops.setProperty("poolName", "roPool");
         roprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
         roprops.setProperty("maximumPoolSize", System.getProperty("roMaximumPoolSize"));
-        roConnectionPoolMaxSize.set(Double.parseDouble(System.getProperty("roMaximumPoolSize")));
+        roConnectionPoolMaxSize.labels("connection_pool_props").set(Double.parseDouble(System.getProperty("roMaximumPoolSize")));
         roprops.setProperty("minimumIdle", System.getProperty("roMinimumIdle"));
         roprops.setProperty("registerMbeans", "true");
         roprops.setProperty("transactionIsolation", "TRANSACTION_READ_COMMITTED");
