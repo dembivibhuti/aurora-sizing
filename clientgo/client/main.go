@@ -61,6 +61,7 @@ func pairityWithSaral(scl model.SSClient) {
 			resp, err := scl.GetObjectExt(objName)
 			if err != nil {
 				log.Println(err)
+				return // retry to create a new connection
 			}
 			_ = resp
 		}
