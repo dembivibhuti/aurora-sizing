@@ -59,8 +59,12 @@ func (s *SSClient) Init() {
 	// don't need any initialization here
 }
 
+func (s *SSClient) RegisterMetrics() {
+    s.metrics.Register(prometheus.DefaultRegisterer)
+}
+
 func (s *SSClient) EnableMetrics(addr string) {
-	s.metrics.Register(prometheus.DefaultRegisterer)
+	s.RegisterMetrics()
 	http.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{

@@ -44,7 +44,7 @@ func startTest() {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
-	sscl.metrics.Register(prometheus.DefaultRegisterer)
+	sscl.RegisterMetrics()
 	pairityWithSaral(sscl)
 }
 
