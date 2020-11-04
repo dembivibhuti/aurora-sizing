@@ -50,6 +50,7 @@ func NewSSClient(addr string) *SSClient {
 		metrics: model.NewMetrics(),
 	}
 	client.registerMetrics()
+	return client
 }
 
 func (s *SSClient) Close() {
