@@ -44,11 +44,12 @@ func mustGetConn(addr string) *grpc.ClientConn {
 
 func NewSSClient(addr string) *SSClient {
 	conn := mustGetConn(addr)
-	return &SSClient{
+	client := &SSClient{
 		client:  pb.NewObjServiceClient(conn),
 		conn:    conn,
 		metrics: model.NewMetrics(),
 	}
+	client.registerMetrics()
 }
 
 func (s *SSClient) Close() {
@@ -59,12 +60,11 @@ func (s *SSClient) Init() {
 	// don't need any initialization here
 }
 
-func (s *SSClient) RegisterMetrics() {
+func (s *SSClient) registerMetrics() {
     s.metrics.Register(prometheus.DefaultRegisterer)
 }
 
 func (s *SSClient) EnableMetrics(addr string) {
-	s.RegisterMetrics()
 	http.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{

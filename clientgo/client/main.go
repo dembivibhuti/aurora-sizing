@@ -44,7 +44,6 @@ func startTest() {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
-	sscl.RegisterMetrics()
 	pairityWithSaral(sscl)
 }
 
