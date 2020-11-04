@@ -24,8 +24,6 @@ func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
 
-	startMetricsServer(":9090")
-
 	var wg sync.WaitGroup
 	for i := 0; i < 500; i++ {
 		wg.Add(1)
@@ -36,6 +34,8 @@ func main() {
 			}
 		}()
 	}
+
+	startMetricsServer(":9090")
 	wg.Wait()
 	//ssMain(sscl)
 }
