@@ -38,9 +38,8 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     @Override
     public void lookupByName(CmdLookupByName request, StreamObserver<CmdLookupByNameResponse> responseObserver) {
         LOGGER.trace("got request lookupByName()");
-        Gauge.Timer timer = lookupByNameObjectGaugeTimer.labels("lookup_by_name").startTimer();
         long span = Statistics.lookupByName.start();
-
+        Gauge.Timer timer = lookupByNameObjectGaugeTimer.labels("lookup_by_name").startTimer();
         try {
             int limit = request.getCount();
             LOGGER.trace("limit = " + limit);
@@ -56,12 +55,12 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             CmdLookupByNameResponse.Builder responseBuilder = CmdLookupByNameResponse.newBuilder();
             objectRepository.lookup(prefix, typeid, limit).stream().forEach(key -> responseBuilder.addSecurityNames(key));
             responseObserver.onNext(responseBuilder.build());
+            timer.setDuration();
             responseObserver.onCompleted();
-
         } catch (Exception e) {
             LOGGER.error("Caught Exception in lookupByName()", e);
         } finally {
-            timer.setDuration();
+
             Statistics.lookupByName.stop(span);
         }
     }
@@ -82,13 +81,15 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             CmdLookupByNameResponseStream.Builder responseBuilder = CmdLookupByNameResponseStream.newBuilder();
             List<String> results = objectRepository.lookup(prefix, typeid, limit);
             results.stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
+            timer.setDuration();
             responseObserver.onCompleted();
             LOGGER.trace("elapsed time = " + (System.currentTimeMillis() - start ) / 1000 );
         } catch (Exception e) {
             LOGGER.error("Caught Exception in lookupByNameStream()", e);
         } finally {
             Statistics.lookupByNameStream.stop(span);
-            timer.setDuration();        }
+        }
+
     }
 
     @Override
@@ -142,8 +143,8 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     @Override
     public void getObject(CmdGetByName request, StreamObserver<CmdGetByNameResponse> responseObserver) {
         LOGGER.trace("got request getObject()");
-        Gauge.Timer timer = getObjectGaugeTimer.labels("get_object").startTimer();
         long span = Statistics.getObject.start();
+        Gauge.Timer timer = getObjectGaugeTimer.labels("get_object").startTimer();
         try {
             CmdGetByNameResponse response;
 
@@ -160,8 +161,8 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         } catch (Exception e) {
             LOGGER.error("Caught Exception in getObject()", e);
         } finally {
-            Statistics.getObject.stop(span);
             timer.setDuration();
+            Statistics.getObject.stop(span);
         }
     }
 
@@ -261,13 +262,12 @@ public class ObjServiceImpl extends ObjServiceImplBase {
                 CmdGetByNameExtResponse.MsgOnFailure msgOnFailure = CmdGetByNameExtResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
                 response = CmdGetByNameExtResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
             }
-
             responseObserver.onNext(response);
+            timer.setDuration();
             responseObserver.onCompleted();
         } catch (Exception e) {
             LOGGER.error("Caught Exception in getObjectExt()", e);
         } finally {
-            timer.setDuration();
             Statistics.getObjectExt.stop(span);
         }
     }
