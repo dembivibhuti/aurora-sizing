@@ -5,27 +5,28 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net/http"
 	"sort"
 	"sync"
 	"time"
-	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
-    "github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient"
 	"github.com/somnath67643/aurora-sizing/clientgo/ssclient/model"
 )
 
 var (
-	serverAddr = flag.String("sa", "localhost:8080", "the server port")
+	serverAddr     = flag.String("sa", "localhost:8080", "the server port")
+	promScrapePort = flag.String("promscrapeport", ":8080", "the prometheus scrape port")
 )
 
 func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
 
-    metrics := model.NewMetrics()
-    metrics.Register(prometheus.DefaultRegisterer)
+	metrics := model.NewMetrics()
+	metrics.Register(prometheus.DefaultRegisterer)
 	var wg sync.WaitGroup
 	for i := 0; i < 500; i++ {
 		wg.Add(1)
@@ -37,7 +38,7 @@ func main() {
 		}()
 	}
 
-	startMetricsServer(":9090")
+	startMetricsServer(*promScrapePort)
 	wg.Wait()
 	//ssMain(sscl)
 }
