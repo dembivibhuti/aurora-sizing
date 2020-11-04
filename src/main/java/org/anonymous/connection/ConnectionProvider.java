@@ -77,7 +77,7 @@ public class ConnectionProvider implements AutoCloseable {
         rwprops.setProperty("minimumIdle", System.getProperty("rwMinimumIdle"));
         rwprops.setProperty("registerMbeans", "true");
         rwprops.setProperty("transactionIsolation", "TRANSACTION_READ_COMMITTED");
-        rwprops.setProperty("prepareThreshold", "1");
+        rwprops.setProperty("dataSource.prepareThreshold", "1");
         rwprops.setProperty("idleTimeout", "1800000");
         rwprops.setProperty("maxLifetime", "1800000");
         rwprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
@@ -111,7 +111,7 @@ public class ConnectionProvider implements AutoCloseable {
         roprops.setProperty("minimumIdle", System.getProperty("roMinimumIdle"));
         roprops.setProperty("registerMbeans", "true");
         roprops.setProperty("transactionIsolation", "TRANSACTION_READ_COMMITTED");
-        roprops.setProperty("prepareThreshold", "1");
+        roprops.setProperty("dataSource.prepareThreshold", "1");
         roprops.setProperty("idleTimeout", "1800000");
         roprops.setProperty("maxLifetime", "1800000");
         roprops.setProperty("dataSource.user", System.getProperty("dataSource.user"));
