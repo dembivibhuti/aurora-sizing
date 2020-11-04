@@ -2,6 +2,7 @@ package org.anonymous.connection;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.prometheus.client.Gauge;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -10,6 +11,9 @@ import java.util.Properties;
 import java.lang.AutoCloseable;
 
 public class ConnectionProvider implements AutoCloseable {
+
+    private static final Gauge roConnectionPoolMaxSize = Gauge.build().name("ro_conn_pool_max_size").help("Max RO Pool Size").labelNames("connection_pool_props").register();
+    private static final Gauge rwConnectionPoolMaxSize = Gauge.build().name("rw_conn_pool_max_size").help("Max RW Pool Size").labelNames("connection_pool_props").register();
 
     private final DataSource ds;
 
@@ -74,6 +78,7 @@ public class ConnectionProvider implements AutoCloseable {
         rwprops.setProperty("poolName", "rwPool");
         rwprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
         rwprops.setProperty("maximumPoolSize", System.getProperty("rwMaximumPoolSize"));
+        rwConnectionPoolMaxSize.set(Double.parseDouble(System.getProperty("rwMaximumPoolSize")));
         rwprops.setProperty("minimumIdle", System.getProperty("rwMinimumIdle"));
         rwprops.setProperty("registerMbeans", "true");
         rwprops.setProperty("transactionIsolation", "TRANSACTION_READ_COMMITTED");
@@ -108,6 +113,7 @@ public class ConnectionProvider implements AutoCloseable {
         roprops.setProperty("poolName", "roPool");
         roprops.setProperty("dataSourceClassName", System.getProperty("dataSourceClassName"));
         roprops.setProperty("maximumPoolSize", System.getProperty("roMaximumPoolSize"));
+        roConnectionPoolMaxSize.set(Double.parseDouble(System.getProperty("roMaximumPoolSize")));
         roprops.setProperty("minimumIdle", System.getProperty("roMinimumIdle"));
         roprops.setProperty("registerMbeans", "true");
         roprops.setProperty("transactionIsolation", "TRANSACTION_READ_COMMITTED");

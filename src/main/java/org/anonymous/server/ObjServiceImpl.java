@@ -89,7 +89,6 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         } finally {
             Statistics.lookupByNameStream.stop(span);
         }
-
     }
 
     @Override
