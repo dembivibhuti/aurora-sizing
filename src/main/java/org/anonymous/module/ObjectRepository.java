@@ -2,6 +2,7 @@ package org.anonymous.module;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
+import io.prometheus.client.Gauge;
 import org.anonymous.connection.ConnectionProvider;
 import org.anonymous.grpc.*;
 import org.anonymous.stats.Statistics;
@@ -27,6 +28,12 @@ public class ObjectRepository implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private final ConnectionProvider roConnectionProvider;
     private final ConnectionProvider rwConnectionProvider;
+
+    private static final Gauge obtainDBConnFromPool = Gauge.build().name("get_db_conn_from_pool").help("Get DB Connection from Pool").labelNames("db_ops").register();
+    private static final Gauge releaseDBConnToPool = Gauge.build().name("release_db_conn_to_pool").help("Release DB Connection to Pool").labelNames("db_ops").register();
+    private static final Gauge prepareStatement = Gauge.build().name("prepare_statement").help("Make PreparedStatement").labelNames("db_ops").register();
+    private static final Gauge fetchAndParseResultSet = Gauge.build().name("fetch_parse_resultset").help("Fetch and Parse Resultset").labelNames("db_ops").register();
+
 
     private static final byte[] BYTES_560 = getSizedByteArray(560);
 
@@ -585,15 +592,20 @@ public class ObjectRepository implements AutoCloseable {
 
         try {
             long span = Statistics.getObjectExtDBGetConnection.start();
+            Gauge.Timer timer1 = obtainDBConnFromPool.labels("get_object_ext").startTimer();
             Connection connection = roConnectionProvider.getConnection();
+            timer1.setDuration();
             Statistics.getObjectExtDBGetConnection.stop(span);
 
             span = Statistics.getObjectExtDBPreparedStatementMake.start();
+            timer1 = prepareStatement.labels("get_object_ext").startTimer();
             PreparedStatement lookupStmt = connection.prepareStatement(GET_FULL_OBJECT);
             lookupStmt.setString(1, secKey.toLowerCase());
+            timer1.setDuration();
             Statistics.getObjectExtDBPreparedStatementMake.stop(span);
 
             span = Statistics.getObjectExtDBResultSetFetch.start();
+            timer1 = fetchAndParseResultSet.labels("get_object_ext").startTimer();
             ResultSet rs = lookupStmt.executeQuery();
             if (rs.next()) {
                 msgOnSuccess = CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
@@ -609,12 +621,15 @@ public class ObjectRepository implements AutoCloseable {
                                 setTimeUpdate(rs.getString("timeUpdated"))).
                         build();
             }
+            timer1.setDuration();
             Statistics.getObjectExtDBResultSetFetch.stop(span);
 
             span = Statistics.getObjectExtDBCloseResource.start();
-            rs.close();
-            lookupStmt.close();
+            timer1 = releaseDBConnToPool.labels("get_object_ext").startTimer();
+            //rs.close();
+            //lookupStmt.close();
             connection.close();
+            timer1.setDuration();
             Statistics.getObjectExtDBCloseResource.stop(span);
 
         } catch (SQLException sqlException) {
