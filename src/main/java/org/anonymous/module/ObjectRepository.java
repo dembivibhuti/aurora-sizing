@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,6 +27,8 @@ public class ObjectRepository implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private final ConnectionProvider roConnectionProvider;
     private final ConnectionProvider rwConnectionProvider;
+
+    private static final byte[] BYTES_560 = getSizedByteArray(560);
 
     public ObjectRepository(ConnectionProvider roConnectionProvider, ConnectionProvider rwConnectionProvider) {
         this.roConnectionProvider = roConnectionProvider;
@@ -576,7 +579,7 @@ public class ObjectRepository implements AutoCloseable {
         return Optional.ofNullable(arrayContainsMem);
     }
 
-    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
+    /*public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
         CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
 
 
@@ -609,8 +612,8 @@ public class ObjectRepository implements AutoCloseable {
             Statistics.getObjectExtDBResultSetFetch.stop(span);
 
             span = Statistics.getObjectExtDBCloseResource.start();
-            /*rs.close();
-            lookupStmt.close();*/
+            *//*rs.close();
+            lookupStmt.close();*//*
             connection.close();
             Statistics.getObjectExtDBCloseResource.stop(span);
 
@@ -618,6 +621,22 @@ public class ObjectRepository implements AutoCloseable {
             LOGGER.error("error in getFullObject()", sqlException);
         }
         return Optional.ofNullable(msgOnSuccess);
+    }*/
+
+    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
+        String dummyTime = new Timestamp(new Date().getTime()).toString();
+        return Optional.ofNullable(CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
+                setMem(ByteString.copyFrom(BYTES_560)).
+                setMetadata(Metadata.newBuilder().
+                        setSecurityName(secKey).
+                        setSecurityType(1).
+                        setLastTxnId(1).
+                        setUpdateCount(1).
+                        setDateCreated(1).
+                        setDbIdUpdated(1).
+                        setVersionInfo(1).
+                        setTimeUpdate(dummyTime)).
+                build());
     }
 
     public CompletableFuture<Void> getMemsByKeys(List<String> secKeys, TimeKeeper lookupTimeKeeper) {
