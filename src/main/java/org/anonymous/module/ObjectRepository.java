@@ -579,7 +579,7 @@ public class ObjectRepository implements AutoCloseable {
         return Optional.ofNullable(arrayContainsMem);
     }
 
-    /*public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
+    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
         CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
 
 
@@ -612,8 +612,8 @@ public class ObjectRepository implements AutoCloseable {
             Statistics.getObjectExtDBResultSetFetch.stop(span);
 
             span = Statistics.getObjectExtDBCloseResource.start();
-            *//*rs.close();
-            lookupStmt.close();*//*
+            rs.close();
+            lookupStmt.close();
             connection.close();
             Statistics.getObjectExtDBCloseResource.stop(span);
 
@@ -621,9 +621,9 @@ public class ObjectRepository implements AutoCloseable {
             LOGGER.error("error in getFullObject()", sqlException);
         }
         return Optional.ofNullable(msgOnSuccess);
-    }*/
+    }
 
-    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
+    /*public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
         String dummyTime = new Timestamp(new Date().getTime()).toString();
         return Optional.ofNullable(CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
                 setMem(ByteString.copyFrom(BYTES_560)).
@@ -637,7 +637,7 @@ public class ObjectRepository implements AutoCloseable {
                         setVersionInfo(1).
                         setTimeUpdate(dummyTime)).
                 build());
-    }
+    }*/
 
     public CompletableFuture<Void> getMemsByKeys(List<String> secKeys, TimeKeeper lookupTimeKeeper) {
         CompletableFuture<Void> completableFuture = new CompletableFuture();
