@@ -9,9 +9,6 @@ import java.sql.SQLException;
 
 public class TomcatJDBCConnectionProvider implements ConnectionProvider {
 
-    private static final Gauge roConnectionPoolMaxSize = Gauge.build().name("ro_conn_pool_max_size_tomcat").help("Max RO Pool Size").labelNames("connection_pool_props").register();
-    private static final Gauge rwConnectionPoolMaxSize = Gauge.build().name("rw_conn_pool_max_size_tomcat").help("Max RW Pool Size").labelNames("connection_pool_props").register();
-
     private final DataSource ds;
 
     public TomcatJDBCConnectionProvider(PoolProperties ps) {
