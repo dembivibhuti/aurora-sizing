@@ -1,11 +1,7 @@
 package org.anonymous.pattern;
 
-import java.util.Properties;
-import org.anonymous.connection.ConnectionProvider;
-import java.sql.Connection;
-import java.sql.SQLException;
+import org.anonymous.connection.HikariCPConnectionProvider;
 import org.anonymous.module.ObjectRepository;
-import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
 import java.util.stream.Collectors;
 import java.util.concurrent.CompletableFuture;
@@ -15,11 +11,11 @@ import static org.anonymous.stats.Statistics.log;
 
 public class LoadObjectsDataAndLookup {
 
-    private ConnectionProvider roConnectionProvider;
-    private ConnectionProvider rwConnectionProvider;
+    private HikariCPConnectionProvider roConnectionProvider;
+    private HikariCPConnectionProvider rwConnectionProvider;
     private ObjectRepository objectRepositiory;
 
-    public LoadObjectsDataAndLookup(ConnectionProvider roConnectionProvider, ConnectionProvider rwConnectionProvider) {
+    public LoadObjectsDataAndLookup(HikariCPConnectionProvider roConnectionProvider, HikariCPConnectionProvider rwConnectionProvider) {
         this.roConnectionProvider = roConnectionProvider;
         this.rwConnectionProvider = rwConnectionProvider;
         this.objectRepositiory = new ObjectRepository(roConnectionProvider, rwConnectionProvider);

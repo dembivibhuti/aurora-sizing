@@ -1,11 +1,9 @@
 package org.anonymous.setup;
 
-import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.connection.HikariCPConnectionProvider;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.TimeKeeper;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.io.FileReader;
 
@@ -14,7 +12,7 @@ import com.opencsv.CSVReaderBuilder;
 
 
 public class ObjectLoadFromCSV {
-    private final static ConnectionProvider.Holder holder = ConnectionProvider.create();
+    private final static HikariCPConnectionProvider.Holder holder = HikariCPConnectionProvider.create();
 
     public static void main(String[] args) {
         try {

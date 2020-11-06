@@ -1,7 +1,6 @@
 package org.anonymous.boot;
 
-import org.anonymous.connection.ConnectionProvider;
-import org.anonymous.unused.Connector;
+import org.anonymous.connection.HikariCPConnectionProvider;
 
 import java.sql.*;
 import java.util.Scanner;
@@ -12,7 +11,7 @@ import java.util.Scanner;
  */
 public class QueryCLI {
 
-    private final static ConnectionProvider.Holder holder = ConnectionProvider.create();
+    private final static HikariCPConnectionProvider.Holder holder = HikariCPConnectionProvider.create();
 
     public static void main(String[] args) throws SQLException {
 

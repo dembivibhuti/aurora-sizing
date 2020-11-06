@@ -1,7 +1,7 @@
 package org.anonymous.boot;
 
 import java.util.Properties;
-import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.connection.HikariCPConnectionProvider;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.anonymous.module.ObjectRepository;
@@ -19,7 +19,7 @@ public class SchemaUtil {
         rwprops.setProperty("dataSource.serverName", System.getProperty("dataSource.rwserverName"));
         rwprops.setProperty("dataSource.currentSchema", System.getProperty("dataSource.currentSchema"));
         rwprops.setProperty("autoCommit", "false");
-        try (ConnectionProvider rwConnectionProvider = new ConnectionProvider(rwprops)) {
+        try (HikariCPConnectionProvider rwConnectionProvider = new HikariCPConnectionProvider(rwprops)) {
             try (Connection connection = rwConnectionProvider.getConnection()) {
                 connection
                         .prepareStatement(

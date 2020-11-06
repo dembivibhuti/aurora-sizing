@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
 import io.prometheus.client.Gauge;
 import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.connection.HikariCPConnectionProvider;
 import org.anonymous.grpc.*;
 import org.anonymous.stats.Statistics;
 import org.anonymous.util.StopWatch;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
-import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
