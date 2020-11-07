@@ -589,11 +589,13 @@ public class ObjectRepository implements AutoCloseable {
     public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
         CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
 
-
+        long span = -1;
+        Gauge.Timer timer1 = null;
+        Connection connection = null;
         try {
-            long span = Statistics.getObjectExtDBGetConnection.start();
-            Gauge.Timer timer1 = obtainDBConnFromPool.labels("get_object_ext").startTimer();
-            Connection connection = roConnectionProvider.getConnection();
+            span = Statistics.getObjectExtDBGetConnection.start();
+            timer1 = obtainDBConnFromPool.labels("get_object_ext").startTimer();
+            connection = roConnectionProvider.getConnection();
             timer1.setDuration();
             Statistics.getObjectExtDBGetConnection.stop(span);
 
@@ -624,16 +626,20 @@ public class ObjectRepository implements AutoCloseable {
             timer1.setDuration();
             Statistics.getObjectExtDBResultSetFetch.stop(span);
 
+        } catch (SQLException sqlException) {
+            LOGGER.error("error in getFullObject()", sqlException);
+        } finally {
             span = Statistics.getObjectExtDBCloseResource.start();
             timer1 = releaseDBConnToPool.labels("get_object_ext").startTimer();
             //rs.close();
             //lookupStmt.close();
-            connection.close();
+            try {
+                connection.close();
+            } catch (SQLException sqlException) {
+                LOGGER.error("error in getFullObject() finally, error in closing the connection", sqlException);
+            }
             timer1.setDuration();
             Statistics.getObjectExtDBCloseResource.stop(span);
-
-        } catch (SQLException sqlException) {
-            LOGGER.error("error in getFullObject()", sqlException);
         }
         return Optional.ofNullable(msgOnSuccess);
     }
