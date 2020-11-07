@@ -119,7 +119,7 @@ public class TomcatJDBCConnectionProvider implements ConnectionProvider {
         roprops.setTimeBetweenEvictionRunsMillis(30000);
         roprops.setMaxActive(Integer.parseInt(System.getProperty("roMaximumPoolSize")));
         roprops.setInitialSize(10);
-        roprops.setMaxWait(10000);
+        roprops.setMaxWait(20000);
         roprops.setRemoveAbandonedTimeout(60);
         roprops.setMinEvictableIdleTimeMillis(30000);
         roprops.setMinIdle(10);
