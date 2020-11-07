@@ -252,7 +252,8 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         Gauge.Timer timer = getObjectExtGaugeTimer.labels("get_object_ext").startTimer();
         try {
             CmdGetByNameExtResponse response;
-            async(request, responseObserver, timer, span);
+            //async(request, responseObserver, timer, span); Does not help much
+            sync(request, responseObserver, timer, span);
         } catch (Exception e) {
             LOGGER.error("Caught Exception in getObjectExt()", e);
         }
