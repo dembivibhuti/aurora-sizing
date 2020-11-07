@@ -92,7 +92,7 @@ public class TomcatJDBCConnectionProvider implements ConnectionProvider {
         rwprops.setDefaultAutoCommit(false);
         rwprops.setDefaultTransactionIsolation(2); //== TRANSACTION_READ_COMMITTED
         rwprops.setJdbcInterceptors(
-                "org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"+
+                /*"org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"+*/
                         "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
         return rwprops;
     }
@@ -123,7 +123,7 @@ public class TomcatJDBCConnectionProvider implements ConnectionProvider {
         roprops.setDefaultAutoCommit(false);
         roprops.setDefaultTransactionIsolation(2); //== TRANSACTION_READ_COMMITTED
         roprops.setJdbcInterceptors(
-                "org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"+
+                /*"org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"+*/
                         "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
         return roprops;
     }
