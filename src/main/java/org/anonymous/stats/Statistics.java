@@ -100,7 +100,7 @@ public class Statistics {
         }
     }
 
-    public static final int INTERVAL = 20;
+    public static final int INTERVAL = 60;
 
     static {
         new Thread(() -> {
