@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TimeKeeper {
 
+    private static final boolean ENABLED = false;
+
     private final String op;
     private Instant resetTime = Instant.now();
 
@@ -44,22 +46,28 @@ public class TimeKeeper {
     }
 
     public long start() {
-        long click = clicks.addAndGet(1);
-        starts.put(click, Instant.now());
-        return click;
+        if (ENABLED) {
+            long click = clicks.addAndGet(1);
+            starts.put(click, Instant.now());
+            return click;
+        }
+        return -1;
     }
 
     public Duration stop(long id) {
-        Instant now = Instant.now();
-        Duration span = null;
-        Instant start = starts.get(id);
-        if (null != start) {
-            span = Duration.between(start, now);
-            durations.add(span);
-        } else {
-            System.out.println("Span Id Not Valid " + id);
+        if (ENABLED) {
+            Instant now = Instant.now();
+            Duration span = null;
+            Instant start = starts.get(id);
+            if (null != start) {
+                span = Duration.between(start, now);
+                durations.add(span);
+            } else {
+                System.out.println("Span Id Not Valid " + id);
+            }
+            return span;
         }
-        return span;
+        return Duration.ZERO;
     }
 
     public Result getStats() {
