@@ -4,7 +4,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
 import io.prometheus.client.Gauge;
 import org.anonymous.connection.ConnectionProvider;
-import org.anonymous.connection.HikariCPConnectionProvider;
 import org.anonymous.grpc.*;
 import org.anonymous.stats.Statistics;
 import org.anonymous.util.StopWatch;
@@ -25,6 +24,7 @@ import static org.anonymous.sql.Store.*;
 public class ObjectRepository implements AutoCloseable {
 
     private static final ExecutorService executorService = Executors.newFixedThreadPool(100);
+    private static final ExecutorService dbOpsExecutorService = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private final ConnectionProvider roConnectionProvider;
     private final ConnectionProvider rwConnectionProvider;
@@ -642,6 +642,14 @@ public class ObjectRepository implements AutoCloseable {
             Statistics.getObjectExtDBCloseResource.stop(span);
         }
         return Optional.ofNullable(msgOnSuccess);
+    }
+
+    public CompletableFuture<Optional<CmdGetByNameExtResponse.MsgOnSuccess>> getFullObjectAsync(final String secKey) {
+        CompletableFuture<Optional<CmdGetByNameExtResponse.MsgOnSuccess>> answer = new CompletableFuture<>();
+        dbOpsExecutorService.execute(() -> {
+            answer.complete(getFullObject(secKey));
+        });
+        return answer;
     }
 
     /*public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {

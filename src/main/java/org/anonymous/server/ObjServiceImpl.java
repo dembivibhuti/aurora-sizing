@@ -252,11 +252,40 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         Gauge.Timer timer = getObjectExtGaugeTimer.labels("get_object_ext").startTimer();
         try {
             CmdGetByNameExtResponse response;
-            Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getFullObject(request.getSecurityName());
+            async(request, responseObserver, timer, span);
+        } catch (Exception e) {
+            LOGGER.error("Caught Exception in getObjectExt()", e);
+        }
+    }
 
-            if(msgOnSuccess.isPresent()){
-                response = CmdGetByNameExtResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
-            }else{
+    private void sync(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver, Gauge.Timer timer, long spanID) {
+        CmdGetByNameExtResponse response;
+        Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getFullObject(request.getSecurityName());
+
+        if(msgOnSuccess.isPresent()){
+            response = CmdGetByNameExtResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
+        }else{
+            LOGGER.error("Object Doesn't exist");
+            CmdGetByNameExtResponse.MsgOnFailure msgOnFailure = CmdGetByNameExtResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
+            response = CmdGetByNameExtResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
+        }
+        responseObserver.onNext(response);
+        timer.setDuration();
+        responseObserver.onCompleted();
+        Statistics.getObjectExt.stop(spanID);
+    }
+
+    private void async(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver, Gauge.Timer timer, long spanId ) {
+        objectRepository.getFullObjectAsync(request.getSecurityName()).whenComplete((answer, error) -> {
+            CmdGetByNameExtResponse response;
+
+            if(error != null ) {
+                LOGGER.error("Object Doesn't exist", error );
+                CmdGetByNameExtResponse.MsgOnFailure msgOnFailure = CmdGetByNameExtResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
+                response = CmdGetByNameExtResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
+            } else if(answer.isPresent()){
+                response = CmdGetByNameExtResponse.newBuilder().setMsgOnSuccess(answer.get()).build();
+            } else{
                 LOGGER.error("Object Doesn't exist");
                 CmdGetByNameExtResponse.MsgOnFailure msgOnFailure = CmdGetByNameExtResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
                 response = CmdGetByNameExtResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
@@ -264,10 +293,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             responseObserver.onNext(response);
             timer.setDuration();
             responseObserver.onCompleted();
-        } catch (Exception e) {
-            LOGGER.error("Caught Exception in getObjectExt()", e);
-        } finally {
-            Statistics.getObjectExt.stop(span);
-        }
+            Statistics.getObjectExt.stop(spanId);
+        });
     }
 }

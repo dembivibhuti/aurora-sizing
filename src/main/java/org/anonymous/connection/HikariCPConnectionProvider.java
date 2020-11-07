@@ -2,13 +2,13 @@ package org.anonymous.connection;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import io.prometheus.client.Gauge;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.lang.AutoCloseable;
+import java.util.concurrent.Future;
 
 public class HikariCPConnectionProvider implements ConnectionProvider {
 
@@ -35,6 +35,11 @@ public class HikariCPConnectionProvider implements ConnectionProvider {
 
     public Connection getConnection() throws SQLException {
         return ds.getConnection();
+    }
+
+    @Override
+    public Future<Connection> getConnectionAsync() throws SQLException {
+        throw new RuntimeException("Not Implemented for HikariCP Conn. Pool");
     }
 
     public static boolean isInMemDB() {

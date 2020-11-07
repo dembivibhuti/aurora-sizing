@@ -1,11 +1,11 @@
 package org.anonymous.connection;
 
-import io.prometheus.client.Gauge;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.Future;
 
 public class TomcatJDBCConnectionProvider implements ConnectionProvider {
 
@@ -32,6 +32,11 @@ public class TomcatJDBCConnectionProvider implements ConnectionProvider {
 
     public Connection getConnection() throws SQLException {
         return ds.getConnection();
+    }
+
+    @Override
+    public Future<Connection> getConnectionAsync() throws SQLException {
+        return ds.getConnectionAsync();
     }
 
     public static boolean isInMemDB() {
