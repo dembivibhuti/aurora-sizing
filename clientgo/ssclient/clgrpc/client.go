@@ -62,16 +62,16 @@ func (s *SSClient) Init() {
 func (s *SSClient) EnableMetrics(addr string) {
 
 	/*
-	s.metrics.Register(prometheus.DefaultRegisterer)
-	http.Handle("/metrics", promhttp.HandlerFor(
-		prometheus.DefaultGatherer,
-		promhttp.HandlerOpts{
-			EnableOpenMetrics: true,
-		},
-	))
-	go func() {
-		log.Fatal(http.ListenAndServe(addr, nil)) // Start the http server for prometheus
-	}()
+		s.metrics.Register(prometheus.DefaultRegisterer)
+		http.Handle("/metrics", promhttp.HandlerFor(
+			prometheus.DefaultGatherer,
+			promhttp.HandlerOpts{
+				EnableOpenMetrics: true,
+			},
+		))
+		go func() {
+			log.Fatal(http.ListenAndServe(addr, nil)) // Start the http server for prometheus
+		}()
 	*/
 }
 
@@ -205,6 +205,25 @@ func (s *SSClient) GetObjectMany(snames []string) (<-chan *model.Object, error) 
 	}()
 	return ch, nil
 }
+func (s *SSClient) GetIdxByName(sname string) (*model.Record, error) {
+	ctx := context.Background()
+	resp, err := s.client.GetIdxByName(ctx, &pb.CmdIdxGetByName{IdsName: sname})
+	if err != nil {
+		return nil, err
+	}
+
+	v := resp.GetMsgOnSuccess()
+
+	if v == nil {
+		return nil, fmt.Errorf("Could not get Object")
+	}
+
+	obj := &model.Record{
+		Name: v.GetName(),
+		Time: v.GetTime(),
+	}
+	return obj, nil
+}
 
 func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, error) {
 	ctx := context.Background()
@@ -231,7 +250,7 @@ func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, e
 				break
 			}
 			v := resp.GetMsgOnSuccess()
-			fmt.Printf("Has Succeeded: %t | Metadata: %s \n", v.HasSucceeded, v.Metadata)
+			//fmt.Printf("Has Succeeded: %t | Metadata: %s \n", v.HasSucceeded, v.Metadata)
 			if v == nil {
 				continue
 			}

@@ -269,7 +269,6 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     public void getIdxByName(CmdIdxGetByName request, StreamObserver<CmdIdxGetByNameResponse> responseObserver) {
         LOGGER.trace("got request getIdx()");
         try {
-            objectRepository.insertIndexTest();  // added for testing purpose (to be removed)
             CmdIdxGetByNameResponse response;
             Optional<CmdIdxGetByNameResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getIdxRecords(request.getIdsName());
 
@@ -277,7 +276,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
                 response = CmdIdxGetByNameResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
             }else{
                 LOGGER.error("Object Doesn't exist");
-                CmdIdxGetByNameResponse.MsgOnFailure msgOnFailure = CmdIdxGetByNameResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
+                CmdIdxGetByNameResponse.MsgOnFailure msgOnFailure = CmdIdxGetByNameResponse.MsgOnFailure.newBuilder().setHasFailed(false).setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
                 response = CmdIdxGetByNameResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
             }
 

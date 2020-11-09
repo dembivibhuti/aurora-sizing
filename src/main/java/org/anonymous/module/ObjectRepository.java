@@ -117,7 +117,8 @@ public class ObjectRepository implements AutoCloseable {
     private void insertRecs(int numberOfRecsPerThread, CompletableFuture completableFuture, int objSize, TimeKeeper secInsertTimeKeeper) {
 
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
-                .prepareStatement(INSERT_RECORDS)) {
+                .prepareStatement(INSERT_RECORDS);
+             PreparedStatement insertIndexRec = connection .prepareStatement(INSERT_INDEX_RECORDS); ) {
 
             byte[] sdbMem = getSizedByteArray(100);
             byte[] mem = getSizedByteArray(objSize);
@@ -127,6 +128,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 int randTypeId = randIntStream.next();
                 String name = String.format("testSec-%d-%d", randIntStream.next(), i);
+                String indexRecordName = String.format("test-%d-%d",randIntStream.next(), i);
 
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
@@ -141,6 +143,10 @@ public class ObjectRepository implements AutoCloseable {
                 insertRec.setBytes(10, mem);
                 insertRec.setString(11, name.toLowerCase());
                 insertRec.executeUpdate();
+                insertIndexRec.setString(1, indexRecordName);
+                insertIndexRec.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
+                insertIndexRec.setString(3, "ABC");
+                insertIndexRec.executeUpdate();
                 connection.commit();
 
                 secInsertTimeKeeper.stop(spanId);
@@ -151,21 +157,6 @@ public class ObjectRepository implements AutoCloseable {
         } catch (Exception ex) {
             ex.printStackTrace();
             completableFuture.completeExceptionally(ex);
-        }
-    }
-
-    //added for testing purpose of index records
-    public void insertIndexTest(){
-        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
-                .prepareStatement(INSERT_INDEX_RECORDS)) {
-            insertRec.setString(1, "test");
-            insertRec.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
-            insertRec.setString(3, "X");
-            insertRec.executeUpdate();
-            connection.commit();
-
-        }catch (Exception e){
-            System.out.println("Error in inserting index records");
         }
     }
 
@@ -807,6 +798,7 @@ public class ObjectRepository implements AutoCloseable {
             ResultSet rs = lookupStmt.executeQuery();
             if(rs.next()) {
                 msgOnSuccess = CmdIdxGetByNameResponse.MsgOnSuccess.newBuilder().
+                                setHasSucceeded(true).
                                 setName(rs.getString("creator_name")).
                                 setTime(rs.getString("timeUpdated")).build();
 

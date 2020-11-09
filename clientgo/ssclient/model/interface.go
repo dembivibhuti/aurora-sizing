@@ -16,6 +16,7 @@ type Reader interface {
 	GetObjectExt(sname string) (*ObjectExt, error)
 	GetObjectMany(snames []string) (<-chan *Object, error)
 	GetObjectManyExt(snames []string) (<-chan *ObjectExt, error)
+	GetIdxByName(sname string) (*Record, error)
 }
 
 type Transactor interface {

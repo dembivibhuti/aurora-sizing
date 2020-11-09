@@ -67,6 +67,10 @@ type ObjectExt struct {
 	Mem      []byte
 }
 
+type Record struct {
+	Name string
+	Time string
+}
 type TxnResp struct {
 	// TODO: (mfrw) leave it empty for now
 }

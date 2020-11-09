@@ -21,10 +21,13 @@ func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
 	// infinite for loop
-	for {
-		startTest()
-	}
-	//ssMain(sscl)
+	//for {
+	//	startTest()
+	//}
+	// added for testing purpose
+	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
+	defer sscl.Close()
+	ssMain(sscl)
 }
 
 func startTest() {
@@ -62,7 +65,7 @@ func pairityWithSaral(scl model.SSClient) {
 				}
 				_ = resp
 
-                <-sem
+				<-sem
 			}(k)
 		}
 	}
@@ -174,6 +177,14 @@ func ssMain(scl model.SSClient) {
 			fmt.Printf("LookupByType Time Taken:%s\n", time.Since(start).String())
 			fmt.Println("======================================================")
 		}
+		getIndexObject := func(n int32) {
+			response, error := scl.GetIdxByName("test")
+			if error != nil {
+				log.Fatal(error)
+			}
+			fmt.Print("Get Index Object By Name: ", response)
+			fmt.Println("======================================================")
+		}
 
 		transaction := func(n int32) {
 			transactor := scl.BeginTxn()
@@ -219,11 +230,12 @@ func ssMain(scl model.SSClient) {
 		increments := []int32{100, 1_000, 10_000} //, 100_000, 1_000_000} // go can have numebers 100 -> 1_0_0
 		for {
 			for _, i := range increments {
-				runNTimesWithArg(1, lookupOnly, i)
-				runNTimesWithArg(1, lookupWithGetObject, i)
-				runNTimesWithArg(1, lookupWithGetMany, i)
+				runNTimesWithArg(0, lookupOnly, i)
+				runNTimesWithArg(0, lookupWithGetObject, i)
+				runNTimesWithArg(0, lookupWithGetMany, i)
 				runNTimesWithArg(0, lookupByType, i)
 				runNTimesWithArg(0, transaction, i)
+				runNTimesWithArg(1, getIndexObject, 1)
 			}
 		}
 	})
