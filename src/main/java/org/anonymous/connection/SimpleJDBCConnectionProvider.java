@@ -59,7 +59,7 @@ public class SimpleJDBCConnectionProvider implements ConnectionProvider {
         rwConnectionPoolMaxSize.labels("connection_pool_props").set(Double.parseDouble(System.getProperty("rwMaximumPoolSize")));
         SimpleDataSource2.PoolProperties rwprops = new SimpleDataSource2.PoolProperties();
         rwprops.poolName = "read-write pool";
-        rwprops.maxTimeout = 20000;
+        rwprops.maxTimeout = 60000;
         rwprops.maximumPoolSize = Integer.parseInt(System.getProperty("rwMaximumPoolSize"));
         rwprops.user = System.getProperty("dataSource.user");
         rwprops.pswd = System.getProperty("dataSource.password");
@@ -80,7 +80,7 @@ public class SimpleJDBCConnectionProvider implements ConnectionProvider {
         roConnectionPoolMaxSize.labels("connection_pool_props").set(Double.parseDouble(System.getProperty("roMaximumPoolSize")));
         SimpleDataSource2.PoolProperties roprops = new SimpleDataSource2.PoolProperties();
         roprops.poolName = "read-only pool";
-        roprops.maxTimeout = 20000;
+        roprops.maxTimeout = 60000;
         roprops.maximumPoolSize = Integer.parseInt(System.getProperty("roMaximumPoolSize"));
         roprops.user = System.getProperty("dataSource.user");
         roprops.pswd = System.getProperty("dataSource.password");
