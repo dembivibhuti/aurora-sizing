@@ -625,8 +625,8 @@ public class ObjectRepository implements AutoCloseable {
             timer1.setDuration();
             Statistics.getObjectExtDBResultSetFetch.stop(span);
 
-        } catch (SQLException sqlException) {
-            LOGGER.error("error in getFullObject()", sqlException);
+        } catch (Exception exception) {
+            LOGGER.error("error in getFullObject()", exception);
         } finally {
             span = Statistics.getObjectExtDBCloseResource.start();
             timer1 = releaseDBConnToPool.labels("get_object_ext").startTimer();
@@ -634,8 +634,8 @@ public class ObjectRepository implements AutoCloseable {
                 rs.close();
                 lookupStmt.close();
                 connection.close();
-            } catch (SQLException sqlException) {
-                LOGGER.error("error in getFullObject() finally, error in closing the connection", sqlException);
+            } catch (Exception exception) {
+                LOGGER.error("error in getFullObject() finally, error in closing the connection", exception);
             }
             timer1.setDuration();
             Statistics.getObjectExtDBCloseResource.stop(span);
