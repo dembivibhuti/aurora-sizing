@@ -266,7 +266,7 @@ public class SimpleDataSource2 implements AutoCloseable {
     }
 
     private void logStats() {
-        LOGGER.info("Pool = {} Max Pool Size = {} Active Connections = {} Inactive Connections = {}", poolName, maximumPoolSize, getActiveConnections(), getInactiveConnections());
+        LOGGER.info("Pool = {} | Max Pool Size = {} | Active Connections = {} | Inactive Connections = {}", poolName, maximumPoolSize, getActiveConnections(), getInactiveConnections());
     }
 
     public int getActiveConnections() {
