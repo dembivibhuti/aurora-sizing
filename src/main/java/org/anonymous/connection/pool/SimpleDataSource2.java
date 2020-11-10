@@ -223,6 +223,7 @@ public class SimpleDataSource2 implements AutoCloseable {
         Connection conn;
         while ((conn = recycledConnections.poll()) == null) {
             if (System.currentTimeMillis() > timeoutTime) {
+                LOGGER.error("Failed to retrieve connection from Pool {} - Time Waited = {}" , poolName, maxTimeout );
                 throw new TimeoutException("Timeout while waiting for a valid database connection from Pool. maximumPoolSize = " + maximumPoolSize
                         + " Active Connections = " + activeConnections.get() + " Idle Connections = " + recycledConnections.size());
             }
