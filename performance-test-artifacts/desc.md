@@ -44,12 +44,13 @@
 
 #### Compare 
 
-|| Hikari DB | TomcatJDBC |
+|   | Hikari DB | TomcatJDBC |
+| ----------- | ----------- | ----------- |
 | Client Throughput | ![Client Throughput](hikari-cp-conn-pool/grafana-snaps/client-throughput.jpg) | ![Client Throughput](tomcat-jdbc-conn-pool/grafana-snaps/client-throughput.jpg) |
-||
+|| ||
 | Middleware Throughput |![Middleware Throughput](hikari-cp-conn-pool/grafana-snaps/mw-throughput.jpg)| ![Middleware Throughput](tomcat-jdbc-conn-pool/grafana-snaps/mw-throughput.jpg) |
-||
+||||
 | GetObject Latency on Middleware | ![GetObject Latency](hikari-cp-conn-pool/grafana-snaps/mw-getobject-latency.jpg) | ![GetObject Latency](tomcat-jdbc-conn-pool/grafana-snaps/mw-getobject-latency.jpg) |
-||
+||||
 | DB Operation on Middleware |![DB Ops](hikari-cp-conn-pool/grafana-snaps/db-ops-mw.jpg)| ![DB Ops](tomcat-jdbc-conn-pool/grafana-snaps/db-ops-mw.jpg) |
 
