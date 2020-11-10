@@ -1,6 +1,6 @@
 | Middleware | Specs |
 | ----------- | ----------- |
-| | 4 MW ( Server ) Instances [ c5.9xlarge = 36 vCPUs + 72GiB ] - JAVA GRPC Server |
+| | 4 MW ( Server ) Instances [ c5.9xlarge = 36 vCPUs + 72GiB ] - GRPC Server |
 | | 12 Gb Max Heap + 12 Gb Max Direct Memory |
 
 
