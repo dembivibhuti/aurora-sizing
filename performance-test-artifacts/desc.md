@@ -22,18 +22,6 @@
 | Fetch single record ( GetObject ) in loop all 3K Keys serially + repeat |
 | All calls directed to the Single Read Replica Instance |
 | Connection Pool Impl = HikariCP | 
-||
-| Client Throughput |
-|  |
-||
-| Middleware Throughput |
-|  |
-||
-| GetObject Latency on Middleware |
-|  |
-||
-| DB Operation on Middleware |
-|  |
 
 | Test Case 2 |
 | ----------- |
