@@ -40,6 +40,7 @@ public class GrpcServer {
                 break;
             case "simple":
                 connectionProviderHolder = SimpleJDBCConnectionProvider.create();
+                break;
             default:
                 throw new RuntimeException(" -DdataSource.poolType is a mandatory arguement ");
         }
