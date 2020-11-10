@@ -68,7 +68,7 @@ public class SimpleJDBCConnectionProvider implements ConnectionProvider {
         rwprops.currentSchema = System.getProperty("dataSource.currentSchema");
         rwprops.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED;
         rwprops.autoCommit = false;
-        rwprops.validityCheckInterval = 10000;
+        rwprops.validityCheckInterval = 60000;
         if (System.getProperty("javax.net.ssl.trustStore") != null) {
             rwprops.ssl = true;
         }
@@ -88,7 +88,7 @@ public class SimpleJDBCConnectionProvider implements ConnectionProvider {
         roprops.currentSchema = System.getProperty("dataSource.currentSchema");
         roprops.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED;
         roprops.autoCommit = false;
-        roprops.validityCheckInterval = 10000;
+        roprops.validityCheckInterval = 60000;
         if (System.getProperty("javax.net.ssl.trustStore") != null) {
             roprops.ssl = true;
         }

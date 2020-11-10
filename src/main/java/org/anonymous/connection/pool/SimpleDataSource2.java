@@ -94,6 +94,7 @@ public class SimpleDataSource2 implements AutoCloseable {
         this.transactionIsolation = poolProperties.transactionIsolation;
         this.autoCommit = poolProperties.autoCommit;
         this.ssl = poolProperties.ssl;
+        this.validityCheckInterval = poolProperties.validityCheckInterval;
 
         DataSource dataSource = createDataSource();
         dataSourceRef.set(dataSource);
