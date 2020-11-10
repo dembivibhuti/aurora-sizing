@@ -1,21 +1,25 @@
 package org.anonymous.unused;
 
+import org.joda.time.Duration;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import org.joda.time.Duration;
 
 public class AuroraDriverManager {
     private static Duration LOGIN_TIMEOUT = Duration.standardSeconds(2);
     private static Duration CONNECT_TIMEOUT = Duration.standardSeconds(2);
     private static Duration CANCEL_SIGNAL_TIMEOUT = Duration.standardSeconds(1);
     private static Duration DEFAULT_SOCKET_TIMEOUT = Duration.standardSeconds(5);
+    private static String urlFormat = "jdbc:postgresql://%s" + "/postgres" + "?user=%s" + "&password=%s"
+            + "&loginTimeout=%d" + "&connectTimeout=%d" + "&cancelSignalTimeout=%d" + "&socketTimeout=%d"
+            + "&targetServerType=%s" + "&tcpKeepAlive=true"
+            // + "&ssl=true"
+            + "&loadBalanceHosts=true";
 
     public AuroraDriverManager() {
         try {
@@ -32,6 +36,11 @@ public class AuroraDriverManager {
         java.security.Security.setProperty("networkaddress.cache.ttl", "1");
         // If the lookup fails, default to something like small to retry
         java.security.Security.setProperty("networkaddress.cache.negative.ttl", "3");
+    }
+
+    private static String getFormattedEndpointList(List<String> endpoints) {
+        return IntStream.range(0, endpoints.size()).mapToObj(i -> endpoints.get(i).toString())
+                .collect(Collectors.joining(","));
     }
 
     public Connection getConnection(String targetServerType) throws SQLException {
@@ -53,12 +62,6 @@ public class AuroraDriverManager {
         return conn;
     }
 
-    private static String urlFormat = "jdbc:postgresql://%s" + "/postgres" + "?user=%s" + "&password=%s"
-            + "&loginTimeout=%d" + "&connectTimeout=%d" + "&cancelSignalTimeout=%d" + "&socketTimeout=%d"
-            + "&targetServerType=%s" + "&tcpKeepAlive=true"
-            // + "&ssl=true"
-            + "&loadBalanceHosts=true";
-
     public String getJdbcConnectionString(String targetServerType, Duration queryTimeout) {
         return String.format(urlFormat, getFormattedEndpointList(getLocalEndpointList()), "postgres", "postgres",
                 LOGIN_TIMEOUT.getStandardSeconds(), CONNECT_TIMEOUT.getStandardSeconds(),
@@ -75,10 +78,5 @@ public class AuroraDriverManager {
         newEndpointList.add("database-1.cluster-ro-cpw6mwbci5yo.us-east-1.rds.amazonaws.com:5432");
 
         return newEndpointList;
-    }
-
-    private static String getFormattedEndpointList(List<String> endpoints) {
-        return IntStream.range(0, endpoints.size()).mapToObj(i -> endpoints.get(i).toString())
-                .collect(Collectors.joining(","));
     }
 }

@@ -83,7 +83,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             results.stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             timer.setDuration();
             responseObserver.onCompleted();
-            LOGGER.trace("elapsed time = " + (System.currentTimeMillis() - start ) / 1000 );
+            LOGGER.trace("elapsed time = " + (System.currentTimeMillis() - start) / 1000);
         } catch (Exception e) {
             LOGGER.error("Caught Exception in lookupByNameStream()", e);
         } finally {
@@ -98,7 +98,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         try {
             int limit = request.getCount();
             int typeid = request.getGetType().getNumber();
-            int objectType= request.getSecurityType();
+            int objectType = request.getSecurityType();
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
@@ -122,7 +122,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         try {
             int limit = request.getCount();
             int typeid = request.getGetType().getNumber();
-            int objectType= request.getSecurityType();
+            int objectType = request.getSecurityType();
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
@@ -263,9 +263,9 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         CmdGetByNameExtResponse response;
         Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getFullObject(request.getSecurityName());
 
-        if(msgOnSuccess.isPresent()){
+        if (msgOnSuccess.isPresent()) {
             response = CmdGetByNameExtResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
-        }else{
+        } else {
             LOGGER.error("Object Doesn't exist");
             CmdGetByNameExtResponse.MsgOnFailure msgOnFailure = CmdGetByNameExtResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
             response = CmdGetByNameExtResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
@@ -276,17 +276,17 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         Statistics.getObjectExt.stop(spanID);
     }
 
-    private void async(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver, Gauge.Timer timer, long spanId ) {
+    private void async(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver, Gauge.Timer timer, long spanId) {
         objectRepository.getFullObjectAsync(request.getSecurityName()).whenComplete((answer, error) -> {
             CmdGetByNameExtResponse response;
 
-            if(error != null ) {
-                LOGGER.error("Object Doesn't exist", error );
+            if (error != null) {
+                LOGGER.error("Object Doesn't exist", error);
                 CmdGetByNameExtResponse.MsgOnFailure msgOnFailure = CmdGetByNameExtResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
                 response = CmdGetByNameExtResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
-            } else if(answer.isPresent()){
+            } else if (answer.isPresent()) {
                 response = CmdGetByNameExtResponse.newBuilder().setMsgOnSuccess(answer.get()).build();
-            } else{
+            } else {
                 LOGGER.error("Object Doesn't exist");
                 CmdGetByNameExtResponse.MsgOnFailure msgOnFailure = CmdGetByNameExtResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
                 response = CmdGetByNameExtResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();

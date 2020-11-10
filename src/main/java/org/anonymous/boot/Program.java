@@ -1,11 +1,12 @@
 package org.anonymous.boot;
 
+import org.anonymous.connection.ConnectionProviderHolder;
 import org.anonymous.connection.HikariCPConnectionProvider;
 import org.anonymous.pattern.LoadObjectsDataAndLookup;
 
 public class Program {
 
-    private final static HikariCPConnectionProvider.Holder holder = HikariCPConnectionProvider.create();
+    private final static ConnectionProviderHolder holder = HikariCPConnectionProvider.create();
 
     public static void main(String[] args) throws Exception {
 

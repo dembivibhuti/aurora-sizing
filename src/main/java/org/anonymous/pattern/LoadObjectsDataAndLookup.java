@@ -1,21 +1,23 @@
 package org.anonymous.pattern;
 
+import org.anonymous.connection.ConnectionProvider;
 import org.anonymous.connection.HikariCPConnectionProvider;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.TimeKeeper;
-import java.util.stream.Collectors;
-import java.util.concurrent.CompletableFuture;
+
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static org.anonymous.stats.Statistics.log;
 
 public class LoadObjectsDataAndLookup {
 
-    private HikariCPConnectionProvider roConnectionProvider;
-    private HikariCPConnectionProvider rwConnectionProvider;
+    private ConnectionProvider roConnectionProvider;
+    private ConnectionProvider rwConnectionProvider;
     private ObjectRepository objectRepositiory;
 
-    public LoadObjectsDataAndLookup(HikariCPConnectionProvider roConnectionProvider, HikariCPConnectionProvider rwConnectionProvider) {
+    public LoadObjectsDataAndLookup(ConnectionProvider roConnectionProvider, ConnectionProvider rwConnectionProvider) {
         this.roConnectionProvider = roConnectionProvider;
         this.rwConnectionProvider = rwConnectionProvider;
         this.objectRepositiory = new ObjectRepository(roConnectionProvider, rwConnectionProvider);
@@ -58,7 +60,6 @@ public class LoadObjectsDataAndLookup {
         objectRepositiory.getSDBMemsByKeys(secKeys, timekeeper).join();
         log(timekeeper);
     }
-
 
 
     private void randomLookUpByPrefix() {

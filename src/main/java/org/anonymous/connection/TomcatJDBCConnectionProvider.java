@@ -30,20 +30,11 @@ public class TomcatJDBCConnectionProvider implements ConnectionProvider {
         ds = datasource;
     }
 
-    public Connection getConnection() throws SQLException {
-        return ds.getConnection();
-    }
-
-    @Override
-    public Future<Connection> getConnectionAsync() throws SQLException {
-        return ds.getConnectionAsync();
-    }
-
     public static boolean isInMemDB() {
         return null == System.getProperty("dataSourceClassName");
     }
 
-    public static Holder create() {
+    public static ConnectionProviderHolder create() {
         /*
          * RO endpoint has a TTL of 1s, we should honor that here. Setting this aggressively makes sure that when the PG
          * JDBC driver creates a new connection, it will resolve a new different RO endpoint on subsequent attempts
@@ -53,7 +44,7 @@ public class TomcatJDBCConnectionProvider implements ConnectionProvider {
         // If the lookup fails, default to something like small to retry
         java.security.Security.setProperty("networkaddress.cache.negative.ttl", "3");
 
-        Holder holder = new Holder();
+        ConnectionProviderHolder holder = new ConnectionProviderHolder();
 
         if (isInMemDB()) {
             TomcatJDBCConnectionProvider connectionProvider = new TomcatJDBCConnectionProvider(); // h2
@@ -86,7 +77,7 @@ public class TomcatJDBCConnectionProvider implements ConnectionProvider {
         rwprops.setTestOnReturn(false);
         rwprops.setValidationInterval(30000);
         rwprops.setTimeBetweenEvictionRunsMillis(30000);
-        rwprops.setMaxActive(Integer.parseInt(System.getProperty("roMaximumPoolSize")));
+        rwprops.setMaxActive(Integer.parseInt(System.getProperty("rwMaximumPoolSize")));
         rwprops.setInitialSize(10);
         rwprops.setMaxWait(20000);
         rwprops.setRemoveAbandonedTimeout(60);
@@ -95,10 +86,10 @@ public class TomcatJDBCConnectionProvider implements ConnectionProvider {
         rwprops.setLogAbandoned(true);
         rwprops.setRemoveAbandoned(true);
         rwprops.setDefaultAutoCommit(false);
-        rwprops.setDefaultTransactionIsolation(2); //== TRANSACTION_READ_COMMITTED
+        rwprops.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         rwprops.setJdbcInterceptors(
                 /*"org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"+*/
-                        "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
+                "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
         return rwprops;
     }
 
@@ -129,19 +120,17 @@ public class TomcatJDBCConnectionProvider implements ConnectionProvider {
         roprops.setDefaultTransactionIsolation(2); //== TRANSACTION_READ_COMMITTED
         roprops.setJdbcInterceptors(
                 /*"org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"+*/
-                        "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
+                "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
         return roprops;
     }
 
-    public static class Holder implements AutoCloseable {
-        public TomcatJDBCConnectionProvider roConnectionProvider;
-        public TomcatJDBCConnectionProvider rwConnectionProvider;
+    public Connection getConnection() throws SQLException {
+        return ds.getConnection();
+    }
 
-        @Override
-        public void close() {
-            roConnectionProvider.close();
-            rwConnectionProvider.close();
-        }
+    @Override
+    public Future<Connection> getConnectionAsync() throws SQLException {
+        return ds.getConnectionAsync();
     }
 
     public void close() {

@@ -1,10 +1,11 @@
 package org.anonymous.boot;
 
-import java.util.Properties;
 import org.anonymous.connection.HikariCPConnectionProvider;
+import org.anonymous.module.ObjectRepository;
+
 import java.sql.Connection;
 import java.sql.SQLException;
-import org.anonymous.module.ObjectRepository;
+import java.util.Properties;
 
 public class SchemaUtil {
 

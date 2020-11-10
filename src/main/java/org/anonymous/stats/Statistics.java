@@ -17,35 +17,29 @@ import java.lang.management.ManagementFactory;
 
 public class Statistics {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(Statistics.class);
-
+    public static final int INTERVAL = 60;
     private static final boolean logToFile = Boolean.parseBoolean(System.getProperty("metricsFileDump"));
-
+    private static final CSVWriter writer;
     public static TimeKeeper connect = new TimeKeeper("connect", logToFile);
     public static TimeKeeper lookupByName = new TimeKeeper("lookupByName", logToFile);
-    public static TimeKeeper lookupByNameStream = new TimeKeeper("lookupByNameStream", logToFile );
-    public static TimeKeeper lookupByType = new TimeKeeper("lookupByType", logToFile );
-    public static TimeKeeper lookupByTypeStream = new TimeKeeper("lookupByTypeStream", logToFile );
-
-    public static TimeKeeper getObject = new TimeKeeper("getObject", logToFile );
-    public static TimeKeeper getObjectDBGetConnection = new TimeKeeper("getObjectDBGetConnection", logToFile );
-    public static TimeKeeper getObjectDBPreparedStatementMake = new TimeKeeper("getObjectDBPreparedStatementMake", logToFile );
-    public static TimeKeeper getObjectDBResultSetFetch = new TimeKeeper("getObjectDBResultSetFetch", logToFile );
-    public static TimeKeeper getObjectDBCloseResource = new TimeKeeper("getObjectDBCloseResource", logToFile );
-
-    public static TimeKeeper getObjectExt = new TimeKeeper("getObjectExt", logToFile );
-    public static TimeKeeper getObjectExtDBGetConnection = new TimeKeeper("getObjectExtDBGetConnection", logToFile );
-    public static TimeKeeper getObjectExtDBPreparedStatementMake = new TimeKeeper("getObjectExtDBPreparedStatementMake", logToFile );
-    public static TimeKeeper getObjectExtDBResultSetFetch = new TimeKeeper("getObjectExtDBResultSetFetch", logToFile );
-    public static TimeKeeper getObjectExtDBCloseResource = new TimeKeeper("getObjectExtDBCloseResource", logToFile );
-
-    
-    public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName", logToFile );
-    public static TimeKeeper getObjectManyByNameStream = new TimeKeeper("getObjectManyByNameStream", logToFile );
-    public static TimeKeeper getObjectManyByNameExt = new TimeKeeper("getObjectManyByNameExt", logToFile );
-    public static TimeKeeper getObjectManyByNameExtStream = new TimeKeeper("getObjectManyByNameExtStream", logToFile );
-
-    private static final CSVWriter writer;
+    public static TimeKeeper lookupByNameStream = new TimeKeeper("lookupByNameStream", logToFile);
+    public static TimeKeeper lookupByType = new TimeKeeper("lookupByType", logToFile);
+    public static TimeKeeper lookupByTypeStream = new TimeKeeper("lookupByTypeStream", logToFile);
+    public static TimeKeeper getObject = new TimeKeeper("getObject", logToFile);
+    public static TimeKeeper getObjectDBGetConnection = new TimeKeeper("getObjectDBGetConnection", logToFile);
+    public static TimeKeeper getObjectDBPreparedStatementMake = new TimeKeeper("getObjectDBPreparedStatementMake", logToFile);
+    public static TimeKeeper getObjectDBResultSetFetch = new TimeKeeper("getObjectDBResultSetFetch", logToFile);
+    public static TimeKeeper getObjectDBCloseResource = new TimeKeeper("getObjectDBCloseResource", logToFile);
+    public static TimeKeeper getObjectExt = new TimeKeeper("getObjectExt", logToFile);
+    public static TimeKeeper getObjectExtDBGetConnection = new TimeKeeper("getObjectExtDBGetConnection", logToFile);
+    public static TimeKeeper getObjectExtDBPreparedStatementMake = new TimeKeeper("getObjectExtDBPreparedStatementMake", logToFile);
+    public static TimeKeeper getObjectExtDBResultSetFetch = new TimeKeeper("getObjectExtDBResultSetFetch", logToFile);
+    public static TimeKeeper getObjectExtDBCloseResource = new TimeKeeper("getObjectExtDBCloseResource", logToFile);
+    public static TimeKeeper getObjectManyByName = new TimeKeeper("getObjectManyByName", logToFile);
+    public static TimeKeeper getObjectManyByNameStream = new TimeKeeper("getObjectManyByNameStream", logToFile);
+    public static TimeKeeper getObjectManyByNameExt = new TimeKeeper("getObjectManyByNameExt", logToFile);
+    public static TimeKeeper getObjectManyByNameExtStream = new TimeKeeper("getObjectManyByNameExtStream", logToFile);
+    private static Logger LOGGER = LoggerFactory.getLogger(Statistics.class);
     private static HikariPoolMXBean rwPoolProxy;
     private static HikariPoolMXBean roPoolProxy;
 
@@ -58,7 +52,7 @@ public class Statistics {
             e.printStackTrace();
         }
         writer = new CSVWriter(outputfile);
-        String[] header = { "Op-Type", "Average-Time", "Peak-Time", "Floor-Time", "Total Ops", "Through Put ( ops / sec )" };
+        String[] header = {"Op-Type", "Average-Time", "Peak-Time", "Floor-Time", "Total Ops", "Through Put ( ops / sec )"};
         writer.writeNext(header);
         writer.flushQuietly();
 
@@ -75,39 +69,12 @@ public class Statistics {
 
     }
 
-
-    public static void log(
-            TimeKeeper timekeeper) {
-        TimeKeeper.Result result = timekeeper.getStats();
-        if(result.opsCount > 0 ) {
-
-            double avgTime = ( (double)result.avgDuration.getNano() / 1000000 );
-            double peakTime = ( (double)result.peak.getNano() / 1000000 );
-            double floorTime = ( (double)result.floor.getNano() / 1000000 );
-            double throughput = (double)result.opsCount / INTERVAL;
-
-            LOGGER.info("Average Time Per '" + timekeeper.getOp() + "' = " + avgTime);
-            LOGGER.info("Peak Time Per '" + timekeeper.getOp() + "' = " + peakTime);
-            LOGGER.info("Floor Time Per '" + timekeeper.getOp() + "' = " + floorTime );
-            LOGGER.info("Total Number of Ops " + result.opsCount);
-            LOGGER.info("Through Put ( ops / sec )  " +  throughput);
-            LOGGER.info("** Time is in millis ====================================================================");
-
-            String[] data = { timekeeper.getOp(), Double.toString(avgTime), Double.toString(peakTime),
-                    Double.toString(floorTime), Long.toString(result.opsCount), Double.toString(throughput) };
-            writer.writeNext(data);
-            writer.flushQuietly();
-        }
-    }
-
-    public static final int INTERVAL = 60;
-
     static {
         new Thread(() -> {
 
             while (true) {
                 try {
-                    Thread.sleep(INTERVAL * 1000 );
+                    Thread.sleep(INTERVAL * 1000);
 
                     LOGGER.info("");
                     LOGGER.info("");
@@ -154,11 +121,34 @@ public class Statistics {
                     LOGGER.info("Threads Awaiting Connections = " + roPoolProxy.getThreadsAwaitingConnection());
 
 
-
                 } catch (Throwable e) {
                     //LOGGER.error("", e);
                 }
             }
         }).start();
+    }
+
+    public static void log(
+            TimeKeeper timekeeper) {
+        TimeKeeper.Result result = timekeeper.getStats();
+        if (result.opsCount > 0) {
+
+            double avgTime = ((double) result.avgDuration.getNano() / 1000000);
+            double peakTime = ((double) result.peak.getNano() / 1000000);
+            double floorTime = ((double) result.floor.getNano() / 1000000);
+            double throughput = (double) result.opsCount / INTERVAL;
+
+            LOGGER.info("Average Time Per '" + timekeeper.getOp() + "' = " + avgTime);
+            LOGGER.info("Peak Time Per '" + timekeeper.getOp() + "' = " + peakTime);
+            LOGGER.info("Floor Time Per '" + timekeeper.getOp() + "' = " + floorTime);
+            LOGGER.info("Total Number of Ops " + result.opsCount);
+            LOGGER.info("Through Put ( ops / sec )  " + throughput);
+            LOGGER.info("** Time is in millis ====================================================================");
+
+            String[] data = {timekeeper.getOp(), Double.toString(avgTime), Double.toString(peakTime),
+                    Double.toString(floorTime), Long.toString(result.opsCount), Double.toString(throughput)};
+            writer.writeNext(data);
+            writer.flushQuietly();
+        }
     }
 }

@@ -1,11 +1,12 @@
 package org.anonymous.setup;
 
+import org.anonymous.connection.ConnectionProviderHolder;
 import org.anonymous.connection.HikariCPConnectionProvider;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.TimeKeeper;
 
 public class ObjectLoad {
-    private final static HikariCPConnectionProvider.Holder holder = HikariCPConnectionProvider.create();
+    private final static ConnectionProviderHolder holder = HikariCPConnectionProvider.create();
 
     public static void main(String[] args) {
 
@@ -20,7 +21,7 @@ public class ObjectLoad {
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-          holder.close();
+            holder.close();
         }
     }
 }

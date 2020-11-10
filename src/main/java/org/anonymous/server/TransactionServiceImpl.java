@@ -29,6 +29,8 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
             Optional<Long> txnId = Optional.empty();
             int transpartIndex = 0;
             Connection connection;
+            ResultSet resultSet;
+
             {
                 try {
                     connection = objectRepository.getConnectionObjRepo();
@@ -36,7 +38,7 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
                     throwables.printStackTrace();
                 }
             }
-            ResultSet resultSet;
+
             {
                 try {
                     resultSet = connection.prepareStatement(GET_NXT_TXN_ID)
@@ -49,52 +51,51 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
 
             @Override
             public void onNext(CmdTransactionRequest request) {
-                try{
-                    if(!txnId.isPresent()){
+                try {
+                    if (!txnId.isPresent()) {
                         txnId = Optional.of(resultSet.getLong(1));
                     }
-                    switch (request.getTransSeqValue()){
+                    switch (request.getTransSeqValue()) {
                         case 0:
                             LOGGER.info("got request insertHeader()");
                             break;
                         case 1:
                             LOGGER.info("got request insertRecord()");
-                            if(!objectRepository.insertRec(connection, request.getInsert(), txnId.get())){
+                            if (!objectRepository.insertRec(connection, request.getInsert(), txnId.get())) {
                                 throw new SQLException();
                             }
                             break;
                         case 2:
                             LOGGER.info("got request updateRecord()");
-                            if(!objectRepository.updateRec(connection, request.getUpdate(), txnId.get())){
+                            if (!objectRepository.updateRec(connection, request.getUpdate(), txnId.get())) {
                                 throw new SQLException();
                             }
                             break;
                         case 3:
                             LOGGER.info("got request renameRecord()");
-                            if(!objectRepository.renameDataRecords(connection, request.getRename(), txnId.get())){
+                            if (!objectRepository.renameDataRecords(connection, request.getRename(), txnId.get())) {
                                 throw new SQLException();
                             }
                             break;
                         case 4:
                             LOGGER.info("got request deleteRecord()");
-                            if(!objectRepository.deleteDataRecords(connection, request.getDelete())) {
+                            if (!objectRepository.deleteDataRecords(connection, request.getDelete())) {
                                 throw new SQLException();
                             }
                             break;
                         case 5:
                             LOGGER.info("got request commitTransaction() - end of transaction");
-                            if(!objectRepository.commitTransaction(connection)){
+                            if (!objectRepository.commitTransaction(connection)) {
                                 throw new SQLException();
                             }
                     }
                     // insert trans log record - insert Header + tarns part
-                    if(request.getTransSeqValue() == 0){
-                        if(!objectRepository.insertHeaderLog(connection, request.getHeader(), txnId.get())){
+                    if (request.getTransSeqValue() == 0) {
+                        if (!objectRepository.insertHeaderLog(connection, request.getHeader(), txnId.get())) {
                             throw new SQLException();
                         }
-                    }
-                    else if(request.getTransSeqValue() != 5){
-                        if(!objectRepository.insertTranspartLog(connection, request, txnId.get(), transpartIndex)) {
+                    } else if (request.getTransSeqValue() != 5) {
+                        if (!objectRepository.insertTranspartLog(connection, request, txnId.get(), transpartIndex)) {
                             throw new SQLException();
                         }
                         transpartIndex++;

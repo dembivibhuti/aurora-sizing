@@ -26,20 +26,23 @@ public class ObjectRepository implements AutoCloseable {
     private static final ExecutorService executorService = Executors.newFixedThreadPool(100);
     private static final ExecutorService dbOpsExecutorService = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
-    private final ConnectionProvider roConnectionProvider;
-    private final ConnectionProvider rwConnectionProvider;
-
     private static final Gauge obtainDBConnFromPool = Gauge.build().name("get_db_conn_from_pool").help("Get DB Connection from Pool").labelNames("db_ops").register();
     private static final Gauge releaseDBConnToPool = Gauge.build().name("release_db_conn_to_pool").help("Release DB Connection to Pool").labelNames("db_ops").register();
     private static final Gauge prepareStatement = Gauge.build().name("prepare_statement").help("Make PreparedStatement").labelNames("db_ops").register();
     private static final Gauge fetchAndParseResultSet = Gauge.build().name("fetch_parse_resultset").help("Fetch and Parse Resultset").labelNames("db_ops").register();
-
-
     private static final byte[] BYTES_560 = getSizedByteArray(560);
+    private final ConnectionProvider roConnectionProvider;
+    private final ConnectionProvider rwConnectionProvider;
 
     public ObjectRepository(ConnectionProvider roConnectionProvider, ConnectionProvider rwConnectionProvider) {
         this.roConnectionProvider = roConnectionProvider;
         this.rwConnectionProvider = rwConnectionProvider;
+    }
+
+    private static byte[] getSizedByteArray(int size) {
+        byte[] result = new byte[size];
+        Arrays.fill(result, (byte) 'a');
+        return result;
     }
 
     public void runDDL(boolean dropAndCreate) {
@@ -203,13 +206,6 @@ public class ObjectRepository implements AutoCloseable {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-
-    private static byte[] getSizedByteArray(int size) {
-        byte[] result = new byte[size];
-        Arrays.fill(result, (byte) 'a');
-        return result;
     }
 
     public CompletableFuture<List<String>> randomLookUpByPrefix(int numberOfLookupOps, int limit,
@@ -573,8 +569,9 @@ public class ObjectRepository implements AutoCloseable {
 
 
             // The Connection delegate will close all Statement, the closure of Statement will close the Resultset
-            //rs.close();
-            //lookupStmt.close();
+            // But modifying for SimpleDataSource2, which tries not to be that smart
+            rs.close();
+            lookupStmt.close();
 
             span = Statistics.getObjectDBCloseResource.start();
             connection.close();
@@ -592,6 +589,8 @@ public class ObjectRepository implements AutoCloseable {
         long span = -1;
         Gauge.Timer timer1 = null;
         Connection connection = null;
+        ResultSet rs = null;
+        PreparedStatement lookupStmt = null;
         try {
             span = Statistics.getObjectExtDBGetConnection.start();
             timer1 = obtainDBConnFromPool.labels("get_object_ext").startTimer();
@@ -601,14 +600,14 @@ public class ObjectRepository implements AutoCloseable {
 
             span = Statistics.getObjectExtDBPreparedStatementMake.start();
             timer1 = prepareStatement.labels("get_object_ext").startTimer();
-            PreparedStatement lookupStmt = connection.prepareStatement(GET_FULL_OBJECT);
+            lookupStmt = connection.prepareStatement(GET_FULL_OBJECT);
             lookupStmt.setString(1, secKey.toLowerCase());
             timer1.setDuration();
             Statistics.getObjectExtDBPreparedStatementMake.stop(span);
 
             span = Statistics.getObjectExtDBResultSetFetch.start();
             timer1 = fetchAndParseResultSet.labels("get_object_ext").startTimer();
-            ResultSet rs = lookupStmt.executeQuery();
+            rs = lookupStmt.executeQuery();
             if (rs.next()) {
                 msgOnSuccess = CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
                         setMem(ByteString.copyFrom(rs.getBytes("mem"))).
@@ -631,9 +630,9 @@ public class ObjectRepository implements AutoCloseable {
         } finally {
             span = Statistics.getObjectExtDBCloseResource.start();
             timer1 = releaseDBConnToPool.labels("get_object_ext").startTimer();
-            //rs.close();
-            //lookupStmt.close();
             try {
+                rs.close();
+                lookupStmt.close();
                 connection.close();
             } catch (SQLException sqlException) {
                 LOGGER.error("error in getFullObject() finally, error in closing the connection", sqlException);

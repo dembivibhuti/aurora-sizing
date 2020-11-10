@@ -1,5 +1,6 @@
 package org.anonymous.setup;
 
+import org.anonymous.connection.ConnectionProviderHolder;
 import org.anonymous.connection.HikariCPConnectionProvider;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.TimeKeeper;
@@ -9,7 +10,7 @@ import java.sql.SQLException;
 
 public class SchemaUtil {
 
-    private final static HikariCPConnectionProvider.Holder holder = HikariCPConnectionProvider.create();
+    private final static ConnectionProviderHolder holder = HikariCPConnectionProvider.create();
 
     public static void main(String[] args) {
 

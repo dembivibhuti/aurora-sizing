@@ -1,11 +1,8 @@
 package org.anonymous.connection;
 
-import com.amazonaws.services.rds.auth.RdsIamAuthTokenGenerator;
-import com.amazonaws.services.rds.auth.GetIamAuthTokenRequest;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.services.rds.auth.GetIamAuthTokenRequest;
+import com.amazonaws.services.rds.auth.RdsIamAuthTokenGenerator;
 
 public class GetDBCredsByIAM {
 
@@ -20,11 +17,11 @@ public class GetDBCredsByIAM {
     /*
      * public static String generateAuthToken(String region, String rdsInstanceHostname, int rdsInstancePort, String
      * userName) {
-     * 
+     *
      * System.out.println("AWS_ACCESS_KEY " + AWS_ACCESS_KEY); System.out.println("AWS_SECRET_KEY " + AWS_SECRET_KEY);
      * BasicAWSCredentials awsCredentials = new BasicAWSCredentials("ASIARHC5AWYNXSSWI67Z",
      * "ZXikyrTZn7c/s6tEdf1vzyERN436lYATMbtHuem1");
-     * 
+     *
      * RdsIamAuthTokenGenerator generator = RdsIamAuthTokenGenerator.builder() .credentials(new
      * AWSStaticCredentialsProvider(awsCredentials)).region(region).build(); return
      * generator.getAuthToken(GetIamAuthTokenRequest.builder().hostname(rdsInstanceHostname)

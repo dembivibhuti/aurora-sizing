@@ -7,7 +7,6 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.lang.AutoCloseable;
 import java.util.concurrent.Future;
 
 public class HikariCPConnectionProvider implements ConnectionProvider {
@@ -24,7 +23,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider {
         props.setProperty("driverClassName", "org.h2.Driver");
         props.setProperty("jdbcUrl",
                 "jdbc:h2:mem:saral;INIT=CREATE SCHEMA IF NOT EXISTS OBJECTS_SCHEMA\\;SET SCHEMA OBJECTS_SCHEMA\\;SET MODE PostgreSQL;"); // Mem
-                                                                                                                       // Mode
+        // Mode
         props.setProperty("username", "sa");
         props.setProperty("password", "sa");
         props.setProperty("autoCommit", "false");
@@ -33,20 +32,11 @@ public class HikariCPConnectionProvider implements ConnectionProvider {
         ds = new HikariDataSource(config);
     }
 
-    public Connection getConnection() throws SQLException {
-        return ds.getConnection();
-    }
-
-    @Override
-    public Future<Connection> getConnectionAsync() throws SQLException {
-        throw new RuntimeException("Not Implemented for HikariCP Conn. Pool");
-    }
-
     public static boolean isInMemDB() {
         return null == System.getProperty("dataSourceClassName");
     }
 
-    public static Holder create() {
+    public static ConnectionProviderHolder create() {
         /*
          * RO endpoint has a TTL of 1s, we should honor that here. Setting this aggressively makes sure that when the PG
          * JDBC driver creates a new connection, it will resolve a new different RO endpoint on subsequent attempts
@@ -56,7 +46,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider {
         // If the lookup fails, default to something like small to retry
         java.security.Security.setProperty("networkaddress.cache.negative.ttl", "3");
 
-        Holder holder = new Holder();
+        ConnectionProviderHolder holder = new ConnectionProviderHolder();
 
         if (isInMemDB()) {
             HikariCPConnectionProvider connectionProvider = new HikariCPConnectionProvider(); // h2
@@ -144,16 +134,13 @@ public class HikariCPConnectionProvider implements ConnectionProvider {
         return roprops;
     }
 
+    public Connection getConnection() throws SQLException {
+        return ds.getConnection();
+    }
 
-    public static class Holder implements AutoCloseable {
-        public HikariCPConnectionProvider roConnectionProvider;
-        public HikariCPConnectionProvider rwConnectionProvider;
-
-        @Override
-        public void close() {
-            roConnectionProvider.close();
-            rwConnectionProvider.close();
-        }
+    @Override
+    public Future<Connection> getConnectionAsync() throws SQLException {
+        throw new RuntimeException("Not Implemented for HikariCP Conn. Pool");
     }
 
     public void close() {

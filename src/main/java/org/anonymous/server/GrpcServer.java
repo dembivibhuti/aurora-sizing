@@ -6,7 +6,9 @@ import io.grpc.ServerInterceptors;
 import io.prometheus.client.exporter.MetricsServlet;
 import me.dinowernli.grpc.prometheus.Configuration;
 import me.dinowernli.grpc.prometheus.MonitoringServerInterceptor;
+import org.anonymous.connection.ConnectionProviderHolder;
 import org.anonymous.connection.HikariCPConnectionProvider;
+import org.anonymous.connection.SimpleJDBCConnectionProvider;
 import org.anonymous.connection.TomcatJDBCConnectionProvider;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.TimeKeeper;
@@ -23,12 +25,29 @@ public class GrpcServer {
 
     private static Logger LOGGER = LoggerFactory.getLogger(GrpcServer.class);
 
+    private static ConnectionProviderHolder connectionProviderHolder;
+    private static final Thread shutdownHook = new Thread(() -> connectionProviderHolder.close());
+
     public static void main(String[] args) {
-        try (TomcatJDBCConnectionProvider.Holder holder = TomcatJDBCConnectionProvider.create()) {
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-            ObjectRepository objectRepositiory = new ObjectRepository(holder.roConnectionProvider, holder.rwConnectionProvider);
+        switch (System.getProperty("dataSource.poolType")) {
+            case "hikaricp":
+                connectionProviderHolder = HikariCPConnectionProvider.create();
+                break;
+            case "tomcatjdbc":
+                connectionProviderHolder = TomcatJDBCConnectionProvider.create();
+                break;
+            case "simple":
+                connectionProviderHolder = SimpleJDBCConnectionProvider.create();
+            default:
+                throw new RuntimeException(" -DdataSource.poolType is a mandatory arguement ");
+        }
 
-            if ( isInMemDB()) {
+        try {
+            ObjectRepository objectRepositiory = new ObjectRepository(connectionProviderHolder.roConnectionProvider, connectionProviderHolder.rwConnectionProvider);
+
+            if (isInMemDB()) {
                 LOGGER.info("Starting in-Mem DB Mode");
                 objectRepositiory.runDDL(false);
                 TimeKeeper timekeeper = new TimeKeeper("load", false);
@@ -40,7 +59,7 @@ public class GrpcServer {
 
             int port = Integer.parseInt(System.getProperty("port"));
 
-             MonitoringServerInterceptor monitoringInterceptor =
+            MonitoringServerInterceptor monitoringInterceptor =
                     MonitoringServerInterceptor.create(Configuration.allMetrics());
 
             Server server = ServerBuilder.forPort(port)
@@ -61,6 +80,8 @@ public class GrpcServer {
             server.awaitTermination();
         } catch (Exception e) {
             LOGGER.error("unexpected error", e);
+        } finally {
+            connectionProviderHolder.close();
         }
     }
 
@@ -84,6 +105,5 @@ public class GrpcServer {
             }
         }).start();
     }
-
 
 }
