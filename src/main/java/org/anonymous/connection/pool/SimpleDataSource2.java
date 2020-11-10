@@ -338,7 +338,7 @@ public class SimpleDataSource2 implements AutoCloseable {
                     "maxTimeout=" + maxTimeout +
                     ", maximumPoolSize=" + maximumPoolSize +
                     ", user='" + user + '\'' +
-                    ", pswd='" + pswd + '\'' +
+                    ", pswd='" + "xxxx" + '\'' +
                     ", databaseName='" + databaseName + '\'' +
                     ", serverName='" + serverName + '\'' +
                     ", portNumber=" + portNumber +
