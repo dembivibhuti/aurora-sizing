@@ -20,7 +20,7 @@ public class SimpleJDBCConnectionProvider implements ConnectionProvider {
         dataSource.setUrl("jdbc:h2:mem:saral;INIT=CREATE SCHEMA IF NOT EXISTS OBJECTS_SCHEMA\\;SET SCHEMA OBJECTS_SCHEMA\\;SET MODE PostgreSQL;");// Mem  // Mode
         dataSource.setUser("sa");
         dataSource.setPassword("sa");
-        ds = new SimpleDataSource2(20000, 10, Connection.TRANSACTION_READ_COMMITTED, false, 5000, dataSource);
+        ds = new SimpleDataSource2("in-mem", 20000, 10, Connection.TRANSACTION_READ_COMMITTED, false, 5000, dataSource);
     }
 
     public static boolean isInMemDB() {
@@ -58,6 +58,7 @@ public class SimpleJDBCConnectionProvider implements ConnectionProvider {
     private static SimpleDataSource2.PoolProperties getRWProperties() {
         rwConnectionPoolMaxSize.labels("connection_pool_props").set(Double.parseDouble(System.getProperty("rwMaximumPoolSize")));
         SimpleDataSource2.PoolProperties rwprops = new SimpleDataSource2.PoolProperties();
+        rwprops.poolName = "read-write pool";
         rwprops.maxTimeout = 20000;
         rwprops.maximumPoolSize = Integer.parseInt(System.getProperty("rwMaximumPoolSize"));
         rwprops.user = System.getProperty("dataSource.user");
@@ -78,6 +79,7 @@ public class SimpleJDBCConnectionProvider implements ConnectionProvider {
     private static SimpleDataSource2.PoolProperties getROProperties() {
         roConnectionPoolMaxSize.labels("connection_pool_props").set(Double.parseDouble(System.getProperty("roMaximumPoolSize")));
         SimpleDataSource2.PoolProperties roprops = new SimpleDataSource2.PoolProperties();
+        roprops.poolName = "read-only pool";
         roprops.maxTimeout = 20000;
         roprops.maximumPoolSize = Integer.parseInt(System.getProperty("roMaximumPoolSize"));
         roprops.user = System.getProperty("dataSource.user");

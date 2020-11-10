@@ -27,6 +27,8 @@ public class SimpleDataSource2 implements AutoCloseable {
     private final ExecutorService connRecyclerEventLoop = Executors.newSingleThreadExecutor(r -> new Thread(r, "db-conn-recycler-thread"));
     private final ExecutorService credsRefresherEventLoop = Executors.newSingleThreadExecutor(r -> new Thread(r, "iam-creds-refresher-thread"));
     private final ExecutorService connCheckerEventLoop = Executors.newSingleThreadExecutor(r -> new Thread(r, "db-conn-validity-check-thread"));
+
+    private String poolName;
     private AtomicReference<String> user = new AtomicReference<>();
     private AtomicReference<String> pswd = new AtomicReference<>();
     private String databaseName;
@@ -52,8 +54,9 @@ public class SimpleDataSource2 implements AutoCloseable {
     private AtomicBoolean isClosed = new AtomicBoolean(false);
 
 
-    public SimpleDataSource2(int maxTimeout, int maximumPoolSize, int transactionIsolation, boolean autoCommit, long validityCheckInterval, DataSource dataSource) {
+    public SimpleDataSource2(String poolName, int maxTimeout, int maximumPoolSize, int transactionIsolation, boolean autoCommit, long validityCheckInterval, DataSource dataSource) {
         dataSourceRef.set(dataSource);
+        this.poolName = poolName;
         this.maxTimeout = maxTimeout;
         this.maximumPoolSize = maximumPoolSize;
         this.transactionIsolation = transactionIsolation;
@@ -83,6 +86,7 @@ public class SimpleDataSource2 implements AutoCloseable {
 
     public SimpleDataSource2(PoolProperties poolProperties) {
         LOGGER.info("Creating DB Connection Pool with {}", poolProperties.toString());
+        this.poolName = poolProperties.poolName;
         this.user = new AtomicReference<>(poolProperties.user);
         this.pswd = new AtomicReference<>(poolProperties.pswd);
         this.maxTimeout = poolProperties.maxTimeout;
@@ -262,7 +266,7 @@ public class SimpleDataSource2 implements AutoCloseable {
     }
 
     private void logStats() {
-        LOGGER.info("Max Pool Size = {} Active Connections = {} Inactive Connections = {}", maximumPoolSize, getActiveConnections(), getInactiveConnections());
+        LOGGER.info("Pool = {} Max Pool Size = {} Active Connections = {} Inactive Connections = {}", poolName, maximumPoolSize, getActiveConnections(), getInactiveConnections());
     }
 
     public int getActiveConnections() {
@@ -319,6 +323,7 @@ public class SimpleDataSource2 implements AutoCloseable {
     }
 
     public static class PoolProperties {
+        public String poolName;
         public long maxTimeout;
         public int maximumPoolSize;
         public String user;
@@ -335,7 +340,8 @@ public class SimpleDataSource2 implements AutoCloseable {
         @Override
         public String toString() {
             return "PoolProperties{" +
-                    "maxTimeout=" + maxTimeout +
+                    "poolName=" + poolName +
+                    ", maxTimeout=" + maxTimeout +
                     ", maximumPoolSize=" + maximumPoolSize +
                     ", user='" + user + '\'' +
                     ", pswd='" + "xxxx" + '\'' +
