@@ -30,6 +30,13 @@
 | All calls directed to the Single Read Replica Instance |
 | Connection Pool Impl = TomcatJDBC  | 
 
+| Test Case 3 |
+| ----------- |
+|1 Lookup for fetching all the Object Keys|
+| Fetch single record ( GetObject ) in loop all 3K Keys serially + repeat |
+| All calls directed to the Single Read Replica Instance |
+| Connection Pool Impl = SimplePool  | 
+
 #### Compare 
 
 |   | Hikari DB | TomcatJDBC |
@@ -41,4 +48,15 @@
 | GetObject Latency on Middleware | ![GetObject Latency](hikari-cp-conn-pool/grafana-snaps/mw-getobject-latency.jpg) | ![GetObject Latency](tomcat-jdbc-conn-pool/grafana-snaps/mw-getobject-latency.jpg) |
 ||||
 | DB Operation on Middleware |![DB Ops](hikari-cp-conn-pool/grafana-snaps/db-ops-mw.jpg)| ![DB Ops](tomcat-jdbc-conn-pool/grafana-snaps/db-ops-mw.jpg) |
+
+|   | Simple Pool |
+| ----------- | ----------- | 
+| Client Throughput | ![Client Throughput](simple-cp-conn-pool/grafana-snaps/client-throughput.jpg) |
+|||
+| Middleware Throughput |![Middleware Throughput](simple-cp-conn-pool/grafana-snaps/server-throughput.jpg)|
+|||
+| GetObject Latency on Middleware | ![GetObject Latency](simple-cp-conn-pool/grafana-snaps/middleware-getobject-latency.jpg) |
+|||
+| DB Operation on Middleware |![DB Ops](simple-cp-conn-pool/grafana-snaps/db-ops-mw.jpg)|
+
 
