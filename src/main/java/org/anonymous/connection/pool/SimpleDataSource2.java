@@ -48,13 +48,13 @@ public class SimpleDataSource2 implements AutoCloseable {
     private final Consumer<Connection> closeHandler = new Consumer<Connection>() {
         @Override
         public void accept(Connection conn) {
+            // No Dirty checks and other problems, we assume Good Developers have returned the Connection by closing all associated RS and Stmts :)
             recycledConnections.add(conn);
             activeConnections.decrementAndGet();
         }
     };
 
     private AtomicBoolean isClosed = new AtomicBoolean(false);
-
 
     public SimpleDataSource2(String poolName, int maxTimeout, int maximumPoolSize, int transactionIsolation, boolean autoCommit, long validityCheckInterval, DataSource dataSource) {
         dataSourceRef.set(dataSource);
@@ -155,12 +155,14 @@ public class SimpleDataSource2 implements AutoCloseable {
         while (!isClosed.get()) {
             try {
                 Connection conn = recycledConnections.take();
+                activeConnections.incrementAndGet();
                 if (!conn.isValid(0)) {
                     ((ConnectionProxy<Connection>) conn).getInner().close();
                     populateConnection();
                 } else {
                     recycledConnections.add(conn);
                 }
+                activeConnections.decrementAndGet();
 
                 logStats();
                 Thread.sleep(validityCheckInterval);
@@ -233,9 +235,8 @@ public class SimpleDataSource2 implements AutoCloseable {
             conn = recycledConnections.take();
             if (System.currentTimeMillis() > timeoutTime) {
                 LOGGER.warn("Failed to retrieve connection from Pool {} - Time Waited = {} | maximumPoolSize = {} | activeConnections = {}", poolName, maxTimeout, activeConnections.get());
-                /*throw new TimeoutException("Timeout while waiting for a valid database connection from Pool. maximumPoolSize = " + maximumPoolSize
-                        + " Active Connections = " + activeConnections.get() + " Idle Connections = " + recycledConnections.size());*/
-                timeoutTime = System.currentTimeMillis() + maxTimeout;
+                throw new TimeoutException("Timeout while waiting for a valid database connection from Pool. maximumPoolSize = " + maximumPoolSize
+                        + " Active Connections = " + activeConnections.get() + " Idle Connections = " + recycledConnections.size());
             }
             activeConnections.incrementAndGet();
             return conn;
