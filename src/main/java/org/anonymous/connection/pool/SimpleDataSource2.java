@@ -1,5 +1,6 @@
 package org.anonymous.connection.pool;
 
+import com.conversantmedia.util.concurrent.DisruptorBlockingQueue;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,7 +23,8 @@ import java.util.function.Consumer;
 public class SimpleDataSource2 implements AutoCloseable {
 
     private static Logger LOGGER = LoggerFactory.getLogger(SimpleDataSource2.class);
-    private final ConcurrentLinkedQueue<Connection> recycledConnections = new ConcurrentLinkedQueue<>();          // list of inactive PooledConnections
+    //private final ConcurrentLinkedQueue<Connection> recycledConnections = new ConcurrentLinkedQueue<>();
+    private final DisruptorBlockingQueue<Connection> recycledConnections; // list of inactive PooledConnections
     private final ExecutorService connRecyclerEventLoop = Executors.newSingleThreadExecutor(r -> new Thread(r, "db-conn-recycler-thread"));
     private final ExecutorService credsRefresherEventLoop = Executors.newSingleThreadExecutor(r -> new Thread(r, "iam-creds-refresher-thread"));
     private final ExecutorService connCheckerEventLoop = Executors.newSingleThreadExecutor(r -> new Thread(r, "db-conn-validity-check-thread"));
@@ -51,6 +52,7 @@ public class SimpleDataSource2 implements AutoCloseable {
             activeConnections.decrementAndGet();
         }
     };
+
     private AtomicBoolean isClosed = new AtomicBoolean(false);
 
 
@@ -70,6 +72,8 @@ public class SimpleDataSource2 implements AutoCloseable {
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
         }
+
+        recycledConnections = new DisruptorBlockingQueue<>(maximumPoolSize);
 
         // Pre-populate Connections
         for (int i = 0; i < maximumPoolSize; i++) {
@@ -109,6 +113,7 @@ public class SimpleDataSource2 implements AutoCloseable {
             sqlException.printStackTrace();
         }
 
+        recycledConnections = new DisruptorBlockingQueue<>(maximumPoolSize);
         // Pre-populate Connections
         for (int i = 0; i < maximumPoolSize; i++) {
             populateConnection();
@@ -149,17 +154,17 @@ public class SimpleDataSource2 implements AutoCloseable {
     private void checkConnection() {
         while (!isClosed.get()) {
             try {
-                Connection conn = null;
-                while ((conn = recycledConnections.poll()) != null) {
-                    if (!conn.isValid(0)) {
-                        ((ConnectionProxy<Connection>) conn).getInner().close();
-                        populateConnection();
-                    } else {
-                        recycledConnections.add(conn);
-                    }
-                    logStats();
-                    Thread.sleep(validityCheckInterval);
+                Connection conn = recycledConnections.take();
+                if (!conn.isValid(0)) {
+                    ((ConnectionProxy<Connection>) conn).getInner().close();
+                    populateConnection();
+                } else {
+                    recycledConnections.add(conn);
                 }
+
+                logStats();
+                Thread.sleep(validityCheckInterval);
+
             } catch (SQLException sqlException) {
                 sqlException.printStackTrace();
             } catch (InterruptedException e) {
@@ -198,9 +203,12 @@ public class SimpleDataSource2 implements AutoCloseable {
 
         SQLException e = null;
         while (!recycledConnections.isEmpty()) {
-            Connection conn = recycledConnections.poll();
+            Connection conn = null;
             try {
+                conn = recycledConnections.take();
                 ((ConnectionProxy<Connection>) conn).getInner().close();
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
             } catch (SQLException e2) {
                 if (e == null) {
                     e = e2;
@@ -220,17 +228,21 @@ public class SimpleDataSource2 implements AutoCloseable {
         }
 
         long timeoutTime = System.currentTimeMillis() + maxTimeout;
-        Connection conn;
-        while ((conn = recycledConnections.poll()) == null) {
+        Connection conn = null;
+        try {
+            conn = recycledConnections.take();
             if (System.currentTimeMillis() > timeoutTime) {
                 LOGGER.warn("Failed to retrieve connection from Pool {} - Time Waited = {} | maximumPoolSize = {} | activeConnections = {}", poolName, maxTimeout, activeConnections.get());
                 /*throw new TimeoutException("Timeout while waiting for a valid database connection from Pool. maximumPoolSize = " + maximumPoolSize
                         + " Active Connections = " + activeConnections.get() + " Idle Connections = " + recycledConnections.size());*/
                 timeoutTime = System.currentTimeMillis() + maxTimeout;
             }
+            activeConnections.incrementAndGet();
+            return conn;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        activeConnections.incrementAndGet();
-        return conn;
+        return null;
     }
 
     private void populateConnection() {
