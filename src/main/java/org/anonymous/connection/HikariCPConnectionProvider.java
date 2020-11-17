@@ -91,7 +91,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider {
             rwprops.setProperty("dataSource.sslmode", "verify-full");
             rwprops.setProperty("dataSource.sslfactory", "org.postgresql.ssl.DefaultJavaSSLFactory");
         }
-        rwprops.setProperty("autoCommit", "false");
+        //rwprops.setProperty("autoCommit", "false");
         rwprops.setProperty("connectionTestQuery", "SELECT 1");
         return rwprops;
     }
@@ -131,7 +131,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider {
             roprops.setProperty("dataSource.sslmode", "verify-full");
             roprops.setProperty("dataSource.sslfactory", "org.postgresql.ssl.DefaultJavaSSLFactory");
         }
-        roprops.setProperty("autoCommit", "false");
+        //roprops.setProperty("autoCommit", "false");
         roprops.setProperty("connectionTestQuery", "SELECT 1");
         return roprops;
     }

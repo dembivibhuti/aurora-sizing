@@ -590,7 +590,7 @@ public class ObjectRepository implements AutoCloseable {
         Gauge.Timer timer1 = null;
         Connection connection = null;
         ResultSet rs = null;
-        PreparedStatement lookupStmt = null;
+        PreparedStatement getFullObjStmt = null;
         try {
             span = Statistics.getObjectExtDBGetConnection.start();
             timer1 = obtainDBConnFromPool.labels("get_object_ext").startTimer();
@@ -600,14 +600,14 @@ public class ObjectRepository implements AutoCloseable {
 
             span = Statistics.getObjectExtDBPreparedStatementMake.start();
             timer1 = prepareStatement.labels("get_object_ext").startTimer();
-            lookupStmt = connection.prepareStatement(GET_FULL_OBJECT);
-            lookupStmt.setString(1, secKey.toLowerCase());
+            getFullObjStmt = connection.prepareStatement(GET_FULL_OBJECT);
+            getFullObjStmt.setString(1, secKey.toLowerCase());
             timer1.setDuration();
             Statistics.getObjectExtDBPreparedStatementMake.stop(span);
 
             span = Statistics.getObjectExtDBResultSetFetch.start();
             timer1 = fetchAndParseResultSet.labels("get_object_ext").startTimer();
-            rs = lookupStmt.executeQuery();
+            rs = getFullObjStmt.executeQuery();
             if (rs.next()) {
                 msgOnSuccess = CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
                         setMem(ByteString.copyFrom(rs.getBytes("mem"))).
@@ -632,7 +632,7 @@ public class ObjectRepository implements AutoCloseable {
             timer1 = releaseDBConnToPool.labels("get_object_ext").startTimer();
             try {
                 rs.close();
-                lookupStmt.close();
+                getFullObjStmt.close();
                 connection.close();
             } catch (Exception exception) {
                 LOGGER.error("error in getFullObject() finally, error in closing the connection", exception);
