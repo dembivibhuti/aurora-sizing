@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -651,7 +652,7 @@ public class ObjectRepository implements AutoCloseable {
         return answer;
     }
 
-    /*public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
+    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObjectStubbed(final String secKey) {
         String dummyTime = new Timestamp(new Date().getTime()).toString();
         return Optional.ofNullable(CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
                 setMem(ByteString.copyFrom(BYTES_560)).
@@ -665,7 +666,7 @@ public class ObjectRepository implements AutoCloseable {
                         setVersionInfo(1).
                         setTimeUpdate(dummyTime)).
                 build());
-    }*/
+    }
 
     public CompletableFuture<Void> getMemsByKeys(List<String> secKeys, TimeKeeper lookupTimeKeeper) {
         CompletableFuture<Void> completableFuture = new CompletableFuture();

@@ -21,6 +21,8 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     private static final Gauge lookupByNameObjectGaugeTimer = Gauge.build().name("lookup_by_name_mw").help("Lookup Object by Name on Middleware").labelNames("grpc_method").register();
     private static ObjectRepository objectRepository;
 
+    private static final boolean NO_DB = ("true".equals(System.getProperty("stubbed")));
+
     ObjServiceImpl(ObjectRepository objectRepositiory) {
         ObjServiceImpl.objectRepository = objectRepositiory;
     }
@@ -261,7 +263,12 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     private void sync(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver, Gauge.Timer timer, long spanID) {
         CmdGetByNameExtResponse response;
-        Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getFullObject(request.getSecurityName());
+        Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess;
+        if(NO_DB) {
+            msgOnSuccess = objectRepository.getFullObjectStubbed(request.getSecurityName());
+        } else {
+            msgOnSuccess = objectRepository.getFullObject(request.getSecurityName());
+        }
 
         if (msgOnSuccess.isPresent()) {
             response = CmdGetByNameExtResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
