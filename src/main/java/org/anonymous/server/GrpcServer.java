@@ -97,7 +97,7 @@ public class GrpcServer {
                 server1.setHandler(context);
                 context.addServlet(new ServletHolder(new MetricsServlet()), "/metrics");
                 server1.start();
-                LOGGER.info("Metrics Server parted on {}", port);
+                LOGGER.info("Metrics Server started on {}", port);
                 server1.join();
             } catch (IOException e) {
                 LOGGER.error("failed to start metrics server", e);
