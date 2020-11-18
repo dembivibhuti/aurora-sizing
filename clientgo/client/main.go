@@ -38,7 +38,7 @@ func main() {
 		}()
 	}
 
-	//startMetricsServer(*promScrapePort)
+	startMetricsServer(*promScrapePort)
 	wg.Wait()
 	//ssMain(sscl)
 }
