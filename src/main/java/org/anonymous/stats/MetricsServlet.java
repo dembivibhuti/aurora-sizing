@@ -25,7 +25,7 @@ import java.util.Set;
 
 public class MetricsServlet extends HttpServlet {
 
-    private static PrometheusMeterRegistry registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+    public static PrometheusMeterRegistry registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     private CollectorRegistry defaultRegistry = CollectorRegistry.defaultRegistry;
 
     public void init() {

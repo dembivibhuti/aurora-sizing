@@ -2,6 +2,7 @@ package org.anonymous.connection;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.anonymous.stats.MetricsServlet;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -15,7 +16,9 @@ public class HikariCPConnectionProvider implements ConnectionProvider {
 
     public HikariCPConnectionProvider(Properties ps) {
         HikariConfig config = new HikariConfig(ps);
-        ds = new HikariDataSource(config);
+        HikariDataSource hikariDataSource = new HikariDataSource(config);
+        hikariDataSource.setMetricRegistry(MetricsServlet.registry);
+        ds = hikariDataSource;
     }
 
     public HikariCPConnectionProvider() {
@@ -29,7 +32,9 @@ public class HikariCPConnectionProvider implements ConnectionProvider {
         props.setProperty("autoCommit", "false");
 
         HikariConfig config = new HikariConfig(props);
-        ds = new HikariDataSource(config);
+        HikariDataSource hikariDataSource = new HikariDataSource(config);
+        hikariDataSource.setMetricRegistry(MetricsServlet.registry);
+        ds = hikariDataSource;
     }
 
     public static boolean isInMemDB() {
