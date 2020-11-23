@@ -1,0 +1,10 @@
+After Adding Indexes = 
+CREATE UNIQUE INDEX namelower_nulls_low ON objects (namelower );
+CREATE UNIQUE INDEX namelower_desc_index ON objects (namelower DESC);
+
+CREATE UNIQUE INDEX name_nulls_low ON objects (name);
+CREATE UNIQUE INDEX name_desc_index ON objects (name DESC);
+
+select * from snapshots.list_snaps() where snaps_id > 155;
+TomcatJDBC / 150 Max Pool Size / 4K Clients / 5 MW Instance
+
