@@ -276,7 +276,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
                 response = CmdIdxGetByNameResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
             }else{
                 LOGGER.error("Object Doesn't exist");
-                CmdIdxGetByNameResponse.MsgOnFailure msgOnFailure = CmdIdxGetByNameResponse.MsgOnFailure.newBuilder().setHasFailed(false).setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
+                CmdIdxGetByNameResponse.MsgOnFailure msgOnFailure = CmdIdxGetByNameResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
                 response = CmdIdxGetByNameResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
             }
 
@@ -286,5 +286,28 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.error("Caught Exception in getIdx()", e);
         }
 
+    }
+    @Override
+    public void getIndexMsgByName(CmdMsgIndexGetByName request, StreamObserver<CmdMsgIndexGetByNameResponse> responseObserver) {
+        LOGGER.trace("got request getIndexObject()");
+        try {
+            CmdMsgIndexGetByNameResponse response = objectRepository.getIndexObjectsFromCSV(request.getIndexId(), request.getSecurityName());
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.error("Caught Exception in getIndexObjectByName()", e);
+        }
+    }
+
+    @Override
+    public void getIndexMsgManyByNameExtStream(CmdMsgIndexGetManyByNameExt request, StreamObserver<CmdMsgIndexGetManyByNameResponseStream> responseObserver) {
+        LOGGER.trace("got request getIndexMsgManyByNameExtStream()");
+        try {
+            List<CmdMsgIndexGetManyByNameResponseStream> responseMessageList = objectRepository.getIdxManyByNameStreamFromCSV(request.getIndexId(), request.getSecurityNameList());
+            responseMessageList.forEach(responseObserver::onNext);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.trace("Caught Exception in getIndexMsgManyByNameExtStream()", e);
+        }
     }
 }

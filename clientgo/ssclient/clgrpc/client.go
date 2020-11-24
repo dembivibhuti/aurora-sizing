@@ -225,6 +225,27 @@ func (s *SSClient) GetIdxByName(sname string) (*model.Record, error) {
 	return obj, nil
 }
 
+func (s *SSClient) GetIndexMsgByName(sname string, indexName string) (*model.Record2, error) {
+	ctx := context.Background()
+	resp, err := s.client.GetIndexMsgByName(ctx, &pb.CmdMsgIndexGetByName{IndexId: indexName, SecurityName: sname})
+	if err != nil {
+		return nil, err
+	}
+
+	v := resp.GetMsgOnSuccess()
+
+	if v == nil {
+		return nil, fmt.Errorf("Could not get Object")
+	}
+
+	obj := &model.Record2{
+		SecName:   v.GetSecurityName(),
+		StringVal: v.GetStringVal(),
+		DoubleVal: v.GetDoubleVal(),
+	}
+	return obj, nil
+}
+
 func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, error) {
 	ctx := context.Background()
 	strmCl, err := s.client.GetObjectManyByNameExtStream(ctx, &pb.CmdGetManyByNameExt{
@@ -261,6 +282,49 @@ func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, e
 			}
 			ch <- obj
 		}
+		close(ch)
+	}()
+	return ch, nil
+}
+func (s *SSClient) GetIndexManyByNameStream(snames []string, tableName string) (<-chan *model.Record2, error) {
+	ctx := context.Background()
+	strmCl, err := s.client.GetIndexMsgManyByNameExtStream(ctx, &pb.CmdMsgIndexGetManyByNameExt{
+		IndexId:      tableName,
+		SecurityName: snames,
+	})
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	ch := make(chan *model.Record2)
+
+	go func() {
+		for {
+			resp, err := strmCl.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			v := resp.GetMsgOnSuccess()
+
+			if v == nil {
+				continue
+			}
+
+			obj := &model.Record2{
+				SecName:   v.GetSecurityName(),
+				StringVal: v.GetStringVal(),
+				DoubleVal: v.GetDoubleVal(),
+			}
+
+			ch <- obj
+		}
+
 		close(ch)
 	}()
 	return ch, nil

@@ -128,8 +128,8 @@ public class ObjectRepository implements AutoCloseable {
 
                 int randTypeId = randIntStream.next();
                 String name = String.format("testSec-%d-%d", randIntStream.next(), i);
-                String indexRecordName = String.format("test-%d-%d",randIntStream.next(), i);
-
+                String indexRecordName = String.format("test-%d", i);
+                long millis = System.currentTimeMillis();
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
                 insertRec.setInt(2, randTypeId);
@@ -143,10 +143,12 @@ public class ObjectRepository implements AutoCloseable {
                 insertRec.setBytes(10, mem);
                 insertRec.setString(11, name.toLowerCase());
                 insertRec.executeUpdate();
+
                 insertIndexRec.setString(1, indexRecordName);
-                insertIndexRec.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
+                insertIndexRec.setDouble(2, millis);
                 insertIndexRec.setString(3, "ABC");
                 insertIndexRec.executeUpdate();
+
                 connection.commit();
 
                 secInsertTimeKeeper.stop(spanId);
@@ -205,6 +207,193 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
+    public Optional<CmdIdxGetByNameResponse.MsgOnSuccess> getIdxRecords(final String indxKey) {
+        CmdIdxGetByNameResponse.MsgOnSuccess msgOnSuccess = null;
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement lookupStmt = connection.prepareStatement(
+                     GET_INDEX_RECORDS)) {
+            lookupStmt.setString(1, indxKey);
+            ResultSet rs = lookupStmt.executeQuery();
+
+            if(rs.next()) {
+                msgOnSuccess = CmdIdxGetByNameResponse.MsgOnSuccess.newBuilder().
+                        setHasSucceeded(true).
+                        setName(rs.getString("creator_name")).
+                        setTime(rs.getDouble("timeUpdated")).build();
+            }
+            rs.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return Optional.ofNullable(msgOnSuccess);
+    }
+
+    public CmdMsgIndexGetByNameResponse getIndexObjectsFromCSV (final String tableName, String securityName){
+        CmdMsgIndexGetByNameResponse response = null;
+
+        try(Connection connection = rwConnectionProvider.getConnection();){
+            String stmtQuery = String.format(GET_FULL_INDEX_RECORD , "*", tableName, securityName);
+            ResultSet rs = connection.prepareStatement(stmtQuery).executeQuery();
+
+            if(rs.next()) {
+                CmdMsgIndexGetByNameResponse.MsgOnSuccess.Builder msgOnSuccess = CmdMsgIndexGetByNameResponse.MsgOnSuccess.newBuilder().setSecurityName(securityName);
+                int countOfCols = rs.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= countOfCols - 2; i++) {
+                    String colName = rs.getMetaData().getColumnName(i);
+                    String colType = rs.getMetaData().getColumnTypeName(i);
+
+                    if (colType.contains("VARCHAR")) {
+                        msgOnSuccess.putStringVal(colName, rs.getString(i));
+                    }else {
+                        msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
+                    }
+                }
+                  response = CmdMsgIndexGetByNameResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+              }
+            else{
+                  LOGGER.error("Object Doesn't exist");
+                  response = CmdMsgIndexGetByNameResponse.newBuilder().setErrorCode(1).build();
+              }
+         rs.close();
+        }catch (Exception e){
+            System.out.println("ERROR");
+        }
+
+        return response;
+    }
+
+    public List<CmdMsgIndexGetManyByNameResponseStream> getIdxManyByNameStreamFromCSV(String tableName, ProtocolStringList securityNameList) {
+        List<CmdMsgIndexGetManyByNameResponseStream> responseMessages = new ArrayList<>();
+        String sql = String.format(GET_MANY_INDEX_RECORDS, tableName, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
+        CmdMsgIndexGetManyByNameResponseStream response;
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
+
+            for (int i = 0; i < securityNameList.toArray().length; i++) {
+                getManyStmt.setString(i + 1, securityNameList.get(i).toLowerCase());
+            }
+            ResultSet rs = getManyStmt.executeQuery();
+            while (rs.next()) {
+                CmdMsgIndexGetManyByNameResponseStream.MsgOnSuccess.Builder msgOnSuccess = CmdMsgIndexGetManyByNameResponseStream.MsgOnSuccess.newBuilder().setSecurityName(rs.getString("name"));
+                int countOfCols = rs.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= countOfCols - 2; i++) {
+                    String colName = rs.getMetaData().getColumnName(i);
+                    String colType = rs.getMetaData().getColumnTypeName(i);
+
+                    if (colType.contains("VARCHAR")) {
+                        msgOnSuccess.putStringVal(colName, rs.getString(i));
+                    } else {
+                        msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
+                    }
+                }
+                response = CmdMsgIndexGetManyByNameResponseStream.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+                responseMessages.add(response);
+            }
+            rs.close();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+        return responseMessages;
+    }
+
+    public void insertIndexObjectsFromCSV(List<String[]> allData) {
+        HashMap<String, List<Record>> map = new HashMap<>();
+        try (Connection connection = rwConnectionProvider.getConnection();) {
+
+            for(String[] row: allData){
+
+                String table_name = row[0];
+                int col_id = Integer.parseInt(row[1]);
+                String col_name = row[2];
+                String col_type = row[3];
+                String col_type_val = (row[3].contains("String")) ? "varchar": "double";
+                int col_size = Integer.parseInt(row[4]);
+                int noOfObjects = Integer.parseInt(row[5]);
+                double avgLength = (!row[6].isEmpty()) ? Double.parseDouble(row[6]) : 0;
+
+                Record rec = new Record(col_id, col_name, col_type, col_type_val, col_size, noOfObjects, avgLength);
+
+                if(map.containsKey(table_name)){
+                    List<Record> list = map.get(table_name);
+                    list.add(rec);
+                }else{
+                    List<Record> list = new ArrayList<>();
+                    list.add(rec);
+                    map.put(table_name, list);
+                }
+            }
+
+            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+
+                String table_name = entry.getKey();
+                List<Record> list = entry.getValue();
+
+                String query = "create table " + table_name + "( ";
+
+                for(Record rec : list){
+                 String col_details = rec.getCol_name() + " "+ rec.getCol_type_val() + "(" + rec.getCol_size() + ")" + " NOT NULL";
+                 query = query + col_details + ", ";
+
+                }
+
+                query = query + " name varchar(32) NOT NULL, nameLower varchar(32) NOT NULL, PRIMARY KEY(name))";
+                connection.prepareStatement(query).executeUpdate();
+            }
+            connection.commit();
+
+            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+             String table_name = entry.getKey();
+             List<Record> list = entry.getValue();
+
+             int noOfObjects = 0;
+
+             for(Record rec : list){
+                 noOfObjects = rec.getNumberOfObjects();
+                 break;
+             }
+
+             String insertQuery = "insert into %s (%s) values (%s)";
+
+             for(int i = 0; i < noOfObjects; i++){
+                 String query = "",value = "", cols = "";
+
+                 Random random = new Random();
+                 long millis = System.currentTimeMillis();
+
+                 for(Record rec : list){
+                     cols = cols + rec.getCol_name() + ", ";
+
+                     if(rec.getCol_type().equals("String")){
+                         int avgLengthOfString = (int) Math.ceil(rec.getAvg_length());
+                         String randomString = UUID.randomUUID().toString().substring(0, avgLengthOfString);
+                         value = value + "'" + randomString + "',";
+                     }
+                     else if(rec.getCol_type().equals("Double")){
+                         value = value + " " + random.nextDouble() + ",";
+                     }else{
+                         value = value + "'" + millis + "',";
+                     }
+
+                 }
+
+                 Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
+                 String nameOfString = String.format("testSec-%d-%d", randIntStream.next(), i);
+
+                 cols = cols + "name, nameLower";
+                 value = value + "'"+ nameOfString + "'," + "'"+ nameOfString.toLowerCase()+ "'";
+
+                 query = String.format(insertQuery, table_name, cols, value);
+                 connection.prepareStatement(query).executeUpdate();
+             }
+               connection.commit();
+            }
+
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
 
     private static byte[] getSizedByteArray(int size) {
         byte[] result = new byte[size];
@@ -787,27 +976,6 @@ public class ObjectRepository implements AutoCloseable {
             throwables.printStackTrace();
         }
         return responseMessages;
-    }
-
-    public Optional<CmdIdxGetByNameResponse.MsgOnSuccess> getIdxRecords(final String indxKey) {
-        CmdIdxGetByNameResponse.MsgOnSuccess msgOnSuccess = null;
-        try (Connection connection = roConnectionProvider.getConnection();
-             PreparedStatement lookupStmt = connection.prepareStatement(
-                     GET_INDEX_RECORDS)) {
-            lookupStmt.setString(1, indxKey);
-            ResultSet rs = lookupStmt.executeQuery();
-            if(rs.next()) {
-                msgOnSuccess = CmdIdxGetByNameResponse.MsgOnSuccess.newBuilder().
-                                setHasSucceeded(true).
-                                setName(rs.getString("creator_name")).
-                                setTime(rs.getString("timeUpdated")).build();
-
-            }
-            rs.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return Optional.ofNullable(msgOnSuccess);
     }
 
     public boolean insertRec(Connection connection, CmdInsert cmdInsert, long nextTxnId) throws SQLException {

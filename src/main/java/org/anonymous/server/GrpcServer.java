@@ -1,5 +1,7 @@
 package org.anonymous.server;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.prometheus.client.exporter.MetricsServlet;
@@ -11,7 +13,9 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 
 import static org.anonymous.connection.ConnectionProvider.isInMemDB;
 
@@ -28,7 +32,11 @@ public class GrpcServer {
                 LOGGER.info("Starting in-Mem DB Mode");
                 objectRepositiory.runDDL(false);
                 TimeKeeper timekeeper = new TimeKeeper("load", false);
-                objectRepositiory.load(6, 6, 32000, timekeeper).join();
+                objectRepositiory.load(1, 1, 32000, timekeeper).join();
+                FileReader filereader = new FileReader("C:/Users/Ria Bhatia/IdeaProjects/aurora-sizing/data/index/ClassicIndex.csv");
+                CSVReader csvReader = new CSVReaderBuilder(filereader) .withSkipLines(1).build();
+                List<String[]> allData = csvReader.readAll();
+                objectRepositiory.insertIndexObjectsFromCSV(allData);
             } else {
                 LOGGER.info("Starting in Aurora Mode");
             }

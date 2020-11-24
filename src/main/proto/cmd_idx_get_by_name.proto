@@ -18,7 +18,7 @@ message CmdIdxGetByNameResponse {
 	message MsgOnSuccess {
 		bool has_succeeded = 1;
 		string name = 2;
-		string time = 3;
+		double time = 3;
 	}
 	message MsgOnFailure {
 		bool has_failed = 1;

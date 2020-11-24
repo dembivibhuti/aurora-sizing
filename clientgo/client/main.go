@@ -178,12 +178,32 @@ func ssMain(scl model.SSClient) {
 			fmt.Println("======================================================")
 		}
 		getIndexObject := func(n int32) {
-			response, error := scl.GetIdxByName("test")
+			response, error := scl.GetIdxByName("test-0")
 			if error != nil {
 				log.Fatal(error)
 			}
 			fmt.Print("Get Index Object By Name: ", response)
 			fmt.Println("======================================================")
+		}
+
+		getIndexObjectCSV := func(n int32) {
+			response, error := scl.GetIndexMsgByName("testSec--22108009-103", "Table_TETID")
+			if error != nil {
+				log.Fatal(error)
+			}
+			fmt.Print("Get Index Object By Name CSV: ", response)
+			fmt.Println("======================================================")
+		}
+
+		getIndexObjectManyCSV := func(n int32) {
+			respCh, err := scl.GetIndexManyByNameStream([]string{"testSec--22108009-103", "testSec-795220597-92"}, "Table_TETID")
+			if err != nil {
+				log.Fatal(err)
+			}
+			for k := range respCh {
+				fmt.Print("Get Index Many by Name Record: ", k)
+				fmt.Println("======================================================")
+			}
 		}
 
 		transaction := func(n int32) {
@@ -235,7 +255,9 @@ func ssMain(scl model.SSClient) {
 				runNTimesWithArg(0, lookupWithGetMany, i)
 				runNTimesWithArg(0, lookupByType, i)
 				runNTimesWithArg(0, transaction, i)
-				runNTimesWithArg(1, getIndexObject, 1)
+				runNTimesWithArg(0, getIndexObject, 1)
+				runNTimesWithArg(1, getIndexObjectCSV, 1)
+				runNTimesWithArg(1, getIndexObjectManyCSV, 1)
 			}
 		}
 	})

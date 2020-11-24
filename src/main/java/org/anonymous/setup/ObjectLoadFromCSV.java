@@ -1,16 +1,13 @@
 package org.anonymous.setup;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import org.anonymous.connection.ConnectionProvider;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.util.TimeKeeper;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
 import java.io.FileReader;
-
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
+import java.util.List;
 
 
 public class ObjectLoadFromCSV {
@@ -20,11 +17,11 @@ public class ObjectLoadFromCSV {
         try {
             ObjectRepository objectRepository = new ObjectRepository(holder.roConnectionProvider, holder.rwConnectionProvider);
             TimeKeeper timekeeper = new TimeKeeper("load", false);
-            
-            FileReader filereader = new FileReader("/home/ec2-user/environment/aurora-sizing/TestData.csv"); 
-            CSVReader csvReader = new CSVReaderBuilder(filereader) .withSkipLines(1).build(); 
-            List<String[]> allData = csvReader.readAll(); 
-  
+
+            FileReader filereader = new FileReader("/home/ec2-user/environment/aurora-sizing/TestData.csv");
+            CSVReader csvReader = new CSVReaderBuilder(filereader) .withSkipLines(1).build();
+            List<String[]> allData = csvReader.readAll();
+
             //objectRepository.insertObjectsFromCSV(9, allData, timekeeper);
             objectRepository.insertObjectsFromCSV(9, allData, timekeeper);
         } catch (Exception ex) {

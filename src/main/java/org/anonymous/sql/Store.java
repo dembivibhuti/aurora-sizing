@@ -101,11 +101,16 @@ public class Store {
 
     public static final String CREATE_INDEX_TABLE = "CREATE TABLE index_records (\n" +
             "   name varchar NOT NULL,\n" +
-            "   timeUpdated timestamp NOT NULL,\n" +
+            "   timeUpdated double NOT NULL,\n" +
             "   creator_name varchar(32) NOT NULL,\n" +
             " PRIMARY KEY (name)\n" + ")";
 
     public static final String GET_INDEX_RECORDS = "select creator_name, timeUpdated from index_records where name = ?";
 
     public static final String INSERT_INDEX_RECORDS = "insert into index_records values (?, ?, ?)";
+
+    public static final String GET_MANY_INDEX_RECORDS = "select * from %s where nameLower in (%s)";
+
+    public static final String GET_FULL_INDEX_RECORD = "Select %s from %s where name = '%s'";
+
 }
