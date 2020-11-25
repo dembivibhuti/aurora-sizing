@@ -168,8 +168,7 @@ public class ObjectRepository implements AutoCloseable {
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
 
         LOGGER.info("Records in CSV = {}", allData.size());
-        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
-                .prepareStatement(INSERT_RECORDS)) {
+        try {
 
             for (String[] row : allData) {
                 int numObjects = Integer.parseInt(row[2]);
@@ -184,7 +183,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 for (int i = 0; i < numObjects; i++) {
                     long spanId = secInsertTimeKeeper.start();
-                    insert(connection, insertRec, objPropertyMem, mem, objClassId, randIntStream, randLongStream);
+                    insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream);
                     secInsertTimeKeeper.stop(spanId);
                 }
                 LOGGER.info("Inserted another {} records", numObjects);
@@ -194,8 +193,9 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    private void insert(Connection connection, PreparedStatement insertRec, byte[] objPropertyMem, byte[] mem, int objClassId, Iterator<Integer> randIntStream, Iterator<Long> randLongStream) throws SQLException {
-        try {
+    private void insert(byte[] objPropertyMem, byte[] mem, int objClassId, Iterator<Integer> randIntStream, Iterator<Long> randLongStream) throws SQLException {
+        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
+                .prepareStatement(INSERT_RECORDS)) {
             String name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
             Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
 
@@ -213,8 +213,8 @@ public class ObjectRepository implements AutoCloseable {
             insertRec.executeUpdate();
             connection.commit();
         } catch (PSQLException ex) {
-            LOGGER.error("Error Occured will retry", ex);
-            insert(connection, insertRec, objPropertyMem, mem, objClassId, randIntStream, randLongStream);
+            LOGGER.error("Error occurred will retry", ex.getMessage());
+            insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream);
         }
     }
 
