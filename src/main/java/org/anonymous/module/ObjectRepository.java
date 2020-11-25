@@ -8,12 +8,13 @@ import org.anonymous.grpc.*;
 import org.anonymous.stats.Statistics;
 import org.anonymous.util.StopWatch;
 import org.anonymous.util.TimeKeeper;
+import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.util.*;
 import java.util.Date;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -182,31 +183,38 @@ public class ObjectRepository implements AutoCloseable {
                 Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
 
                 for (int i = 0; i < numObjects; i++) {
-
-                    String name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
-                    Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
-
                     long spanId = secInsertTimeKeeper.start();
-                    insertRec.setString(1, name);
-                    insertRec.setInt(2, objClassId);
-                    insertRec.setLong(3, randLongStream.next());
-                    insertRec.setTimestamp(4, timeStampCreated);
-                    insertRec.setLong(5, randLongStream.next());
-                    insertRec.setInt(6, (short) (timeStampCreated.getTime() / 1000));
-                    insertRec.setInt(7, randIntStream.next());
-                    insertRec.setInt(8, randIntStream.next());
-                    insertRec.setBytes(9, objPropertyMem);
-                    insertRec.setBytes(10, mem);
-                    insertRec.setString(11, name.toLowerCase());
-                    insertRec.executeUpdate();
-                    connection.commit();
-
+                    insert(connection, insertRec, objPropertyMem, mem, objClassId, randIntStream, randLongStream);
                     secInsertTimeKeeper.stop(spanId);
                 }
                 LOGGER.info("Inserted another {} records", numObjects);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+
+    private void insert(Connection connection, PreparedStatement insertRec, byte[] objPropertyMem, byte[] mem, int objClassId, Iterator<Integer> randIntStream, Iterator<Long> randLongStream) throws SQLException {
+        try {
+            String name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
+            Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
+
+            insertRec.setString(1, name);
+            insertRec.setInt(2, objClassId);
+            insertRec.setLong(3, randLongStream.next());
+            insertRec.setTimestamp(4, timeStampCreated);
+            insertRec.setLong(5, randLongStream.next());
+            insertRec.setInt(6, (short) (timeStampCreated.getTime() / 1000));
+            insertRec.setInt(7, randIntStream.next());
+            insertRec.setInt(8, randIntStream.next());
+            insertRec.setBytes(9, objPropertyMem);
+            insertRec.setBytes(10, mem);
+            insertRec.setString(11, name.toLowerCase());
+            insertRec.executeUpdate();
+            connection.commit();
+        } catch (PSQLException ex) {
+            LOGGER.error("Error Occured will retry", ex);
+            insert(connection, insertRec, objPropertyMem, mem, objClassId, randIntStream, randLongStream);
         }
     }
 
