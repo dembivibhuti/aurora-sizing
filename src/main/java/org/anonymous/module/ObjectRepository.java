@@ -166,6 +166,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
 
+        LOGGER.info("Records in CSV = {}", allData.size());
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
                 .prepareStatement(INSERT_RECORDS)) {
 
