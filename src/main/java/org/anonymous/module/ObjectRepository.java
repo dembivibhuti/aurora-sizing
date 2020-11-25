@@ -174,7 +174,8 @@ public class ObjectRepository implements AutoCloseable {
 
             for (String[] row : allData) {
                 int numObjects = Integer.parseInt(row[2]);
-                //LOGGER.info("Current Estimated Object Record Count to be inserted = {}", progressCounter.addAndGet(numObjects));
+                progressCounter.addAndGet(numObjects)        ;
+
                 int objMemSize = Integer.parseInt(row[1]);
 
                 byte[] objPropertyMem = getSizedByteArray(100);
@@ -187,7 +188,7 @@ public class ObjectRepository implements AutoCloseable {
                 for (int i = 0; i < numObjects; i++) {
                     executorService.execute(() -> insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter));
                 }
-                System.out.println("Estimated number of Object Record remaining = " + progressCounter.get() + "\r");
+                System.out.print("Estimated number of Object Record remaining = " + progressCounter.get() + "\r");
             }
             executorService.shutdown();
             try {
