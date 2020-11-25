@@ -227,6 +227,8 @@ public class ObjectRepository implements AutoCloseable {
         } catch (SQLException sqlException) {
             //System.out.println("Error occurred will retry" + sqlException.getMessage());
             insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
+        } catch (Throwable th) {
+            insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
         }
     }
 
