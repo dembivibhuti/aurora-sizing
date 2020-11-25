@@ -27,7 +27,7 @@ import static org.anonymous.sql.Store.*;
 
 public class ObjectRepository implements AutoCloseable {
 
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(360);
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(3600);
     private static final ExecutorService dbOpsExecutorService = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private static final Gauge obtainDBConnFromPool = Gauge.build().name("get_db_conn_from_pool").help("Get DB Connection from Pool").labelNames("db_ops").register();
@@ -174,7 +174,7 @@ public class ObjectRepository implements AutoCloseable {
 
             for (String[] row : allData) {
                 int numObjects = Integer.parseInt(row[2]);
-                LOGGER.info("Current Estimated Object Record Count to be inserted = {}", progressCounter.addAndGet(numObjects));
+                //LOGGER.info("Current Estimated Object Record Count to be inserted = {}", progressCounter.addAndGet(numObjects));
                 int objMemSize = Integer.parseInt(row[1]);
 
                 byte[] objPropertyMem = getSizedByteArray(100);
@@ -187,7 +187,7 @@ public class ObjectRepository implements AutoCloseable {
                 for (int i = 0; i < numObjects; i++) {
                     executorService.execute(() -> insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter));
                 }
-                LOGGER.info("Estimated number of Object Record remaining = {}", progressCounter.get());
+                System.out.println("Estimated number of Object Record remaining = " + progressCounter.get() + "\r");
             }
             executorService.shutdown();
             try {
