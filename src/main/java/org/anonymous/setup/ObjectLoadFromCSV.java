@@ -23,8 +23,7 @@ public class ObjectLoadFromCSV {
             CSVReader csvReader = new CSVReaderBuilder(filereader).withSkipLines(1).build();
             List<String[]> allData = csvReader.readAll();
 
-            //objectRepository.insertObjectsFromCSV(9, allData, timekeeper);
-            objectRepository.insertObjectsFromCSV(9, allData, timekeeper);
+            objectRepository.insertObjectsFromCSV(allData, timekeeper);
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
