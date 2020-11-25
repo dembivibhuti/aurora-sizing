@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -25,7 +27,7 @@ import static org.anonymous.sql.Store.*;
 
 public class ObjectRepository implements AutoCloseable {
 
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(100);
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(360);
     private static final ExecutorService dbOpsExecutorService = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private static final Gauge obtainDBConnFromPool = Gauge.build().name("get_db_conn_from_pool").help("Get DB Connection from Pool").labelNames("db_ops").register();
@@ -166,12 +168,13 @@ public class ObjectRepository implements AutoCloseable {
     }
 
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
-
+        AtomicLong progressCounter = new AtomicLong();
         LOGGER.info("Records in CSV = {}", allData.size());
         try {
 
             for (String[] row : allData) {
                 int numObjects = Integer.parseInt(row[2]);
+                LOGGER.info("Current Estimated Object Record Count to be inserted = {}", progressCounter.addAndGet(numObjects));
                 int objMemSize = Integer.parseInt(row[1]);
 
                 byte[] objPropertyMem = getSizedByteArray(100);
@@ -182,18 +185,22 @@ public class ObjectRepository implements AutoCloseable {
                 Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
 
                 for (int i = 0; i < numObjects; i++) {
-                    long spanId = secInsertTimeKeeper.start();
-                    insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream);
-                    secInsertTimeKeeper.stop(spanId);
+                    executorService.execute(() -> insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter));
                 }
-                LOGGER.info("Inserted another {} records", numObjects);
+                LOGGER.info("Estimated number of Object Record remaining = {}", progressCounter.get());
+            }
+            executorService.shutdown();
+            try {
+                executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
+            } catch (InterruptedException it) {
+                LOGGER.error("failed in executor service. Please clean and re-run", it);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private void insert(byte[] objPropertyMem, byte[] mem, int objClassId, Iterator<Integer> randIntStream, Iterator<Long> randLongStream) throws SQLException {
+    private void insert(byte[] objPropertyMem, byte[] mem, int objClassId, Iterator<Integer> randIntStream, Iterator<Long> randLongStream, AtomicLong progressCounter) {
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
                 .prepareStatement(INSERT_RECORDS)) {
             String name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
@@ -212,9 +219,13 @@ public class ObjectRepository implements AutoCloseable {
             insertRec.setString(11, name.toLowerCase());
             insertRec.executeUpdate();
             connection.commit();
+            progressCounter.decrementAndGet();
         } catch (PSQLException ex) {
             LOGGER.error("Error occurred will retry", ex.getMessage());
-            insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream);
+            insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
+        } catch (SQLException sqlException) {
+            LOGGER.error("Error occurred will retry", sqlException.getMessage());
+            insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
         }
     }
 
