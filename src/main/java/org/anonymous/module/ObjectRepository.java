@@ -233,14 +233,15 @@ public class ObjectRepository implements AutoCloseable {
             connection.commit();
             progressCounter.decrementAndGet();
         } catch (PSQLException ex) {
-            //System.out.println("Error occurred will retry "  + ex.getMessage());
+            System.out.println("Error occurred will retry "  + ex.getMessage());
             close(connection, insertRec);
             insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
         } catch (SQLException sqlException) {
-            //System.out.println("Error occurred will retry" + sqlException.getMessage());
+            System.out.println("Error occurred will retry" + sqlException.getMessage());
             close(connection, insertRec);
             insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
         } catch (Throwable th) {
+            System.out.println("Error occurred will retry" + th.getMessage());
             close(connection, insertRec);
             insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
         }
