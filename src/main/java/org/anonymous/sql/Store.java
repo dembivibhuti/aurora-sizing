@@ -113,4 +113,13 @@ public class Store {
 
     public static final String GET_FULL_INDEX_RECORD = "Select %s from %s where name = '%s'";
 
+    public static final String TEST_INDEX_TABLE = "CREATE TABLE test_table (\n" +
+            "   double_val double(8) NOT NULL,\n" +
+            "   string_val varchar(32) NOT NULL,\n" +
+            "   name varchar NOT NULL,\n" +
+            "   nameLower varchar NOT NULL,\n" +
+            " PRIMARY KEY (name)\n" + ")";
+
+    public static final String INSERT_TEST_INDEX_RECORDS = "insert into test_table values (?, ?, ?, ?)";
+
 }

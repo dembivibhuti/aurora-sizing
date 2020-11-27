@@ -32,7 +32,7 @@ public class GrpcServer {
                 LOGGER.info("Starting in-Mem DB Mode");
                 objectRepositiory.runDDL(false);
                 TimeKeeper timekeeper = new TimeKeeper("load", false);
-                objectRepositiory.load(1, 1, 32000, timekeeper).join();
+                objectRepositiory.load(6, 6, 32000, timekeeper).join();
                 FileReader filereader = new FileReader("C:/Users/Ria Bhatia/IdeaProjects/aurora-sizing/data/index/ClassicIndex.csv");
                 CSVReader csvReader = new CSVReaderBuilder(filereader) .withSkipLines(1).build();
                 List<String[]> allData = csvReader.readAll();

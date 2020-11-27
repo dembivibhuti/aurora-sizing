@@ -235,7 +235,7 @@ func (s *SSClient) GetIndexMsgByName(sname string, indexName string) (*model.Rec
 	v := resp.GetMsgOnSuccess()
 
 	if v == nil {
-		return nil, fmt.Errorf("Could not get Object")
+		fmt.Errorf("Could not get Object")
 	}
 
 	obj := &model.Record2{

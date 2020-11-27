@@ -76,6 +76,10 @@ public class ObjectRepository implements AutoCloseable {
             connection.prepareStatement(CREATE_INDEX_TABLE)
                     .executeUpdate();
             LOGGER.info(" created index table ");
+
+            connection.prepareStatement(TEST_INDEX_TABLE)
+                    .executeUpdate();
+            LOGGER.info(" created test index table ");
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -118,17 +122,20 @@ public class ObjectRepository implements AutoCloseable {
 
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
                 .prepareStatement(INSERT_RECORDS);
-             PreparedStatement insertIndexRec = connection .prepareStatement(INSERT_INDEX_RECORDS); ) {
+             PreparedStatement insertIndexRec = connection .prepareStatement(INSERT_INDEX_RECORDS);
+             PreparedStatement testInsertIndexRec = connection .prepareStatement(INSERT_TEST_INDEX_RECORDS);) {
 
-            byte[] sdbMem = getSizedByteArray(100);
-            byte[] mem = getSizedByteArray(objSize);
+            byte[] sdbMem = getSizedByteArray(1);
+            byte[] mem = getSizedByteArray(1);
+//            byte[] sdbMem = getSizedByteArray(100);
+//            byte[] mem = getSizedByteArray(objSize);
 
             Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
             for (int i = 0; i < numberOfRecsPerThread; i++) {
 
                 int randTypeId = randIntStream.next();
                 String name = String.format("testSec-%d-%d", randIntStream.next(), i);
-                String indexRecordName = String.format("test-%d", i);
+                String indexRecordName = String.format("testSec-%d-%d", randIntStream.next(), i);
                 long millis = System.currentTimeMillis();
                 long spanId = secInsertTimeKeeper.start();
                 insertRec.setString(1, name);
@@ -148,6 +155,12 @@ public class ObjectRepository implements AutoCloseable {
                 insertIndexRec.setDouble(2, millis);
                 insertIndexRec.setString(3, "ABC");
                 insertIndexRec.executeUpdate();
+
+                testInsertIndexRec.setDouble(1, millis);
+                testInsertIndexRec.setString(2, "Dummy");
+                testInsertIndexRec.setString(3, name);
+                testInsertIndexRec.setString(4, name.toLowerCase());
+                testInsertIndexRec.executeUpdate();
 
                 connection.commit();
 
