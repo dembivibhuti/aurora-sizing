@@ -248,10 +248,16 @@ public class ObjectRepository implements AutoCloseable {
 
     private void close(Connection connection, PreparedStatement insertRec){
         try {
-            insertRec.close();
-            connection.close();
+            if ( null != insertRec) {
+                insertRec.close();
+            }
+
+            if ( null != connection ) {
+                connection.close();
+            }
+
         } catch (SQLException sqlException) {
-            //sqlException.printStackTrace();
+            System.out.println("error in closing conn / stmt ");
         }
     }
 
