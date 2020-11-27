@@ -169,11 +169,13 @@ public class ObjectRepository implements AutoCloseable {
 
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
         AtomicLong progressCounter = new AtomicLong();
+
         LOGGER.info("Records in CSV = {}", allData.size());
         for (String[] row : allData) {
             int numObjects = Integer.parseInt(row[2]);
             progressCounter.addAndGet(numObjects);
         }
+        long target = progressCounter.get();
         LOGGER.info("Number of Object Records to be inserted = {}", progressCounter.get());
 
         try {
@@ -192,7 +194,8 @@ public class ObjectRepository implements AutoCloseable {
                 for (int i = 0; i < numObjects; i++) {
                     executorService.execute(() -> insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter));
                 }
-                System.out.print("Estimated number of Object Record remaining = " + progressCounter.get() + "\r");
+                long remaining = progressCounter.get();
+                System.out.print("Estimated number of Object Record remaining = " + remaining + " Progress = " + ((target - remaining) / target ) * 100 + "%" + "\r");
             }
             executorService.shutdown();
             try {
