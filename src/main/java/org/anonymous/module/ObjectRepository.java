@@ -206,8 +206,12 @@ public class ObjectRepository implements AutoCloseable {
     }
 
     private void insert(byte[] objPropertyMem, byte[] mem, int objClassId, Iterator<Integer> randIntStream, Iterator<Long> randLongStream, AtomicLong progressCounter) {
-        try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
-                .prepareStatement(INSERT_RECORDS)) {
+        Connection connection = null;
+        PreparedStatement insertRec = null;
+        try {
+            connection = rwConnectionProvider.getConnection();
+            insertRec = connection.prepareStatement(INSERT_RECORDS);
+
             String name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
             Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
 
@@ -227,12 +231,40 @@ public class ObjectRepository implements AutoCloseable {
             progressCounter.decrementAndGet();
         } catch (PSQLException ex) {
             //System.out.println("Error occurred will retry "  + ex.getMessage());
+            close(connection, insertRec);
             insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
         } catch (SQLException sqlException) {
             //System.out.println("Error occurred will retry" + sqlException.getMessage());
+            close(connection, insertRec);
             insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
         } catch (Throwable th) {
+            close(connection, insertRec);
             insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
+        }
+    }
+
+    private void close(Connection connection, PreparedStatement insertRec){
+        try {
+            insertRec.close();
+            connection.close();
+        } catch (SQLException sqlException) {
+            //sqlException.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        test();
+    }
+
+    private static void test() {
+        try {
+            System.out.println("ok");
+            throw new Exception("ddd");
+        } catch (Exception ex) {
+            System.out.println("ex");
+            test();
+        } finally {
+            System.out.println("finally");
         }
     }
 
