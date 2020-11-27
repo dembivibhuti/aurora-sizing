@@ -27,7 +27,7 @@ import static org.anonymous.sql.Store.*;
 
 public class ObjectRepository implements AutoCloseable {
 
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(1000);
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(72);
     private static final ExecutorService dbOpsExecutorService = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private static final Gauge obtainDBConnFromPool = Gauge.build().name("get_db_conn_from_pool").help("Get DB Connection from Pool").labelNames("db_ops").register();
@@ -170,12 +170,16 @@ public class ObjectRepository implements AutoCloseable {
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
         AtomicLong progressCounter = new AtomicLong();
         LOGGER.info("Records in CSV = {}", allData.size());
+        for (String[] row : allData) {
+            int numObjects = Integer.parseInt(row[2]);
+            progressCounter.addAndGet(numObjects);
+        }
+        LOGGER.info("Number of Object Records to be inserted = {}", progressCounter.get());
+
         try {
 
             for (String[] row : allData) {
                 int numObjects = Integer.parseInt(row[2]);
-                progressCounter.addAndGet(numObjects)        ;
-
                 int objMemSize = Integer.parseInt(row[1]);
 
                 byte[] objPropertyMem = getSizedByteArray(100);
