@@ -214,7 +214,7 @@ public class ObjectRepository implements AutoCloseable {
                             }
                         }
                     } catch (SQLException sqlException) {
-                        LOGGER.error("in verifying unique name", sqlException.getMessage());
+                        LOGGER.error("in verifying unique name", sqlException);
                     }
 
                     Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
@@ -233,7 +233,6 @@ public class ObjectRepository implements AutoCloseable {
                     holder.nameLower = name.toLowerCase();
 
                     data.put(name, holder);
-
                 }
 
                 if (data.size() >= 5000) {
