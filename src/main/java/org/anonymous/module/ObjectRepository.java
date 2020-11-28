@@ -234,14 +234,15 @@ public class ObjectRepository implements AutoCloseable {
 
                     data.put(name, holder);
                     long remaining = progressCounter.get();
-                    System.out.print("Number of Obj Queued = " + data.size() + " Estimated number of Object Record remaining = " + remaining + " Progress = " + ((target - remaining) / target) * 100 + "%" + "\r");
-                }
+                    long queued = data.size();
+                    System.out.print("Number of Obj Queued = " + queued + " Estimated number of Object Record remaining = " + remaining + " Progress = " + ((target - remaining) / target) * 100 + "%" + "\r");
 
-                if (data.size() >= 20000) {
-                    Collection<ObjectDataHolder> objects = data.values();
-                    //executorService.execute(() -> offloadToDB(objects, progressCounter));
-                    offloadToDB(objects, progressCounter);
-                    data = new HashMap<>();
+                    if (queued >= 20000) {
+                        Collection<ObjectDataHolder> objects = data.values();
+                        //executorService.execute(() -> offloadToDB(objects, progressCounter));
+                        offloadToDB(objects, progressCounter);
+                        data = new HashMap<>();
+                    }
                 }
             }
             executorService.shutdown();
