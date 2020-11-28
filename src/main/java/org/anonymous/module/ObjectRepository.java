@@ -168,6 +168,8 @@ public class ObjectRepository implements AutoCloseable {
     }
 
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
+        Map<String, ObjectDataHolder> data = new HashMap<>();
+        Set<String> keys = new HashSet<>();
         AtomicLong progressCounter = new AtomicLong();
 
         LOGGER.info("Records in CSV = {}", allData.size());
@@ -176,10 +178,9 @@ public class ObjectRepository implements AutoCloseable {
             progressCounter.addAndGet(numObjects);
         }
         long target = progressCounter.get();
-        LOGGER.info("Number of Object Records to be inserted = {}", progressCounter.get());
+        LOGGER.info("Number of Object Records to be inserted = {}", target);
 
         try {
-
             for (String[] row : allData) {
                 int numObjects = Integer.parseInt(row[2]);
                 int objMemSize = Integer.parseInt(row[1]);
@@ -192,8 +193,42 @@ public class ObjectRepository implements AutoCloseable {
                 Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
 
                 for (int i = 0; i < numObjects; i++) {
-                    executorService.execute(() -> insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter));
+
+                    String name = null;
+                    while (true) {
+                        name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
+                        if (keys.contains(name)) {
+                            continue;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
+
+                    ObjectDataHolder holder = new ObjectDataHolder();
+                    holder.name = name;
+                    holder.typeId = objClassId;
+                    holder.lastTransaction = randLongStream.next();
+                    holder.timeUpdated = timeStampCreated;
+                    holder.updateCount = randIntStream.next();
+                    holder.dateCreated = (short) (timeStampCreated.getTime() / 1000);
+                    holder.dbIdUpdated = randIntStream.next();
+                    holder.versionInfo = randIntStream.next();
+                    holder.metaMem = objPropertyMem;
+                    holder.mem = mem;
+                    holder.nameLower = name.toLowerCase();
+
+                    data.put(name, holder);
+                    keys.add(name);
                 }
+
+                if ( data.size() >= 5000 ) {
+                    Collection<ObjectDataHolder> objects= data.values();
+                    executorService.execute(() -> offloadToDB(objects, progressCounter));
+                    data = new HashMap<>();
+                }
+
                 long remaining = progressCounter.get();
                 System.out.print("Estimated number of Object Record remaining = " + remaining + " Progress = " + ((target - remaining) / target ) * 100 + "%" + "\r");
             }
@@ -208,73 +243,47 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    private void insert(byte[] objPropertyMem, byte[] mem, int objClassId, Iterator<Integer> randIntStream, Iterator<Long> randLongStream, AtomicLong progressCounter) {
-        Connection connection = null;
-        PreparedStatement insertRec = null;
-        try {
-            connection = rwConnectionProvider.getConnection();
-            insertRec = connection.prepareStatement(INSERT_RECORDS);
 
-            String name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
-            Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
+    class ObjectDataHolder {
+        String name;
+        int typeId;
+        long lastTransaction;
+        Timestamp timeUpdated;
+        long updateCount;
+        int dateCreated;
+        int dbIdUpdated;
+        int versionInfo;
+        byte[] metaMem;
+        byte[] mem;
+        String nameLower;
+    }
 
-            insertRec.setString(1, name);
-            insertRec.setInt(2, objClassId);
-            insertRec.setLong(3, randLongStream.next());
-            insertRec.setTimestamp(4, timeStampCreated);
-            insertRec.setLong(5, randLongStream.next());
-            insertRec.setInt(6, (short) (timeStampCreated.getTime() / 1000));
-            insertRec.setInt(7, randIntStream.next());
-            insertRec.setInt(8, randIntStream.next());
-            insertRec.setBytes(9, objPropertyMem);
-            insertRec.setBytes(10, mem);
-            insertRec.setString(11, name.toLowerCase());
-            insertRec.executeUpdate();
+
+    private void offloadToDB(Collection<ObjectDataHolder> objects, AtomicLong progressCounter) {
+        try( Connection connection = rwConnectionProvider.getConnection();
+             PreparedStatement insertRec = connection.prepareStatement(INSERT_RECORDS)) {
+            for(ObjectDataHolder obj: objects) {
+                insertRec.setString(1, obj.name);
+                insertRec.setInt(2, obj.typeId);
+                insertRec.setLong(3, obj.lastTransaction);
+                insertRec.setTimestamp(4, obj.timeUpdated);
+                insertRec.setLong(5, obj.updateCount);
+                insertRec.setInt(6, obj.dateCreated);
+                insertRec.setInt(7, obj.dbIdUpdated);
+                insertRec.setInt(8, obj.versionInfo);
+                insertRec.setBytes(9, obj.metaMem);
+                insertRec.setBytes(10, obj.mem);
+                insertRec.setString(11, obj.nameLower);
+                insertRec.executeUpdate();
+                progressCounter.decrementAndGet();
+            }
             connection.commit();
-            progressCounter.decrementAndGet();
         } catch (PSQLException ex) {
-            System.out.println("Error occurred will retry "  + ex.getMessage());
-            close(connection, insertRec);
-            insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
+            LOGGER.error("Error occurred will retry "  + ex.getMessage());
         } catch (SQLException sqlException) {
-            System.out.println("Error occurred will retry" + sqlException.getMessage());
-            close(connection, insertRec);
-            insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
+            LOGGER.error("Error occurred will retry" + sqlException.getMessage());
         } catch (Throwable th) {
-            System.out.println("Error occurred will retry" + th.getMessage());
-            close(connection, insertRec);
-            insert(objPropertyMem, mem, objClassId, randIntStream, randLongStream, progressCounter);
-        }
-    }
-
-    private void close(Connection connection, PreparedStatement insertRec){
-        try {
-            if ( null != insertRec) {
-                insertRec.close();
-            }
-
-            if ( null != connection ) {
-                connection.close();
-            }
-
-        } catch (SQLException sqlException) {
-            System.out.println("error in closing conn / stmt ");
-        }
-    }
-
-    public static void main(String[] args) {
-        test();
-    }
-
-    private static void test() {
-        try {
-            System.out.println("ok");
-            throw new Exception("ddd");
-        } catch (Exception ex) {
-            System.out.println("ex");
-            test();
-        } finally {
-            System.out.println("finally");
+            LOGGER.error("Error occurred will retry" + th.getMessage());
         }
     }
 
