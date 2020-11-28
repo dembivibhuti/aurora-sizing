@@ -170,6 +170,7 @@ public class ObjectRepository implements AutoCloseable {
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
         Map<String, ObjectDataHolder> data = new HashMap<>();
         AtomicLong progressCounter = new AtomicLong();
+        long serial = 0;
 
         LOGGER.info("Records in CSV = {}", allData.size());
         for (String[] row : allData) {
@@ -191,14 +192,17 @@ public class ObjectRepository implements AutoCloseable {
                 Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
                 Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
 
-                for (int i = 0; i < numObjects; i++) {
-                    String name = null;
 
-                    try (Connection connection = rwConnectionProvider.getConnection();
+                for (int i = 0; i < numObjects; i++) {
+                    serial++;
+                    String name = String.format("testSec-%05d-%d", serial, objClassId);
+
+                    /*try (Connection connection = rwConnectionProvider.getConnection();
                     ) {
                         while (true) {
+
                             PreparedStatement existStmt = connection.prepareStatement(OBJ_EXISTS);
-                            name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
+                            name = String.format("testSec-%05d-%d", serial, objClassId);
                             existStmt.setString(1, name.toLowerCase());
                             ResultSet rs = existStmt.executeQuery();
                             rs.next();
@@ -215,7 +219,7 @@ public class ObjectRepository implements AutoCloseable {
                         }
                     } catch (SQLException sqlException) {
                         LOGGER.error("in verifying unique name", sqlException);
-                    }
+                    }*/
 
                     Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
 
