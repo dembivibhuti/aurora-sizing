@@ -27,7 +27,7 @@ import static org.anonymous.sql.Store.*;
 
 public class ObjectRepository implements AutoCloseable {
 
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(72);
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(36);
     private static final ExecutorService dbOpsExecutorService = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private static final Gauge obtainDBConnFromPool = Gauge.build().name("get_db_conn_from_pool").help("Get DB Connection from Pool").labelNames("db_ops").register();
@@ -223,7 +223,7 @@ public class ObjectRepository implements AutoCloseable {
                     keys.add(name);
                 }
 
-                if ( data.size() >= 1000 ) {
+                if ( data.size() >= 500 ) {
                     Collection<ObjectDataHolder> objects= data.values();
                     executorService.execute(() -> offloadToDB(objects, progressCounter));
                     data = new HashMap<>();
