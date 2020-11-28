@@ -195,7 +195,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 for (int i = 0; i < numObjects; i++) {
                     serial++;
-                    String name = String.format("testSec-%05d-%d", serial, objClassId);
+                    String name = String.format("testSec-%010d-%d", serial, objClassId);
 
                     /*try (Connection connection = rwConnectionProvider.getConnection();
                     ) {
