@@ -205,13 +205,13 @@ public class ObjectRepository implements AutoCloseable {
 
                             if (rs.getInt(0) == 1) {
                                 rs.close();
+                                existStmt.close();
                                 continue;
                             } else {
                                 rs.close();
+                                existStmt.close();
                                 break;
                             }
-
-
                         }
                     } catch (SQLException sqlException) {
                         LOGGER.error("in verifying unique name", sqlException.getMessage());
