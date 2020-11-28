@@ -27,7 +27,7 @@ import static org.anonymous.sql.Store.*;
 
 public class ObjectRepository implements AutoCloseable {
 
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(5);
     private static final ExecutorService dbOpsExecutorService = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private static final Gauge obtainDBConnFromPool = Gauge.build().name("get_db_conn_from_pool").help("Get DB Connection from Pool").labelNames("db_ops").register();
