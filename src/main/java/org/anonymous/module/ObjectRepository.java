@@ -203,7 +203,7 @@ public class ObjectRepository implements AutoCloseable {
                             ResultSet rs = existStmt.executeQuery();
                             rs.next();
 
-                            if (rs.getInt(1) == 1) {
+                            if (data.containsKey(name) || rs.getInt(1) == 1) {
                                 rs.close();
                                 existStmt.close();
                                 continue;
