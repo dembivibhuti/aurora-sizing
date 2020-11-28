@@ -199,11 +199,11 @@ public class ObjectRepository implements AutoCloseable {
                         while (true) {
                             PreparedStatement existStmt = connection.prepareStatement(OBJ_EXISTS);
                             name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
-                            existStmt.setString(0, name.toLowerCase());
+                            existStmt.setString(1, name.toLowerCase());
                             ResultSet rs = existStmt.executeQuery();
                             rs.next();
 
-                            if (rs.getInt(0) == 1) {
+                            if (rs.getInt(1) == 1) {
                                 rs.close();
                                 existStmt.close();
                                 continue;
