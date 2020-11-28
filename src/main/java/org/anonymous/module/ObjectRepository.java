@@ -223,7 +223,7 @@ public class ObjectRepository implements AutoCloseable {
                     keys.add(name);
                 }
 
-                if ( data.size() >= 5000 ) {
+                if ( data.size() >= 1000 ) {
                     Collection<ObjectDataHolder> objects= data.values();
                     executorService.execute(() -> offloadToDB(objects, progressCounter));
                     data = new HashMap<>();
