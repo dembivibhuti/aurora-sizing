@@ -33,6 +33,8 @@ public class Store {
 
     public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where nameLower %s ? and typeId = ? order by name %s LIMIT ?";
 
+    public static final String OBJ_EXISTS = "Select count(1) from objects where nameLower = ?";
+
     public static final String GET_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where nameLower = ?";
 
     public static final String GET_SDB_MEM = "select sdbDiskMem from objects where nameLower = ?";

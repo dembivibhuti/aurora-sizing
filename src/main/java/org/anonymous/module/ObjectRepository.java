@@ -169,7 +169,6 @@ public class ObjectRepository implements AutoCloseable {
 
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
         Map<String, ObjectDataHolder> data = new HashMap<>();
-        Set<String> keys = new HashSet<>();
         AtomicLong progressCounter = new AtomicLong();
 
         LOGGER.info("Records in CSV = {}", allData.size());
@@ -193,15 +192,29 @@ public class ObjectRepository implements AutoCloseable {
                 Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
 
                 for (int i = 0; i < numObjects; i++) {
-
                     String name = null;
-                    while (true) {
-                        name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
-                        if (keys.contains(name)) {
-                            continue;
-                        } else {
-                            break;
+
+                    try (Connection connection = rwConnectionProvider.getConnection();
+                    ) {
+                        while (true) {
+                            PreparedStatement existStmt = connection.prepareStatement(OBJ_EXISTS);
+                            name = String.format("testSec-%d-%d", randIntStream.next(), objClassId);
+                            existStmt.setString(0, name.toLowerCase());
+                            ResultSet rs = existStmt.executeQuery();
+                            rs.next();
+
+                            if (rs.getInt(0) == 1) {
+                                rs.close();
+                                continue;
+                            } else {
+                                rs.close();
+                                break;
+                            }
+
+
                         }
+                    } catch (SQLException sqlException) {
+                        LOGGER.error("in verifying unique name", sqlException.getMessage());
                     }
 
                     Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
@@ -220,18 +233,18 @@ public class ObjectRepository implements AutoCloseable {
                     holder.nameLower = name.toLowerCase();
 
                     data.put(name, holder);
-                    keys.add(name);
+
                 }
 
-                if ( data.size() >= 5000 ) {
-                    Collection<ObjectDataHolder> objects= data.values();
-                    executorService.execute(() -> offloadToDB(objects, progressCounter));
-                    //offloadToDB(objects, progressCounter);
+                if (data.size() >= 5000) {
+                    Collection<ObjectDataHolder> objects = data.values();
+                    //executorService.execute(() -> offloadToDB(objects, progressCounter));
+                    offloadToDB(objects, progressCounter);
                     data = new HashMap<>();
                 }
 
                 long remaining = progressCounter.get();
-                System.out.print("Estimated number of Object Record remaining = " + remaining + " Progress = " + ((target - remaining) / target ) * 100 + "%" + "\r");
+                System.out.print("Estimated number of Object Record remaining = " + remaining + " Progress = " + ((target - remaining) / target) * 100 + "%" + "\r");
             }
             executorService.shutdown();
             try {
@@ -245,25 +258,10 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-    class ObjectDataHolder {
-        String name;
-        int typeId;
-        long lastTransaction;
-        Timestamp timeUpdated;
-        long updateCount;
-        int dateCreated;
-        int dbIdUpdated;
-        int versionInfo;
-        byte[] metaMem;
-        byte[] mem;
-        String nameLower;
-    }
-
-
     private void offloadToDB(Collection<ObjectDataHolder> objects, AtomicLong progressCounter) {
-        try( Connection connection = rwConnectionProvider.getConnection();
+        try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement insertRec = connection.prepareStatement(INSERT_RECORDS)) {
-            for(ObjectDataHolder obj: objects) {
+            for (ObjectDataHolder obj : objects) {
                 insertRec.setString(1, obj.name);
                 insertRec.setInt(2, obj.typeId);
                 insertRec.setLong(3, obj.lastTransaction);
@@ -280,12 +278,26 @@ public class ObjectRepository implements AutoCloseable {
             }
             connection.commit();
         } catch (PSQLException ex) {
-            LOGGER.error("Error occurred will retry "  + ex.getMessage());
+            LOGGER.error("Error occurred will retry " + ex.getMessage());
         } catch (SQLException sqlException) {
             LOGGER.error("Error occurred will retry" + sqlException.getMessage());
         } catch (Throwable th) {
             LOGGER.error("Error occurred will retry" + th.getMessage());
         }
+    }
+
+    class ObjectDataHolder {
+        String name;
+        int typeId;
+        long lastTransaction;
+        Timestamp timeUpdated;
+        long updateCount;
+        int dateCreated;
+        int dbIdUpdated;
+        int versionInfo;
+        byte[] metaMem;
+        byte[] mem;
+        String nameLower;
     }
 
     public CompletableFuture<List<String>> randomLookUpByPrefix(int numberOfLookupOps, int limit,
