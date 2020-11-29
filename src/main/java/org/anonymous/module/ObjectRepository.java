@@ -15,10 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -27,7 +24,7 @@ import static org.anonymous.sql.Store.*;
 
 public class ObjectRepository implements AutoCloseable {
 
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(5);
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(72);
     private static final ExecutorService dbOpsExecutorService = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private static final Gauge obtainDBConnFromPool = Gauge.build().name("get_db_conn_from_pool").help("Get DB Connection from Pool").labelNames("db_ops").register();
@@ -35,6 +32,7 @@ public class ObjectRepository implements AutoCloseable {
     private static final Gauge prepareStatement = Gauge.build().name("prepare_statement").help("Make PreparedStatement").labelNames("db_ops").register();
     private static final Gauge fetchAndParseResultSet = Gauge.build().name("fetch_parse_resultset").help("Fetch and Parse Resultset").labelNames("db_ops").register();
     private static final byte[] BYTES_560 = getSizedByteArray(560);
+    public static final String TEST_SEC_010_D_D = "testSec-%010d-%d";
     private final ConnectionProvider roConnectionProvider;
     private final ConnectionProvider rwConnectionProvider;
 
@@ -167,6 +165,107 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
+    public void checkReconDataLoadFromCSV(List<String[]> allData) {
+        long expectedObjectCount = 0;
+        long objectsInDb = 0;
+        Map<String, String[]> mapifiedCSV = new HashMap<>();
+        for (String[] row : allData) {
+            int numObjects = Integer.parseInt(row[2]);
+            expectedObjectCount += numObjects;
+            int objClassId = Integer.parseInt(row[0]);
+
+            for (int i = 0; i < numObjects; i++) {
+                mapifiedCSV.put(String.format(TEST_SEC_010_D_D, i, objClassId).toLowerCase(), row);
+            }
+        }
+        LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
+
+        try (Connection connection = rwConnectionProvider.getConnection();
+             PreparedStatement objsInDBStmt = connection.prepareStatement(OBJ_COUNT)
+        ) {
+            ResultSet rs = objsInDBStmt.executeQuery();
+            rs.next();
+            objectsInDb = rs.getLong(1);
+            rs.close();
+            LOGGER.info("Objects in DB number = {}", objectsInDb);
+        } catch (SQLException sqlException) {
+            LOGGER.error("error in finding object count", sqlException);
+        }
+
+
+        //Mapify the CSV
+        Semaphore sem = new Semaphore(72, true);
+        long batchSize = 20000;
+        Set<String> findKeys = new HashSet<>();
+        for (Map.Entry<String, String[]> entry : mapifiedCSV.entrySet()) {
+            findKeys.add(entry.getKey());
+            if (findKeys.size() == batchSize) {
+                String sql = String.format(
+                        GET_MANY_RECORDS,
+                        String.join(",", Collections.nCopies(findKeys.size(), "?")));
+
+                executorService.execute(() -> {
+                    try (Connection connection = rwConnectionProvider.getConnection();
+                         PreparedStatement manyRecs = connection.prepareStatement(sql)
+                    ) {
+                        Set<String> foundObjs = new HashSet<>();
+                        ResultSet rs = manyRecs.executeQuery();
+                        while (rs.next()) {
+                            foundObjs.add(rs.getString("name").toLowerCase());
+                        }
+                        rs.close();
+
+                        //long findKeysSize = findKeys.size();
+                        long foundObjSize = foundObjs.size();
+                        Set<String[]> misingObjs = new HashSet<>();
+                        if (batchSize > foundObjSize) {
+                            LOGGER.info("{} Obj Recs missing", (batchSize - foundObjSize));
+                            /*for (String findKey : findKeys) {
+                                if (foundObjs.add(findKey)) {// non existant
+                                    misingObjs.add(mapifiedCSV.get(findKey));
+                                }
+                            }*/
+                        }
+                        //LOGGER.info("Found {}");
+                    } catch (SQLException sqlException) {
+                        sqlException.printStackTrace();
+                    }
+                });
+            }
+        }
+
+        //last batch
+        String sql = String.format(
+                GET_MANY_RECORDS,
+                String.join(",", Collections.nCopies(findKeys.size(), "?")));
+        try (Connection connection = rwConnectionProvider.getConnection();
+             PreparedStatement manyRecs = connection.prepareStatement(sql)
+        ) {
+            Set<String> foundObjs = new HashSet<>();
+            ResultSet rs = manyRecs.executeQuery();
+            while (rs.next()) {
+                foundObjs.add(rs.getString("name").toLowerCase());
+            }
+            rs.close();
+
+            long findKeysSize = findKeys.size();
+            long foundObjSize = foundObjs.size();
+            Set<String[]> misingObjs = new HashSet<>();
+            if (findKeysSize > foundObjSize) {
+                LOGGER.info("{} Obj Recs missing", (findKeysSize - foundObjSize));
+                            /*for (String findKey : findKeys) {
+                                if (foundObjs.add(findKey)) {// non existant
+                                    misingObjs.add(mapifiedCSV.get(findKey));
+                                }
+                            }*/
+            }
+            //LOGGER.info("Found {}");
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
+
+
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
         long skipUpto = Long.parseLong(System.getProperty("serialStart"));
 
@@ -206,7 +305,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 for (int i = 0; i < numObjects; i++) {
                     serial++;
-                    String name = String.format("testSec-%010d-%d", serial, objClassId);
+                    String name = String.format(TEST_SEC_010_D_D, serial, objClassId);
                     if (serial < skipUpto) {
                         System.out.print("Skipping serial up to = " + skipUpto + " current serial = " + serial + "\r");
                         continue;
