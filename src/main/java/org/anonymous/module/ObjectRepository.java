@@ -199,6 +199,7 @@ public class ObjectRepository implements AutoCloseable {
                     long skipUpto = Long.parseLong(System.getProperty("serialStart"));
                     if ( serial < skipUpto) {
                         System.out.print("Skipping serial up to = " + skipUpto + "\r");
+                        continue;
                     }
 
                     try (Connection connection = rwConnectionProvider.getConnection();
