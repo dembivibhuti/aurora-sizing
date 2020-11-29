@@ -175,27 +175,27 @@ public class ObjectRepository implements AutoCloseable {
         long serial = 0;
 
         LOGGER.info("Records in CSV = {}", allData.size());
+
+        long rowNum = 0;
+        long targetRow = 0;
         for (String[] row : allData) {
             int numObjects = Integer.parseInt(row[2]);
             progressCounter.addAndGet(numObjects);
+            if ( progressCounter.get() >= skipUpto) {
+               targetRow = rowNum; // this row.
+            }
+            rowNum++;
+            serial += numObjects;
         }
         long target = progressCounter.get();
         LOGGER.info("Number of Object Records to be inserted = {}", target);
 
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
         Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
-
-        long jumpSerial = 0;
-
         try {
-            for (String[] row : allData) {
+            for (long j = targetRow; j < rowNum; j++) {
+                String[] row = allData.get((int)j);
                 int numObjects = Integer.parseInt(row[2]);
-
-                jumpSerial += numObjects;
-                if( jumpSerial < skipUpto ) { // make the skipping faster
-                    System.out.print("Skipping serial up to = " + skipUpto + " current jump serial = " + jumpSerial + "\r");
-                    continue;
-                }
 
                 int objMemSize = Integer.parseInt(row[1]);
 
