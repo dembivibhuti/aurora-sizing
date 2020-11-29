@@ -185,9 +185,18 @@ public class ObjectRepository implements AutoCloseable {
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
         Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
 
+        long jumpSerial = 0;
+
         try {
             for (String[] row : allData) {
                 int numObjects = Integer.parseInt(row[2]);
+
+                jumpSerial += numObjects;
+                if( jumpSerial < skipUpto ) { // make the skipping faster
+                    System.out.print("Skipping serial up to = " + skipUpto + " current serial = " + serial + "\r");
+                    continue;
+                }
+
                 int objMemSize = Integer.parseInt(row[1]);
 
                 byte[] objPropertyMem = getSizedByteArray(100);
