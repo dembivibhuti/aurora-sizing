@@ -168,6 +168,8 @@ public class ObjectRepository implements AutoCloseable {
     }
 
     public void insertObjectsFromCSV(List<String[]> allData, TimeKeeper secInsertTimeKeeper) {
+        long skipUpto = Long.parseLong(System.getProperty("serialStart"));
+
         Map<String, ObjectDataHolder> data = new HashMap<>();
         AtomicLong progressCounter = new AtomicLong();
         long serial = 0;
@@ -180,6 +182,9 @@ public class ObjectRepository implements AutoCloseable {
         long target = progressCounter.get();
         LOGGER.info("Number of Object Records to be inserted = {}", target);
 
+        Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
+        Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
+
         try {
             for (String[] row : allData) {
                 int numObjects = Integer.parseInt(row[2]);
@@ -189,14 +194,9 @@ public class ObjectRepository implements AutoCloseable {
                 byte[] mem = getSizedByteArray(objMemSize);
                 int objClassId = Integer.parseInt(row[0]);
 
-                Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
-                Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
-
-
                 for (int i = 0; i < numObjects; i++) {
                     serial++;
                     String name = String.format("testSec-%010d-%d", serial, objClassId);
-                    long skipUpto = Long.parseLong(System.getProperty("serialStart"));
                     if ( serial < skipUpto) {
                         System.out.print("Skipping serial up to = " + skipUpto + "\r");
                         continue;
