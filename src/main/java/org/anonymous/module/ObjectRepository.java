@@ -181,7 +181,7 @@ public class ObjectRepository implements AutoCloseable {
         for (String[] row : allData) {
             int numObjects = Integer.parseInt(row[2]);
             progressCounter.addAndGet(numObjects);
-            if ( progressCounter.get() >= skipUpto) {
+            if ( targetRow == 0 && progressCounter.get() >= skipUpto) {
                targetRow = rowNum; // this row.
             }
             rowNum++;
@@ -196,7 +196,6 @@ public class ObjectRepository implements AutoCloseable {
             for (long j = targetRow; j < rowNum; j++) {
                 String[] row = allData.get((int)j);
                 int numObjects = Integer.parseInt(row[2]);
-
                 int objMemSize = Integer.parseInt(row[1]);
 
                 byte[] objPropertyMem = getSizedByteArray(100);
