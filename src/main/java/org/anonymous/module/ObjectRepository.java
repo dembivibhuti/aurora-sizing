@@ -181,9 +181,9 @@ public class ObjectRepository implements AutoCloseable {
         for (String[] row : allData) {
             int numObjects = Integer.parseInt(row[2]);
             progressCounter.addAndGet(numObjects);
-            if ( targetRow == 0 && progressCounter.get() >= skipUpto) {
-               targetRow = rowNum; // this row.
-               progressCounter.set(numObjects);                
+            if (targetRow == 0 && progressCounter.get() >= skipUpto) {
+                targetRow = rowNum; // this row.
+                progressCounter.set(numObjects);
             }
             rowNum++;
             serial += numObjects;
@@ -193,9 +193,10 @@ public class ObjectRepository implements AutoCloseable {
 
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
         Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
-        try {
+        try (Connection connection = rwConnectionProvider.getConnection();
+        ) {
             for (long j = targetRow; j < rowNum; j++) {
-                String[] row = allData.get((int)j);
+                String[] row = allData.get((int) j);
                 int numObjects = Integer.parseInt(row[2]);
                 int objMemSize = Integer.parseInt(row[1]);
 
@@ -206,28 +207,24 @@ public class ObjectRepository implements AutoCloseable {
                 for (int i = 0; i < numObjects; i++) {
                     serial++;
                     String name = String.format("testSec-%010d-%d", serial, objClassId);
-                    if ( serial < skipUpto) {
+                    if (serial < skipUpto) {
                         System.out.print("Skipping serial up to = " + skipUpto + " current serial = " + serial + "\r");
                         continue;
                     }
 
-                    try (Connection connection = rwConnectionProvider.getConnection();
-                    ) {
-                        PreparedStatement existStmt = connection.prepareStatement(OBJ_EXISTS);
-                        existStmt.setString(1, name.toLowerCase());
-                        ResultSet rs = existStmt.executeQuery();
-                        rs.next();
+                    PreparedStatement existStmt = connection.prepareStatement(OBJ_EXISTS);
+                    existStmt.setString(1, name.toLowerCase());
+                    ResultSet rs = existStmt.executeQuery();
+                    rs.next();
 
-                        if (rs.getInt(1) == 1) {
-                            rs.close();
-                            existStmt.close();
-                            progressCounter.decrementAndGet();
-                            System.out.print("Found Object, skipping. Estimated number of Object Record remaining = " + progressCounter.get() + "\r");
-                            continue;
-                        }
-                    } catch (SQLException sqlException) {
-                        LOGGER.error("in verifying unique name", sqlException);
+                    if (rs.getInt(1) == 1) {
+                        rs.close();
+                        existStmt.close();
+                        progressCounter.decrementAndGet();
+                        System.out.print("Found Object, skipping. Estimated number of Object Record remaining = " + progressCounter.get() + "\r");
+                        continue;
                     }
+
 
                     /*try (Connection connection = rwConnectionProvider.getConnection();
                     ) {
@@ -287,8 +284,10 @@ public class ObjectRepository implements AutoCloseable {
             } catch (InterruptedException it) {
                 LOGGER.error("failed in executor service. Please clean and re-run", it);
             }
+        } catch (SQLException sqlException) {
+            LOGGER.error("in verifying unique name", sqlException);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("unknown error. Please re-run", ex);
         }
     }
 
