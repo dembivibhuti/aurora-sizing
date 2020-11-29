@@ -193,7 +193,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 jumpSerial += numObjects;
                 if( jumpSerial < skipUpto ) { // make the skipping faster
-                    System.out.print("Skipping serial up to = " + skipUpto + " current serial = " + jumpSerial + "\r");
+                    System.out.print("Skipping serial up to = " + skipUpto + " current jump serial = " + jumpSerial + "\r");
                     continue;
                 }
 
