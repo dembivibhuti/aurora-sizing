@@ -197,6 +197,24 @@ public class ObjectRepository implements AutoCloseable {
                     serial++;
                     String name = String.format("testSec-%010d-%d", serial, objClassId);
 
+                    try (Connection connection = rwConnectionProvider.getConnection();
+                    ) {
+                        PreparedStatement existStmt = connection.prepareStatement(OBJ_EXISTS);
+                        existStmt.setString(1, name.toLowerCase());
+                        ResultSet rs = existStmt.executeQuery();
+                        rs.next();
+
+                        if (rs.getInt(1) == 1) {
+                            rs.close();
+                            existStmt.close();
+                            progressCounter.decrementAndGet();
+                            System.out.print("Found Object, skipping. Estimated number of Object Record remaining = " + progressCounter.get() + "\r");
+                            continue;
+                        }
+                    } catch (SQLException sqlException) {
+                        LOGGER.error("in verifying unique name", sqlException);
+                    }
+
                     /*try (Connection connection = rwConnectionProvider.getConnection();
                     ) {
                         while (true) {
