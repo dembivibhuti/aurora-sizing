@@ -208,6 +208,7 @@ public class ObjectRepository implements AutoCloseable {
                     try (Connection connection = rwConnectionProvider.getConnection();
                          PreparedStatement manyRecs = connection.prepareStatement(sql)
                     ) {
+                        manyRecs.setString(1, sql);
                         Set<String> foundObjs = new HashSet<>();
                         ResultSet rs = manyRecs.executeQuery();
                         while (rs.next()) {
@@ -241,6 +242,7 @@ public class ObjectRepository implements AutoCloseable {
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement manyRecs = connection.prepareStatement(sql)
         ) {
+            manyRecs.setString(1, sql);
             Set<String> foundObjs = new HashSet<>();
             ResultSet rs = manyRecs.executeQuery();
             while (rs.next()) {
