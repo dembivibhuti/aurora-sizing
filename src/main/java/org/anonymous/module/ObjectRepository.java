@@ -183,6 +183,7 @@ public class ObjectRepository implements AutoCloseable {
             progressCounter.addAndGet(numObjects);
             if ( targetRow == 0 && progressCounter.get() >= skipUpto) {
                targetRow = rowNum; // this row.
+               progressCounter.set(numObjects);                
             }
             rowNum++;
             serial += numObjects;
