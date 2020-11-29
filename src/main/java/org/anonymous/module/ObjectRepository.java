@@ -198,7 +198,7 @@ public class ObjectRepository implements AutoCloseable {
                     serial++;
                     String name = String.format("testSec-%010d-%d", serial, objClassId);
                     if ( serial < skipUpto) {
-                        System.out.print("Skipping serial up to = " + skipUpto + "\r");
+                        System.out.print("Skipping serial up to = " + skipUpto + " current serial = " + serial + "\r");
                         continue;
                     }
 
