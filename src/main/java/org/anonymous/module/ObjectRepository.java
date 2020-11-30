@@ -361,7 +361,7 @@ public class ObjectRepository implements AutoCloseable {
 
         Map<String, ObjectDataHolder> data = new HashMap<>();
         AtomicLong progressCounter = new AtomicLong();
-        long serial = 0;
+
 
         LOGGER.info("Records in CSV = {}", allData.size());
 
@@ -375,7 +375,6 @@ public class ObjectRepository implements AutoCloseable {
                 progressCounter.set(numObjects);
             }
             rowNum++;
-            serial += numObjects;
         }
         long target = progressCounter.get();
         LOGGER.info("Number of Object Records to be inserted = {}", target);
@@ -396,7 +395,7 @@ public class ObjectRepository implements AutoCloseable {
             sqlException.printStackTrace();
         }
         System.out.println("GOt Obj Keys ...... ");*/
-
+        long serial = 0;
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
         Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
         try (Connection connection = rwConnectionProvider.getConnection();
