@@ -227,7 +227,7 @@ public class ObjectRepository implements AutoCloseable {
 
 
         // Groupify
-        long batchSize = 20000;
+        long batchSize = 200;
         Set<Map<String, DBRecordMetaData>> findKeysGroups = new HashSet<>();
         Map<String, DBRecordMetaData> findKeys = new HashMap<>();
         for (Map.Entry<String, DBRecordMetaData> entry : mapifiedCSV.entrySet()) {
