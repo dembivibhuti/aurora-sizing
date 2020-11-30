@@ -349,7 +349,7 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Number of Object Records to be inserted = {}", target);
 
         // Pre-fetch all Keys for quick validation, that way we dont go to DB to check existance
-        System.out.println("Getting Obj Keys ...... ");
+        /*System.out.println("Getting Obj Keys ...... ");
         final Set<String> existingObjKeys = new HashSet<>();
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement allKeysStmt = connection.prepareStatement(OBJ_KEYS)
@@ -363,7 +363,7 @@ public class ObjectRepository implements AutoCloseable {
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
         }
-        System.out.println("GOt Obj Keys ...... ");
+        System.out.println("GOt Obj Keys ...... ");*/
 
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
         Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
@@ -386,11 +386,11 @@ public class ObjectRepository implements AutoCloseable {
                     }
 
                     String name = String.format(TEST_SEC_010_D_D, serial, objClassId);
-                    if(existingObjKeys.contains(name.toLowerCase())) {
+                    /*if(existingObjKeys.contains(name.toLowerCase())) {
                         progressCounter.decrementAndGet();
                         System.out.print("Found Object ( in-mem ), skipping. Estimated number of Object Record remaining = " + progressCounter.get() + "\r");
                         continue;
-                    }
+                    }*/
                     PreparedStatement existStmt = connection.prepareStatement(OBJ_EXISTS);
                     existStmt.setString(1, name.toLowerCase());
                     ResultSet rs = existStmt.executeQuery();
