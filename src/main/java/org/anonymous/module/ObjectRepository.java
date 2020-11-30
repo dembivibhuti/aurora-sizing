@@ -283,7 +283,7 @@ public class ObjectRepository implements AutoCloseable {
                 }
                 //LOGGER.info("Condition Keys Size( {} ) = {}", keySet.size(), keySet);
                 //LOGGER.info("Query = {}",manyRecs.toString());
-                manyRecs.setFetchSize(1000);
+
                 ResultSet rs = manyRecs.executeQuery();
                 while (rs.next()) {
                     DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
