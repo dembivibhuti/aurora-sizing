@@ -242,10 +242,26 @@ public class ObjectRepository implements AutoCloseable {
 
         LOGGER.info("Groupyfied CSV Contains {} entries with batchsize of {}", findKeysGroups.size(), batchSize);
 
+        //Start status thread
         AtomicLong absentRecCounter = new AtomicLong();
         AtomicLong recordsScannedCounter = new AtomicLong();
         AtomicLong problemRecordsCounter = new AtomicLong();
         AtomicLong recordsInsertedCounter = new AtomicLong();
+
+        new Thread(() -> {
+            while(true) {
+                System.out.print("Records Scanned = " + recordsScannedCounter.incrementAndGet()  +
+                        " | Problem Records = " + problemRecordsCounter.get() +
+                        " | Absent Records = " + absentRecCounter.get() +
+                        " | Records Remaining to be inserted = " + recordsInsertedCounter.get() + "\r");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+
+                }
+            }
+        }).start();
+
         for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
             executorService.execute(new ReconTask(findKeyGrp, absentRecCounter, recordsScannedCounter, problemRecordsCounter, recordsInsertedCounter));
         }
@@ -257,10 +273,7 @@ public class ObjectRepository implements AutoCloseable {
             LOGGER.error("failed in executor service. Please clean and re-run", it);
         }
 
-        System.out.print("Records Scanned = " + recordsScannedCounter.incrementAndGet()  +
-                " | Problem Records = " + problemRecordsCounter.get() +
-                " | Absent Records = " + absentRecCounter.get() +
-                " | Records Remaining to be inserted = " + recordsInsertedCounter.get() + "\r");;
+
     }
 
     class ReconTask implements Runnable {
@@ -312,6 +325,7 @@ public class ObjectRepository implements AutoCloseable {
             }
 
             Set<DBRecordMetaData> absentRecords = new HashSet<>();
+            Set<String> problemRecords = new HashSet<>();
             for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
                 DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
                 DBRecordMetaData inCSV = csvEntry.getValue();
