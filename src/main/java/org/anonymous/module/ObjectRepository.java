@@ -312,10 +312,11 @@ public class ObjectRepository implements AutoCloseable {
                 DBRecordMetaData inCSV = csvEntry.getValue();
 
                 if (!inCSV.equals(inDB)) {
-                    problemRecordsCounter.incrementAndGet();
                     //LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
                     if( null == inDB) {
                         absentRecCounter.incrementAndGet();
+                    } else {
+                        problemRecordsCounter.incrementAndGet();
                     }
                 }
             }
