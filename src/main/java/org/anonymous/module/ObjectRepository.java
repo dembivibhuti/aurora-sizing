@@ -249,7 +249,7 @@ public class ObjectRepository implements AutoCloseable {
         AtomicLong problemRecordsCounter = new AtomicLong();
         AtomicLong recordsInsertedCounter = new AtomicLong();
 
-        new Thread(() -> {
+       executorService.execute(() -> {
             while(true) {
                 System.out.print("Records Scanned = " + recordsScannedCounter.incrementAndGet()  +
                         " | Problem Records = " + problemRecordsCounter.get() +
@@ -261,7 +261,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 }
             }
-        }).start();
+        });
 
         for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
             executorService.execute(new ReconTask(findKeyGrp, absentRecCounter, recordsScannedCounter, problemRecordsCounter, recordsInsertedCounter));
