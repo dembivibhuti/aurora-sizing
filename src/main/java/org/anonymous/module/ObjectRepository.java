@@ -242,10 +242,10 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Groupyfied CSV Contains {} entries with batchsize of {}", findKeysGroups.size(), batchSize);
 
         AtomicLong absentRecCounter = new AtomicLong();
-        AtomicLong recordsScanned = new AtomicLong();
-        AtomicLong problemRecords = new AtomicLong();
+        AtomicLong recordsScannedCounter = new AtomicLong();
+        AtomicLong problemRecordsCounter = new AtomicLong();
         for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
-            executorService.execute(new ReconTask(findKeyGrp, absentRecCounter, recordsScanned, problemRecords));
+            executorService.execute(new ReconTask(findKeyGrp, absentRecCounter, recordsScannedCounter, problemRecordsCounter));
         }
 
         executorService.shutdown();
@@ -255,7 +255,9 @@ public class ObjectRepository implements AutoCloseable {
             LOGGER.error("failed in executor service. Please clean and re-run", it);
         }
 
-        LOGGER.info("Number of Records Absent = {}", absentRecCounter.get());
+        System.out.print("Records Scanned = " + recordsScannedCounter.incrementAndGet()  +
+                " | Problem Records = " + problemRecordsCounter.get() +
+                " | Absent Records = " + absentRecCounter.get() + "\r");;
     }
 
     class ReconTask implements Runnable {
@@ -305,9 +307,6 @@ public class ObjectRepository implements AutoCloseable {
             }
 
             for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
-                System.out.print("Records Scanned = " + recordsScannedCounter.incrementAndGet()  +
-                        " | Problem Records = " + problemRecordsCounter.get() +
-                        " | Absent Records = " + absentRecCounter.get() + "\r");;
                 DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
                 DBRecordMetaData inCSV = csvEntry.getValue();
 
