@@ -237,6 +237,8 @@ public class ObjectRepository implements AutoCloseable {
                 findKeys.clear();
             }
         }
+        findKeysGroups.add(findKeys); //the last group
+
         LOGGER.info("Groupyfied CSV Contains {} entries with batchsize of {}", findKeysGroups.size(), batchSize);
 
         for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
