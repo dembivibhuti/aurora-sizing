@@ -242,47 +242,7 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Groupyfied CSV Contains {} entries with batchsize of {}", findKeysGroups.size(), batchSize);
 
         for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
-
-            executorService.execute(() -> {
-                Set<String> keySet = findKeyGrp.keySet();
-                String sql = String.format(
-                        GET_MANY_RECORDS,
-                        String.join(",", Collections.nCopies(findKeys.size(), "?")));
-
-                Map<String, DBRecordMetaData> dbRecordMetaDataMap = new HashMap<>();
-                try (Connection connection = rwConnectionProvider.getConnection();
-                     PreparedStatement manyRecs = connection.prepareStatement(sql)
-                ) {
-                    int i = 1;
-                    for (String key : keySet) {
-                        manyRecs.setString(i++, key);
-                    }
-                    manyRecs.setFetchSize(1000);
-                    ResultSet rs = manyRecs.executeQuery();
-                    while (rs.next()) {
-                        DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
-                        dbRecordMetaData.name = rs.getString("name");
-                        dbRecordMetaData.typeId = rs.getInt("typeId");
-                        dbRecordMetaData.memSize = rs.getBytes("mem").length;
-                        dbRecordMetaDataMap.put(rs.getString("name").toLowerCase(), dbRecordMetaData);
-                    }
-                    rs.close();
-                } catch (SQLException sqlException) {
-                    sqlException.printStackTrace();
-                }
-
-                long absentRecords = 0;
-                for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
-                    DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
-                    DBRecordMetaData inCSV = csvEntry.getValue();
-
-                    if (!inCSV.equals(inDB)) {
-                        //LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
-                        absentRecords++;
-                    }
-                }
-                LOGGER.error("Absent Records = {}", absentRecords);
-            });
+            executorService.execute(new ReconTask(findKeyGrp));
         }
 
         executorService.shutdown();
@@ -290,6 +250,58 @@ public class ObjectRepository implements AutoCloseable {
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
         } catch (InterruptedException it) {
             LOGGER.error("failed in executor service. Please clean and re-run", it);
+        }
+    }
+
+    class ReconTask implements Runnable {
+
+        private final Map<String, DBRecordMetaData> findKeyGrp;
+
+        ReconTask(Map<String, DBRecordMetaData> findKeyGrp) {
+            this.findKeyGrp = findKeyGrp;
+        }
+
+        @Override
+        public void run() {
+            Set<String> keySet = findKeyGrp.keySet();
+            String sql = String.format(
+                    GET_MANY_RECORDS,
+                    String.join(",", Collections.nCopies(keySet.size(), "?")));
+
+            Map<String, DBRecordMetaData> dbRecordMetaDataMap = new HashMap<>();
+            try (Connection connection = rwConnectionProvider.getConnection();
+                 PreparedStatement manyRecs = connection.prepareStatement(sql)
+            ) {
+                int i = 1;
+                for (String key : keySet) {
+                    manyRecs.setString(i++, key);
+                }
+                manyRecs.setFetchSize(1000);
+                ResultSet rs = manyRecs.executeQuery();
+                while (rs.next()) {
+                    DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
+                    dbRecordMetaData.name = rs.getString("name");
+                    dbRecordMetaData.typeId = rs.getInt("typeId");
+                    dbRecordMetaData.memSize = rs.getBytes("mem").length;
+                    dbRecordMetaDataMap.put(rs.getString("name").toLowerCase(), dbRecordMetaData);
+                }
+                rs.close();
+            } catch (SQLException sqlException) {
+                sqlException.printStackTrace();
+            }
+
+            long absentRecords = 0;
+            for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
+                DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
+                DBRecordMetaData inCSV = csvEntry.getValue();
+
+                if (!inCSV.equals(inDB)) {
+                    //LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
+                    absentRecords++;
+                }
+            }
+            LOGGER.error("Absent Records = {}", absentRecords);
+
         }
     }
 
