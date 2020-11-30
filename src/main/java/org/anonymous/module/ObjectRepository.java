@@ -284,6 +284,13 @@ public class ObjectRepository implements AutoCloseable {
                 LOGGER.error("Absent Records = {}", absentRecords);
             });
         }
+
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
+        } catch (InterruptedException it) {
+            LOGGER.error("failed in executor service. Please clean and re-run", it);
+        }
     }
 
 
