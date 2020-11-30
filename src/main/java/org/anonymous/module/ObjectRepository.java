@@ -214,7 +214,7 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Mapified CSV Contains {} entries", mapifiedCSV.size());
 
         try (Connection connection = roConnectionProvider.getConnection();
-             PreparedStatement objsInDBStmt = connection.prepareStatement(OBJ_COUNT)
+             PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
         ) {
             ResultSet rs = objsInDBStmt.executeQuery();
             rs.next();
@@ -348,6 +348,20 @@ public class ObjectRepository implements AutoCloseable {
         long target = progressCounter.get();
         LOGGER.info("Number of Object Records to be inserted = {}", target);
 
+        // Pre-fetch all Keys for quick validation, that way we dont go to DB to check existance
+        final Set<String> existingObjKeys = new HashSet<>();
+        try (Connection connection = rwConnectionProvider.getConnection();
+             PreparedStatement allKeysStmt = connection.prepareStatement(OBJ_KEYS)
+        ){
+            ResultSet rs = allKeysStmt.executeQuery();
+            while(rs.next()) {
+                existingObjKeys.add(rs.getString("nameLower"));
+            }
+            rs.close();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
         Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
         try (Connection connection = rwConnectionProvider.getConnection();
@@ -363,12 +377,16 @@ public class ObjectRepository implements AutoCloseable {
 
                 for (int i = 0; i < numObjects; i++) {
                     serial++;
-                    String name = String.format(TEST_SEC_010_D_D, serial, objClassId);
                     if (serial < skipUpto) {
                         System.out.print("Skipping serial up to = " + skipUpto + " current serial = " + serial + "\r");
                         continue;
                     }
 
+                    String name = String.format(TEST_SEC_010_D_D, serial, objClassId);
+                    if(existingObjKeys.contains(name.toLowerCase())) {
+                        progressCounter.decrementAndGet();
+                        continue;
+                    }
                     PreparedStatement existStmt = connection.prepareStatement(OBJ_EXISTS);
                     existStmt.setString(1, name.toLowerCase());
                     ResultSet rs = existStmt.executeQuery();
