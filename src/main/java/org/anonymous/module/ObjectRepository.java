@@ -242,8 +242,10 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Groupyfied CSV Contains {} entries with batchsize of {}", findKeysGroups.size(), batchSize);
 
         AtomicLong absentRecCounter = new AtomicLong();
+        AtomicLong recordsScanned = new AtomicLong();
+        AtomicLong problemRecords = new AtomicLong();
         for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
-            executorService.execute(new ReconTask(findKeyGrp, absentRecCounter));
+            executorService.execute(new ReconTask(findKeyGrp, absentRecCounter, recordsScanned, problemRecords));
         }
 
         executorService.shutdown();
@@ -260,10 +262,14 @@ public class ObjectRepository implements AutoCloseable {
 
         private final Map<String, DBRecordMetaData> findKeyGrp;
         private final AtomicLong absentRecCounter;
+        private final AtomicLong recordsScanned;
+        private final AtomicLong problemRecords;
 
-        ReconTask(Map<String, DBRecordMetaData> findKeyGrp, AtomicLong absentRecCounter) {
+        ReconTask(Map<String, DBRecordMetaData> findKeyGrp, AtomicLong absentRecCounter, AtomicLong recordsScanned, AtomicLong problemRecords) {
             this.findKeyGrp = findKeyGrp;
             this.absentRecCounter = absentRecCounter;
+            this.recordsScanned = recordsScanned;
+            this.problemRecords = problemRecords;
         }
 
         @Override
@@ -299,12 +305,16 @@ public class ObjectRepository implements AutoCloseable {
             }
 
             for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
+                System.out.print("Records Scanned = " + recordsScanned.incrementAndGet()  + " | Problem Records = " + problemRecords.get() + " | Absent Records = " + absentRecCounter.get() + "\r");;
                 DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
                 DBRecordMetaData inCSV = csvEntry.getValue();
 
                 if (!inCSV.equals(inDB)) {
+                    problemRecords.incrementAndGet();
                     //LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
-                    absentRecCounter.incrementAndGet();
+                    if( null == inDB) {
+                        absentRecCounter.incrementAndGet();
+                    }
                 }
             }
         }
