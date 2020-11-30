@@ -288,7 +288,7 @@ public class ObjectRepository implements AutoCloseable {
                     manyRecs.setString(i++, key);
                 }
                 //LOGGER.info("Condition Keys Size( {} ) = {}", keySet.size(), keySet);
-                LOGGER.info("Query = {}",manyRecs.toString());
+                //LOGGER.info("Query = {}",manyRecs.toString());
 
                 ResultSet rs = manyRecs.executeQuery();
                 while (rs.next()) {
@@ -298,7 +298,7 @@ public class ObjectRepository implements AutoCloseable {
                     dbRecordMetaData.memSize = rs.getBytes("mem").length;
                     dbRecordMetaDataMap.put(rs.getString("name").toLowerCase(), dbRecordMetaData);
                 }
-                LOGGER.info("DB Records Found {}", dbRecordMetaDataMap.size());
+                //LOGGER.info("DB Records Found {}", dbRecordMetaDataMap.size());
                 rs.close();
             } catch (SQLException sqlException) {
                 sqlException.printStackTrace();
