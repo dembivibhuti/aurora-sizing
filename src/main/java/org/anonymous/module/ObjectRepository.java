@@ -271,14 +271,17 @@ public class ObjectRepository implements AutoCloseable {
                     sqlException.printStackTrace();
                 }
 
+                long absentRecords = 0;
                 for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
                     DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
                     DBRecordMetaData inCSV = csvEntry.getValue();
 
                     if (!inCSV.equals(inDB)) {
-                        LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
+                        //LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
+                        absentRecords++;
                     }
                 }
+                LOGGER.error("Absent Records = {}", absentRecords);
             });
         }
     }
