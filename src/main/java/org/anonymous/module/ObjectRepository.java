@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -244,8 +245,9 @@ public class ObjectRepository implements AutoCloseable {
         AtomicLong absentRecCounter = new AtomicLong();
         AtomicLong recordsScannedCounter = new AtomicLong();
         AtomicLong problemRecordsCounter = new AtomicLong();
+        AtomicLong recordsInsertedCounter = new AtomicLong();
         for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
-            executorService.execute(new ReconTask(findKeyGrp, absentRecCounter, recordsScannedCounter, problemRecordsCounter));
+            executorService.execute(new ReconTask(findKeyGrp, absentRecCounter, recordsScannedCounter, problemRecordsCounter, recordsInsertedCounter));
         }
 
         executorService.shutdown();
@@ -257,7 +259,8 @@ public class ObjectRepository implements AutoCloseable {
 
         System.out.print("Records Scanned = " + recordsScannedCounter.incrementAndGet()  +
                 " | Problem Records = " + problemRecordsCounter.get() +
-                " | Absent Records = " + absentRecCounter.get() + "\r");;
+                " | Absent Records = " + absentRecCounter.get() +
+                " | Records Remaining to be inserted = " + recordsInsertedCounter.get() + "\r");;
     }
 
     class ReconTask implements Runnable {
@@ -266,12 +269,14 @@ public class ObjectRepository implements AutoCloseable {
         private final AtomicLong absentRecCounter;
         private final AtomicLong recordsScannedCounter;
         private final AtomicLong problemRecordsCounter;
+        private final AtomicLong recordsInsertedCounter;
 
-        ReconTask(Map<String, DBRecordMetaData> findKeyGrp, AtomicLong absentRecCounter, AtomicLong recordsScannedCounter, AtomicLong problemRecordsCounter) {
+        ReconTask(Map<String, DBRecordMetaData> findKeyGrp, AtomicLong absentRecCounter, AtomicLong recordsScannedCounter, AtomicLong problemRecordsCounter, AtomicLong recordsInsertedCounter) {
             this.findKeyGrp = findKeyGrp;
             this.absentRecCounter = absentRecCounter;
             this.recordsScannedCounter = recordsScannedCounter;
             this.problemRecordsCounter = problemRecordsCounter;
+            this.recordsInsertedCounter = recordsInsertedCounter;
         }
 
         @Override
@@ -306,6 +311,7 @@ public class ObjectRepository implements AutoCloseable {
                 sqlException.printStackTrace();
             }
 
+            Set<DBRecordMetaData> absentRecords = new HashSet<>();
             for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
                 DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
                 DBRecordMetaData inCSV = csvEntry.getValue();
@@ -314,11 +320,38 @@ public class ObjectRepository implements AutoCloseable {
                     //LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
                     if( null == inDB) {
                         absentRecCounter.incrementAndGet();
+                        absentRecords.add(inCSV);
                     } else {
                         problemRecordsCounter.incrementAndGet();
                     }
                 }
             }
+
+            LOGGER.info("Inserting {} Records", absentRecords.size());
+            recordsInsertedCounter.addAndGet(absentRecords.size());
+
+            Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
+            Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
+            byte[] objPropertyMem = getSizedByteArray(100);
+            Set<ObjectDataHolder> objectDataHolders = absentRecords.stream().map( dbRecordMetaData -> {
+                Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
+
+                ObjectDataHolder holder = new ObjectDataHolder();
+                holder.name = dbRecordMetaData.name;
+                holder.typeId = dbRecordMetaData.typeId;
+                holder.lastTransaction = randLongStream.next();
+                holder.timeUpdated = timeStampCreated;
+                holder.updateCount = randIntStream.next();
+                holder.dateCreated = (short) (timeStampCreated.getTime() / 1000);
+                holder.dbIdUpdated = randIntStream.next();
+                holder.versionInfo = randIntStream.next();
+                holder.metaMem = objPropertyMem;
+                holder.mem = getSizedByteArray(dbRecordMetaData.memSize);
+                holder.nameLower = dbRecordMetaData.name.toLowerCase();
+                return holder;
+            }).collect(Collectors.toSet());
+
+            offloadToDB(objectDataHolders, recordsInsertedCounter);
         }
     }
 
