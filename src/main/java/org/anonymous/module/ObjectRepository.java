@@ -233,7 +233,7 @@ public class ObjectRepository implements AutoCloseable {
         for (Map.Entry<String, DBRecordMetaData> entry : mapifiedCSV.entrySet()) {
             findKeys.put(entry.getKey(), entry.getValue());
             if (findKeys.size() == batchSize) {
-                findKeysGroups.add(new HashMap<String, DBRecordMetaData>(findKeys));
+                findKeysGroups.add(new HashMap<>(findKeys));
                 findKeys.clear();
             }
         }
