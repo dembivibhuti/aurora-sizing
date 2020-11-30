@@ -171,7 +171,7 @@ public class ObjectRepository implements AutoCloseable {
     class DBRecordMetaData {
         String name;
         int typeId;
-        long memSize;
+        int memSize;
 
         @Override
         public boolean equals(Object o) {
