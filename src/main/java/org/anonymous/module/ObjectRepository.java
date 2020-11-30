@@ -214,7 +214,7 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
         LOGGER.info("Mapified CSV Contains {} entries", mapifiedCSV.size());
 
-        try (Connection connection = roConnectionProvider.getConnection();
+        try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
         ) {
             ResultSet rs = objsInDBStmt.executeQuery();
@@ -300,7 +300,7 @@ public class ObjectRepository implements AutoCloseable {
                     String.join(",", Collections.nCopies(keySet.size(), "?")));
 
             Map<String, DBRecordMetaData> dbRecordMetaDataMap = new HashMap<>();
-            try (Connection connection = roConnectionProvider.getConnection();
+            try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement manyRecs = connection.prepareStatement(sql)
             ) {
                 int i = 1;
