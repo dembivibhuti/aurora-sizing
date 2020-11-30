@@ -276,7 +276,7 @@ public class ObjectRepository implements AutoCloseable {
                 for (String key : keySet) {
                     manyRecs.setString(i++, key);
                 }
-                LOGGER.info("Condition Keys = {}", keySet);
+                LOGGER.info("Condition Keys Size( {} ) = {}", keySet.size(), keySet);
                 manyRecs.setFetchSize(1000);
                 ResultSet rs = manyRecs.executeQuery();
                 while (rs.next()) {
