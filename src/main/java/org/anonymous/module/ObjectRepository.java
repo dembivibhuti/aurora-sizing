@@ -385,6 +385,7 @@ public class ObjectRepository implements AutoCloseable {
                     String name = String.format(TEST_SEC_010_D_D, serial, objClassId);
                     if(existingObjKeys.contains(name.toLowerCase())) {
                         progressCounter.decrementAndGet();
+                        System.out.print("Found Object ( in-mem ), skipping. Estimated number of Object Record remaining = " + progressCounter.get() + "\r");
                         continue;
                     }
                     PreparedStatement existStmt = connection.prepareStatement(OBJ_EXISTS);
