@@ -195,6 +195,7 @@ public class ObjectRepository implements AutoCloseable {
         long objectsInDb = 0;
 
         //Mapify the CSV
+        long serial = 1;
         Map<String, DBRecordMetaData> mapifiedCSV = new HashMap<>();
         for (String[] row : allData) {
             int objClassId = Integer.parseInt(row[0]);
@@ -205,7 +206,7 @@ public class ObjectRepository implements AutoCloseable {
 
             for (int i = 0; i < numObjects; i++) {
                 DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
-                dbRecordMetaData.name = String.format(TEST_SEC_010_D_D, i, objClassId).toLowerCase();
+                dbRecordMetaData.name = String.format(TEST_SEC_010_D_D, serial++, objClassId).toLowerCase();
                 dbRecordMetaData.typeId = objClassId;
                 dbRecordMetaData.memSize = memSize;
                 mapifiedCSV.put(dbRecordMetaData.name.toLowerCase(), dbRecordMetaData);
@@ -229,7 +230,7 @@ public class ObjectRepository implements AutoCloseable {
 
         // Groupify
         long batchSize = 20000;
-        Set<Map<String, DBRecordMetaData>> findKeysGroups = new HashSet<>();
+        List<Map<String, DBRecordMetaData>> findKeysGroups = new ArrayList<>();
         Map<String, DBRecordMetaData> findKeys = new HashMap<>();
         for (Map.Entry<String, DBRecordMetaData> entry : mapifiedCSV.entrySet()) {
             findKeys.put(entry.getKey(), entry.getValue());
