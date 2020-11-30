@@ -241,8 +241,9 @@ public class ObjectRepository implements AutoCloseable {
 
         LOGGER.info("Groupyfied CSV Contains {} entries with batchsize of {}", findKeysGroups.size(), batchSize);
 
+        AtomicLong absentRecCounter = new AtomicLong();
         for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
-            executorService.execute(new ReconTask(findKeyGrp));
+            executorService.execute(new ReconTask(findKeyGrp, absentRecCounter));
         }
 
         executorService.shutdown();
@@ -251,14 +252,18 @@ public class ObjectRepository implements AutoCloseable {
         } catch (InterruptedException it) {
             LOGGER.error("failed in executor service. Please clean and re-run", it);
         }
+
+        LOGGER.info("Number of Records Absent = {}", absentRecCounter.get());
     }
 
     class ReconTask implements Runnable {
 
         private final Map<String, DBRecordMetaData> findKeyGrp;
+        private final AtomicLong absentRecCounter;
 
-        ReconTask(Map<String, DBRecordMetaData> findKeyGrp) {
+        ReconTask(Map<String, DBRecordMetaData> findKeyGrp, AtomicLong absentRecCounter) {
             this.findKeyGrp = findKeyGrp;
+            this.absentRecCounter = absentRecCounter;
         }
 
         @Override
@@ -276,8 +281,8 @@ public class ObjectRepository implements AutoCloseable {
                 for (String key : keySet) {
                     manyRecs.setString(i++, key);
                 }
-                LOGGER.info("Condition Keys Size( {} ) = {}", keySet.size(), keySet);
-                LOGGER.info("Query = {}",manyRecs.toString());
+                //LOGGER.info("Condition Keys Size( {} ) = {}", keySet.size(), keySet);
+                //LOGGER.info("Query = {}",manyRecs.toString());
                 manyRecs.setFetchSize(1000);
                 ResultSet rs = manyRecs.executeQuery();
                 while (rs.next()) {
@@ -293,17 +298,15 @@ public class ObjectRepository implements AutoCloseable {
                 sqlException.printStackTrace();
             }
 
-            long absentRecords = 0;
             for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
                 DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
                 DBRecordMetaData inCSV = csvEntry.getValue();
 
                 if (!inCSV.equals(inDB)) {
                     //LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
-                    absentRecords++;
+                    absentRecCounter.incrementAndGet();
                 }
             }
-            LOGGER.error("Absent Records = {}", absentRecords);
         }
     }
 
