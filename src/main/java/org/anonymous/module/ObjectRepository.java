@@ -262,21 +262,21 @@ public class ObjectRepository implements AutoCloseable {
 
         private final Map<String, DBRecordMetaData> findKeyGrp;
         private final AtomicLong absentRecCounter;
-        private final AtomicLong recordsScanned;
-        private final AtomicLong problemRecords;
+        private final AtomicLong recordsScannedCounter;
+        private final AtomicLong problemRecordsCounter;
 
-        ReconTask(Map<String, DBRecordMetaData> findKeyGrp, AtomicLong absentRecCounter, AtomicLong recordsScanned, AtomicLong problemRecords) {
+        ReconTask(Map<String, DBRecordMetaData> findKeyGrp, AtomicLong absentRecCounter, AtomicLong recordsScannedCounter, AtomicLong problemRecordsCounter) {
             this.findKeyGrp = findKeyGrp;
             this.absentRecCounter = absentRecCounter;
-            this.recordsScanned = recordsScanned;
-            this.problemRecords = problemRecords;
+            this.recordsScannedCounter = recordsScannedCounter;
+            this.problemRecordsCounter = problemRecordsCounter;
         }
 
         @Override
         public void run() {
             Set<String> keySet = findKeyGrp.keySet();
             String sql = String.format(
-                    GET_MANY_RECORDS,
+                    GET_MANY_RECORDS_SUMM,
                     String.join(",", Collections.nCopies(keySet.size(), "?")));
 
             Map<String, DBRecordMetaData> dbRecordMetaDataMap = new HashMap<>();
@@ -305,12 +305,14 @@ public class ObjectRepository implements AutoCloseable {
             }
 
             for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
-                System.out.print("Records Scanned = " + recordsScanned.incrementAndGet()  + " | Problem Records = " + problemRecords.get() + " | Absent Records = " + absentRecCounter.get() + "\r");;
+                System.out.print("Records Scanned = " + recordsScannedCounter.incrementAndGet()  +
+                        " | Problem Records = " + problemRecordsCounter.get() +
+                        " | Absent Records = " + absentRecCounter.get() + "\r");;
                 DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
                 DBRecordMetaData inCSV = csvEntry.getValue();
 
                 if (!inCSV.equals(inDB)) {
-                    problemRecords.incrementAndGet();
+                    problemRecordsCounter.incrementAndGet();
                     //LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
                     if( null == inDB) {
                         absentRecCounter.incrementAndGet();

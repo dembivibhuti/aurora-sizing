@@ -51,6 +51,8 @@ public class Store {
 
     public static final String GET_MANY_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower in (%s)";
 
+    public static final String GET_MANY_RECORDS_SUMM = "select name, typeId, mem from objects where nameLower in (%s)";
+
     public static final String GET_FULL_OBJECT = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = ?";
 
     public static final String DELETE_RECORDS = "delete from objects where name = ? and updateCount = ? and dbIdUpdated = ?";
