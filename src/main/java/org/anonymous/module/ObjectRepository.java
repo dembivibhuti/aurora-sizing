@@ -349,6 +349,7 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Number of Object Records to be inserted = {}", target);
 
         // Pre-fetch all Keys for quick validation, that way we dont go to DB to check existance
+        System.out.println("Getting Obj Keys ...... ");
         final Set<String> existingObjKeys = new HashSet<>();
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement allKeysStmt = connection.prepareStatement(OBJ_KEYS)
@@ -361,6 +362,7 @@ public class ObjectRepository implements AutoCloseable {
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
         }
+        System.out.println("GOt Obj Keys ...... ");
 
         Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
         Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
