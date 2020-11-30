@@ -354,6 +354,7 @@ public class ObjectRepository implements AutoCloseable {
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement allKeysStmt = connection.prepareStatement(OBJ_KEYS)
         ){
+            allKeysStmt.setFetchSize(20000);
             ResultSet rs = allKeysStmt.executeQuery();
             while(rs.next()) {
                 existingObjKeys.add(rs.getString("nameLower"));
