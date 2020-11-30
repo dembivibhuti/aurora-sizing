@@ -15,7 +15,10 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -24,7 +27,7 @@ import static org.anonymous.sql.Store.*;
 
 public class ObjectRepository implements AutoCloseable {
 
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(72);
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(36);
     private static final ExecutorService dbOpsExecutorService = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectRepository.class);
     private static final Gauge obtainDBConnFromPool = Gauge.build().name("get_db_conn_from_pool").help("Get DB Connection from Pool").labelNames("db_ops").register();
@@ -165,20 +168,50 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
+    class DBRecordMetaData {
+        String name;
+        int typeId;
+        long memSize;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DBRecordMetaData that = (DBRecordMetaData) o;
+            return typeId == that.typeId &&
+                    memSize == that.memSize &&
+                    Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, typeId, memSize);
+        }
+    }
+
     public void checkReconDataLoadFromCSV(List<String[]> allData) {
         long expectedObjectCount = 0;
         long objectsInDb = 0;
-        Map<String, String[]> mapifiedCSV = new HashMap<>();
+
+        //Mapify the CSV
+        Map<String, DBRecordMetaData> mapifiedCSV = new HashMap<>();
         for (String[] row : allData) {
-            int numObjects = Integer.parseInt(row[2]);
-            expectedObjectCount += numObjects;
             int objClassId = Integer.parseInt(row[0]);
+            int memSize = Integer.parseInt(row[1]);
+            int numObjects = Integer.parseInt(row[2]);
+
+            expectedObjectCount += numObjects;
 
             for (int i = 0; i < numObjects; i++) {
-                mapifiedCSV.put(String.format(TEST_SEC_010_D_D, i, objClassId).toLowerCase(), row);
+                DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
+                dbRecordMetaData.name = String.format(TEST_SEC_010_D_D, i, objClassId).toLowerCase();
+                dbRecordMetaData.typeId = objClassId;
+                dbRecordMetaData.memSize = memSize;
+                mapifiedCSV.put(dbRecordMetaData.name.toLowerCase(), dbRecordMetaData);
             }
         }
         LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
+        LOGGER.info("Mapified CSV Contains {} entries", mapifiedCSV.size());
 
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement objsInDBStmt = connection.prepareStatement(OBJ_COUNT)
@@ -193,77 +226,58 @@ public class ObjectRepository implements AutoCloseable {
         }
 
 
-        //Mapify the CSV
-        Semaphore sem = new Semaphore(72, true);
+        // Groupify
         long batchSize = 20000;
-        Set<String> findKeys = new HashSet<>();
-        for (Map.Entry<String, String[]> entry : mapifiedCSV.entrySet()) {
-            findKeys.add(entry.getKey());
+        Set<Map<String, DBRecordMetaData>> findKeysGroups = new HashSet<>();
+        Map<String, DBRecordMetaData> findKeys = new HashMap<>();
+        for (Map.Entry<String, DBRecordMetaData> entry : mapifiedCSV.entrySet()) {
+            findKeys.put(entry.getKey(), entry.getValue());
             if (findKeys.size() == batchSize) {
+                findKeysGroups.add(findKeys);
+                findKeys.clear();
+            }
+        }
+        LOGGER.info("Groupyfied CSV Contains {} entries with batchsize of {}", findKeysGroups.size(), batchSize);
+
+        for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
+
+            executorService.execute(() -> {
+                Set<String> keySet = findKeyGrp.keySet();
                 String sql = String.format(
                         GET_MANY_RECORDS,
                         String.join(",", Collections.nCopies(findKeys.size(), "?")));
 
-                executorService.execute(() -> {
-                    try (Connection connection = rwConnectionProvider.getConnection();
-                         PreparedStatement manyRecs = connection.prepareStatement(sql)
-                    ) {
-                        manyRecs.setString(1, sql);
-                        Set<String> foundObjs = new HashSet<>();
-                        ResultSet rs = manyRecs.executeQuery();
-                        while (rs.next()) {
-                            foundObjs.add(rs.getString("name").toLowerCase());
-                        }
-                        rs.close();
-
-                        //long findKeysSize = findKeys.size();
-                        long foundObjSize = foundObjs.size();
-                        Set<String[]> misingObjs = new HashSet<>();
-                        if (batchSize > foundObjSize) {
-                            LOGGER.info("{} Obj Recs missing", (batchSize - foundObjSize));
-                            /*for (String findKey : findKeys) {
-                                if (foundObjs.add(findKey)) {// non existant
-                                    misingObjs.add(mapifiedCSV.get(findKey));
-                                }
-                            }*/
-                        }
-                        //LOGGER.info("Found {}");
-                    } catch (SQLException sqlException) {
-                        sqlException.printStackTrace();
+                Map<String, DBRecordMetaData> dbRecordMetaDataMap = new HashMap<>();
+                try (Connection connection = rwConnectionProvider.getConnection();
+                     PreparedStatement manyRecs = connection.prepareStatement(sql)
+                ) {
+                    int i = 1;
+                    for (String key : keySet) {
+                        manyRecs.setString(i++, key);
                     }
-                });
-            }
-        }
+                    manyRecs.setFetchSize(1000);
+                    ResultSet rs = manyRecs.executeQuery();
+                    while (rs.next()) {
+                        DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
+                        dbRecordMetaData.name = rs.getString("name");
+                        dbRecordMetaData.typeId = rs.getInt("typeId");
+                        dbRecordMetaData.memSize = rs.getBytes("mem").length;
+                        dbRecordMetaDataMap.put(rs.getString("name").toLowerCase(), dbRecordMetaData);
+                    }
+                    rs.close();
+                } catch (SQLException sqlException) {
+                    sqlException.printStackTrace();
+                }
 
-        //last batch
-        String sql = String.format(
-                GET_MANY_RECORDS,
-                String.join(",", Collections.nCopies(findKeys.size(), "?")));
-        try (Connection connection = rwConnectionProvider.getConnection();
-             PreparedStatement manyRecs = connection.prepareStatement(sql)
-        ) {
-            manyRecs.setString(1, sql);
-            Set<String> foundObjs = new HashSet<>();
-            ResultSet rs = manyRecs.executeQuery();
-            while (rs.next()) {
-                foundObjs.add(rs.getString("name").toLowerCase());
-            }
-            rs.close();
+                for (Map.Entry<String, DBRecordMetaData> csvEntry : findKeyGrp.entrySet()) {
+                    DBRecordMetaData inDB = dbRecordMetaDataMap.get(csvEntry.getKey());
+                    DBRecordMetaData inCSV = csvEntry.getValue();
 
-            long findKeysSize = findKeys.size();
-            long foundObjSize = foundObjs.size();
-            Set<String[]> misingObjs = new HashSet<>();
-            if (findKeysSize > foundObjSize) {
-                LOGGER.info("{} Obj Recs missing", (findKeysSize - foundObjSize));
-                            /*for (String findKey : findKeys) {
-                                if (foundObjs.add(findKey)) {// non existant
-                                    misingObjs.add(mapifiedCSV.get(findKey));
-                                }
-                            }*/
-            }
-            //LOGGER.info("Found {}");
-        } catch (SQLException sqlException) {
-            sqlException.printStackTrace();
+                    if (!inCSV.equals(inDB)) {
+                        LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
+                    }
+                }
+            });
         }
     }
 
