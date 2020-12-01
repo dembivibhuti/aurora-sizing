@@ -311,7 +311,7 @@ public class ObjectRepository implements AutoCloseable {
         }
 
 
-        AtomicLong rowsCompleteCounter = new AtomicLong(1);
+        AtomicLong rowsCompleteCounter = new AtomicLong();
         executorService.execute(() -> {
             while(rowsCompleteCounter.get() >= batchSize) {
                 System.out.print("Rows Complete = " + rowsCompleteCounter.get() + "\r");
