@@ -37,6 +37,7 @@ public class ObjectRepository implements AutoCloseable {
     private static final Gauge fetchAndParseResultSet = Gauge.build().name("fetch_parse_resultset").help("Fetch and Parse Resultset").labelNames("db_ops").register();
     private static final byte[] BYTES_560 = getSizedByteArray(560);
     public static final String TEST_SEC_010_D_D = "testSec-%010d-%d";
+    public static final String OBJ_NAME_FRMT_V2 = "%d-%d-%d"; // <classId>-<size>-<serial>
     private final ConnectionProvider roConnectionProvider;
     private final ConnectionProvider rwConnectionProvider;
 
@@ -169,6 +170,8 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
+
+
     class DBRecordMetaData {
         String name;
         int typeId;
@@ -195,25 +198,29 @@ public class ObjectRepository implements AutoCloseable {
         long objectsInDb = 0;
 
         //Mapify the CSV
-        long serial = 1;
-        Map<String, DBRecordMetaData> mapifiedCSV = new HashMap<>();
+        Map<Long, List<DBRecordMetaData>> mapifiedCSV = new HashMap<>();
+        long rowNum = 0;
         for (String[] row : allData) {
             int objClassId = Integer.parseInt(row[0]);
             int memSize = Integer.parseInt(row[1]);
             int numObjects = Integer.parseInt(row[2]);
 
             expectedObjectCount += numObjects;
+            List<DBRecordMetaData> objForRow = new ArrayList<>();
 
             for (int i = 0; i < numObjects; i++) {
                 DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
-                dbRecordMetaData.name = String.format(TEST_SEC_010_D_D, serial++, objClassId).toLowerCase();
+                dbRecordMetaData.name = String.format(OBJ_NAME_FRMT_V2, objClassId, memSize, i);
                 dbRecordMetaData.typeId = objClassId;
                 dbRecordMetaData.memSize = memSize;
-                mapifiedCSV.put(dbRecordMetaData.name.toLowerCase(), dbRecordMetaData);
+                objForRow.add(dbRecordMetaData);
             }
+            mapifiedCSV.put(rowNum, objForRow);
+            rowNum++;
         }
+        LOGGER.info("Number of Rows in CSV = {}", rowNum);
         LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
-        LOGGER.info("Mapified CSV Contains {} entries", mapifiedCSV.size());
+        LOGGER.info("Mapified CSV Contains {} entries == number of rows in csv", mapifiedCSV.size());
 
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
@@ -227,34 +234,11 @@ public class ObjectRepository implements AutoCloseable {
             LOGGER.error("error in finding object count", sqlException);
         }
 
-
-        // Groupify
-        long batchSize = 20000;
-        List<Map<String, DBRecordMetaData>> findKeysGroups = new ArrayList<>();
-        Map<String, DBRecordMetaData> findKeys = new HashMap<>();
-        for (Map.Entry<String, DBRecordMetaData> entry : mapifiedCSV.entrySet()) {
-            findKeys.put(entry.getKey(), entry.getValue());
-            if (findKeys.size() == batchSize) {
-                findKeysGroups.add(new HashMap<>(findKeys));
-                findKeys.clear();
-            }
-        }
-        findKeysGroups.add(findKeys); //the last group
-
-        LOGGER.info("Groupyfied CSV Contains {} entries with batchsize of {}", findKeysGroups.size(), batchSize);
-
-        //Start status thread
-        AtomicLong absentRecCounter = new AtomicLong();
-        AtomicLong recordsScannedCounter = new AtomicLong();
-        AtomicLong problemRecordsCounter = new AtomicLong();
-        AtomicLong recordsInsertedCounter = new AtomicLong();
-
-       executorService.execute(() -> {
+        long start = Long.parseLong(System.getProperty("serialStart"));
+        AtomicLong rowsCompleteCounter = new AtomicLong();
+        executorService.execute(() -> {
             while(true) {
-                System.out.print("Records Scanned = " + recordsScannedCounter.incrementAndGet()  +
-                        " | Problem Records = " + problemRecordsCounter.get() +
-                        " | Absent Records = " + absentRecCounter.get() +
-                        " | Records Remaining to be inserted = " + recordsInsertedCounter.get() + "\r");
+                System.out.print("Rows Complete = " + rowsCompleteCounter.get() + "\r");
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -263,8 +247,8 @@ public class ObjectRepository implements AutoCloseable {
             }
         });
 
-        for (Map<String, DBRecordMetaData> findKeyGrp : findKeysGroups) {
-            executorService.execute(new ReconTask(findKeyGrp, absentRecCounter, recordsScannedCounter, problemRecordsCounter, recordsInsertedCounter));
+        for(long i = start; i< rowNum; i++) {
+            executorService.execute(new InsertionTask(i, mapifiedCSV.get(i), rowsCompleteCounter));
         }
 
         executorService.shutdown();
@@ -273,8 +257,49 @@ public class ObjectRepository implements AutoCloseable {
         } catch (InterruptedException it) {
             LOGGER.error("failed in executor service. Please clean and re-run", it);
         }
+    }
 
+    class InsertionTask implements Runnable {
 
+        private final long rowNum;
+        private final List<DBRecordMetaData> dbRecordMetaData;
+        private final AtomicLong rowsCompleteCounter;
+
+        InsertionTask(long rowNum, List<DBRecordMetaData> dbRecordMetaData, AtomicLong rowsCompleteCounter) {
+            this.dbRecordMetaData = dbRecordMetaData;
+            this.rowNum = rowNum;
+            this.rowsCompleteCounter = rowsCompleteCounter;
+        }
+
+        @Override
+        public void run() {
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            try (Connection connection = rwConnectionProvider.getConnection();
+                 PreparedStatement insertRec = connection.prepareStatement(INSERT_RECORDS)) {
+                for (DBRecordMetaData dbRecordMetaData : dbRecordMetaData) {
+                    insertRec.setString(1, dbRecordMetaData.name);
+                    insertRec.setInt(2, dbRecordMetaData.typeId);
+                    insertRec.setLong(3, 123);
+                    insertRec.setTimestamp(4, timestamp);
+                    insertRec.setLong(5, 123);
+                    insertRec.setInt(6, 123);
+                    insertRec.setInt(7, 123);
+                    insertRec.setInt(8, 123);
+                    insertRec.setBytes(9, getSizedByteArray(100));
+                    insertRec.setBytes(10, getSizedByteArray(dbRecordMetaData.memSize));
+                    insertRec.setString(11, dbRecordMetaData.name);
+                    insertRec.executeUpdate();
+                }
+                connection.commit();
+                rowsCompleteCounter.incrementAndGet();
+            } catch (PSQLException ex) {
+                LOGGER.error("Error PSQLException Row Num = {} " + rowNum, ex.getMessage());
+            } catch (SQLException sqlException) {
+                LOGGER.error("Error SQLException Row Num = {} " + rowNum, sqlException.getMessage());
+            } catch (Throwable th) {
+                LOGGER.error("Error Throwable Row Num = {} " + rowNum, th.getMessage());
+            }
+        }
     }
 
     class ReconTask implements Runnable {
