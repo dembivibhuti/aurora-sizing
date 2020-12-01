@@ -283,6 +283,7 @@ public class ObjectRepository implements AutoCloseable {
 
         long start = Long.parseLong(System.getProperty("serialStart"));
         long end = Math.min(start + 30000, rowNum);
+        LOGGER.info("Processing Rows from Row Num = {} to {}", start, end);
 
         LOGGER.info("Starting to Mapify the CSV .....");
         Map<Long, List<DBRecordMetaData>> mapifiedCSV = new HashMap<>();
@@ -303,7 +304,7 @@ public class ObjectRepository implements AutoCloseable {
             mapifiedCSV.put(rowNum, objForRow);
         }
 
-        LOGGER.info("Mapified CSV Contains {} entries == number of rows in csv", mapifiedCSV.size());
+        LOGGER.info("Mapified CSV Contains {} entries == number of rows to be processed", mapifiedCSV.size());
 
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
@@ -318,7 +319,6 @@ public class ObjectRepository implements AutoCloseable {
         }
 
 
-        LOGGER.info("Processing Rows from Row Num = {} to {}", start, end);
         AtomicLong rowsCompleteCounter = new AtomicLong();
         executorService.execute(() -> {
             while(true) {
