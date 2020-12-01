@@ -236,7 +236,17 @@ public class ObjectRepository implements AutoCloseable {
         }
 
         for(Map.Entry<Long, List<DBRecordMetaData>> row: mapifiedCSV.entrySet() ) {
-
+            try (Connection connection = rwConnectionProvider.getConnection();
+                 PreparedStatement objsInDBStmt = connection.prepareStatement(GET_MANY_RECORDS_SUMM)
+            ) {
+                ResultSet rs = objsInDBStmt.executeQuery();
+                rs.next();
+                objectsInDb = rs.getLong(1);
+                rs.close();
+                LOGGER.info("Objects in DB number = {}", objectsInDb);
+            } catch (SQLException sqlException) {
+                LOGGER.error("error in finding object count", sqlException);
+            }
         }
 
 
@@ -249,8 +259,7 @@ public class ObjectRepository implements AutoCloseable {
         long objectsInDb = 0;
 
         //Mapify the CSV
-        LOGGER.info("Starting to Mapify the CSV .....");
-        Map<Long, List<DBRecordMetaData>> mapifiedCSV = new HashMap<>();
+        LOGGER.info("Starting to Analyze the CSV .....");
         long rowNum = 0;
         for (String[] row : allData) {
             int objClassId = Integer.parseInt(row[0]);
@@ -267,11 +276,33 @@ public class ObjectRepository implements AutoCloseable {
                 dbRecordMetaData.memSize = memSize;
                 objForRow.add(dbRecordMetaData);
             }
-            mapifiedCSV.put(rowNum, objForRow);
             rowNum++;
         }
         LOGGER.info("Number of Rows in CSV = {}", rowNum);
-        LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
+        LOGGER.info("Total Expected number of Objects = {}", expectedObjectCount);
+
+        long start = Long.parseLong(System.getProperty("serialStart"));
+        long end = Math.min(start + 30000, rowNum);
+
+        LOGGER.info("Starting to Mapify the CSV .....");
+        Map<Long, List<DBRecordMetaData>> mapifiedCSV = new HashMap<>();
+        for (long i = start; i < end; i++) {
+            String[] row = allData.get((int)i);
+            int objClassId = Integer.parseInt(row[0]);
+            int memSize = Integer.parseInt(row[1]);
+            int numObjects = Integer.parseInt(row[2]);
+
+           List<DBRecordMetaData> objForRow = new ArrayList<>();
+            for (int j = 0; j < numObjects; j++) {
+                DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
+                dbRecordMetaData.name = String.format(OBJ_NAME_FRMT_V2, i, objClassId, memSize, j);
+                dbRecordMetaData.typeId = objClassId;
+                dbRecordMetaData.memSize = memSize;
+                objForRow.add(dbRecordMetaData);
+            }
+            mapifiedCSV.put(rowNum, objForRow);
+        }
+
         LOGGER.info("Mapified CSV Contains {} entries == number of rows in csv", mapifiedCSV.size());
 
         try (Connection connection = rwConnectionProvider.getConnection();
@@ -286,8 +317,7 @@ public class ObjectRepository implements AutoCloseable {
             LOGGER.error("error in finding object count", sqlException);
         }
 
-        long start = Long.parseLong(System.getProperty("serialStart"));
-        long end = Math.min(start + 30000, rowNum);
+
         LOGGER.info("Processing Rows from Row Num = {} to {}", start, end);
         AtomicLong rowsCompleteCounter = new AtomicLong();
         executorService.execute(() -> {
