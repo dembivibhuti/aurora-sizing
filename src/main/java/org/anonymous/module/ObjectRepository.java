@@ -262,20 +262,8 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Starting to Analyze the CSV .....");
         long rowNum = 0;
         for (String[] row : allData) {
-            int objClassId = Integer.parseInt(row[0]);
-            int memSize = Integer.parseInt(row[1]);
             int numObjects = Integer.parseInt(row[2]);
-
             expectedObjectCount += numObjects;
-            List<DBRecordMetaData> objForRow = new ArrayList<>();
-
-            for (int i = 0; i < numObjects; i++) {
-                DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
-                dbRecordMetaData.name = String.format(OBJ_NAME_FRMT_V2, rowNum, objClassId, memSize, i);
-                dbRecordMetaData.typeId = objClassId;
-                dbRecordMetaData.memSize = memSize;
-                objForRow.add(dbRecordMetaData);
-            }
             rowNum++;
         }
         LOGGER.info("Number of Rows in CSV = {}", rowNum);
