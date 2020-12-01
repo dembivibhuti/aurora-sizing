@@ -212,6 +212,16 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Starting to Verify the CSV .....");
         long rowNum = 0;
         AtomicLong rowsCompleteCounter = new AtomicLong();
+        executorService.execute(() -> {
+            while (true) {
+                System.out.print("Rows Complete = " + rowsCompleteCounter.get() + "\r");
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+
+                }
+            }
+        });
         for (String[] row : allData) {
             int objClassId = Integer.parseInt(row[0]);
             int memSize = Integer.parseInt(row[1]);
