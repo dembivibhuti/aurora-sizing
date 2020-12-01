@@ -289,7 +289,7 @@ public class ObjectRepository implements AutoCloseable {
                 dbRecordMetaData.memSize = memSize;
                 objForRow.add(dbRecordMetaData);
             }
-            mapifiedCSV.put(rowNum, objForRow);
+            mapifiedCSV.put(i, objForRow);
         }
 
         LOGGER.info("Mapified CSV Contains {} entries == number of rows to be processed", mapifiedCSV.size());
