@@ -252,7 +252,7 @@ public class ObjectRepository implements AutoCloseable {
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement objsInDBStmt = connection.prepareStatement(String.format(GET_MANY_RECORDS_SUMM, String.format("%d-", rowNum) + "%"))
             ) {
-
+                System.out.println(objsInDBStmt);
                 ResultSet rs = objsInDBStmt.executeQuery();
                 while (rs.next()) {
                     String name = rs.getString("name");
