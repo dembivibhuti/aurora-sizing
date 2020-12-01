@@ -256,7 +256,7 @@ public class ObjectRepository implements AutoCloseable {
 
     public void dataLoadFromCSV(List<String[]> allData) {
         long batchSize = 30000;
-        long expectedObjectCount = 0;
+        long expectedTotalObjectCount = 0;
         long objectsInDb = 0;
 
         //Mapify the CSV
@@ -264,23 +264,25 @@ public class ObjectRepository implements AutoCloseable {
         long rowNum = 0;
         for (String[] row : allData) {
             int numObjects = Integer.parseInt(row[2]);
-            expectedObjectCount += numObjects;
+            expectedTotalObjectCount += numObjects;
             rowNum++;
         }
         LOGGER.info("Number of Rows in CSV = {}", rowNum);
-        LOGGER.info("Total Expected number of Objects = {}", expectedObjectCount);
+        LOGGER.info("Total Expected number of Objects = {}", expectedTotalObjectCount);
 
         long start = Long.parseLong(System.getProperty("serialStart"));
         long end = Math.min(start + batchSize, rowNum);
         LOGGER.info("Processing Rows from Row Num = {} to {}", start, end);
 
         LOGGER.info("Starting to Mapify the CSV .....");
+        long expectedObjectCount = 0;
         Map<Long, List<DBRecordMetaData>> mapifiedCSV = new HashMap<>();
         for (long i = start; i < end; i++) {
             String[] row = allData.get((int)i);
             int objClassId = Integer.parseInt(row[0]);
             int memSize = Integer.parseInt(row[1]);
             int numObjects = Integer.parseInt(row[2]);
+            expectedObjectCount += numObjects;
 
            List<DBRecordMetaData> objForRow = new ArrayList<>();
             for (int j = 0; j < numObjects; j++) {
@@ -294,6 +296,7 @@ public class ObjectRepository implements AutoCloseable {
         }
 
         LOGGER.info("Mapified CSV Contains {} entries == number of rows to be processed", mapifiedCSV.size());
+        LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
 
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
