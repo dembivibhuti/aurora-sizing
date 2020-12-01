@@ -404,13 +404,15 @@ public class ObjectRepository implements AutoCloseable {
                     insertRec.executeUpdate();
                 }
                 connection.commit();
-                rowsCompleteCounter.incrementAndGet();
+
             } catch (PSQLException ex) {
                 LOGGER.error("Error PSQLException Row Num = {} " + rowNum, ex.getMessage());
             } catch (SQLException sqlException) {
                 LOGGER.error("Error SQLException Row Num = {} " + rowNum, sqlException.getMessage());
             } catch (Throwable th) {
                 LOGGER.error("Error Throwable Row Num = {} " + rowNum, th.getMessage());
+            } finally {
+                rowsCompleteCounter.incrementAndGet();
             }
         }
     }
