@@ -196,32 +196,6 @@ public class ObjectRepository implements AutoCloseable {
         long expectedObjectCount = 0;
         long objectsInDb = 0;
 
-        //Mapify the CSV
-        LOGGER.info("Starting to Mapify the CSV .....");
-        Map<Long, List<DBRecordMetaData>> mapifiedCSV = new HashMap<>();
-        long rowNum = 0;
-        for (String[] row : allData) {
-            int objClassId = Integer.parseInt(row[0]);
-            int memSize = Integer.parseInt(row[1]);
-            int numObjects = Integer.parseInt(row[2]);
-
-            expectedObjectCount += numObjects;
-            List<DBRecordMetaData> objForRow = new ArrayList<>();
-
-            for (int i = 0; i < numObjects; i++) {
-                DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
-                dbRecordMetaData.name = String.format(OBJ_NAME_FRMT_V2, rowNum, objClassId, memSize, i);
-                dbRecordMetaData.typeId = objClassId;
-                dbRecordMetaData.memSize = memSize;
-                objForRow.add(dbRecordMetaData);
-            }
-            mapifiedCSV.put(rowNum, objForRow);
-            rowNum++;
-        }
-        LOGGER.info("Number of Rows in CSV = {}", rowNum);
-        LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
-        LOGGER.info("Mapified CSV Contains {} entries == number of rows in csv", mapifiedCSV.size());
-
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
         ) {
@@ -234,14 +208,51 @@ public class ObjectRepository implements AutoCloseable {
             LOGGER.error("error in finding object count", sqlException);
         }
 
-        for (Map.Entry<Long, List<DBRecordMetaData>> row : mapifiedCSV.entrySet()) {
+        //Mapify the CSV
+        LOGGER.info("Starting to Mapify the CSV .....");
+        long rowNum = 0;
+        AtomicLong rowsCompleteCounter = new AtomicLong();
+        for (String[] row : allData) {
+            int objClassId = Integer.parseInt(row[0]);
+            int memSize = Integer.parseInt(row[1]);
+            int numObjects = Integer.parseInt(row[2]);
+
+            expectedObjectCount += numObjects;
+            Map<String, DBRecordMetaData> objForRow = new HashMap<>();
+
+            for (int i = 0; i < numObjects; i++) {
+                DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
+                dbRecordMetaData.name = String.format(OBJ_NAME_FRMT_V2, rowNum, objClassId, memSize, i);
+                dbRecordMetaData.typeId = objClassId;
+                dbRecordMetaData.memSize = memSize;
+                objForRow.put(dbRecordMetaData.name, dbRecordMetaData);
+            }
+
+            executorService.execute(new ReconTask2(rowNum, objForRow, rowsCompleteCounter));
+            rowNum++;
+        }
+        LOGGER.info("Number of Rows in CSV = {}", rowNum);
+        LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
+    }
+
+    class ReconTask2 implements Runnable {
+
+        final private long rowNum;
+        final private Map<String, DBRecordMetaData> rowMap;
+        private final AtomicLong rowsCompleteCounter;
+
+        ReconTask2(long rowNum, Map<String, DBRecordMetaData> rowMap, AtomicLong rowsCompleteCounter) {
+            this.rowNum = rowNum;
+            this.rowMap = rowMap;
+            this.rowsCompleteCounter = rowsCompleteCounter;
+        }
+
+        @Override
+        public void run() {
             try (Connection connection = rwConnectionProvider.getConnection();
-                 PreparedStatement objsInDBStmt = connection.prepareStatement(String.format(GET_MANY_RECORDS_SUMM, row.getKey()))
+                 PreparedStatement objsInDBStmt = connection.prepareStatement(String.format(GET_MANY_RECORDS_SUMM, rowNum))
             ) {
-                Map<String, DBRecordMetaData> rowMap = new HashMap<>();
-                for (DBRecordMetaData dbRecordMetaData : row.getValue()) {
-                    rowMap.put(dbRecordMetaData.name, dbRecordMetaData);
-                }
+
                 ResultSet rs = objsInDBStmt.executeQuery();
                 while (rs.next()) {
                     String name = rs.getString("name");
@@ -257,7 +268,7 @@ public class ObjectRepository implements AutoCloseable {
                     }
                 }
                 rs.close();
-                System.out.print("Rows Complete = " + row.getKey() + "\r");
+                rowsCompleteCounter.incrementAndGet();
             } catch (SQLException sqlException) {
                 LOGGER.error("error in validating object", sqlException);
             }
