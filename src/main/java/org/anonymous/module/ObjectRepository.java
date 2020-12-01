@@ -196,7 +196,7 @@ public class ObjectRepository implements AutoCloseable {
         long expectedObjectCount = 0;
         long objectsInDb = 0;
 
-        try (Connection connection = rwConnectionProvider.getConnection();
+        try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
         ) {
             ResultSet rs = objsInDBStmt.executeQuery();
@@ -260,7 +260,7 @@ public class ObjectRepository implements AutoCloseable {
 
         @Override
         public void run() {
-            try (Connection connection = rwConnectionProvider.getConnection();
+            try (Connection connection = roConnectionProvider.getConnection();
                  PreparedStatement objsInDBStmt = connection.prepareStatement(String.format(GET_MANY_RECORDS_SUMM, String.format("%d-", rowNum) + "%"))
             ) {
                 ResultSet rs = objsInDBStmt.executeQuery();
