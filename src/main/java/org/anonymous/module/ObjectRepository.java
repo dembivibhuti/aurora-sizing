@@ -350,7 +350,7 @@ public class ObjectRepository implements AutoCloseable {
 
         AtomicLong rowsCompleteCounter = new AtomicLong();
         executorService.execute(() -> {
-            while (rowsCompleteCounter.get() < batchSize) {
+            while (rowsCompleteCounter.get() < (end - start)) {
                 System.out.print("Rows Complete = " + rowsCompleteCounter.get() + "\r");
                 try {
                     Thread.sleep(3000);
@@ -404,7 +404,6 @@ public class ObjectRepository implements AutoCloseable {
                     insertRec.executeUpdate();
                 }
                 connection.commit();
-
             } catch (PSQLException ex) {
                 LOGGER.error("Error PSQLException Row Num = {} " + rowNum, ex.getMessage());
             } catch (SQLException sqlException) {
