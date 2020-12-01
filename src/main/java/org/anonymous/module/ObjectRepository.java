@@ -296,7 +296,7 @@ public class ObjectRepository implements AutoCloseable {
         }
 
         LOGGER.info("Mapified CSV Contains {} entries == number of rows to be processed", mapifiedCSV.size());
-        LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
+        LOGGER.info("Expected number of Objects to be added = {}", expectedObjectCount);
 
         try (Connection connection = rwConnectionProvider.getConnection();
              PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
