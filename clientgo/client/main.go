@@ -53,7 +53,7 @@ func startTest(metrics *model.Metrics) {
 func pairityWithSaral(scl model.SSClient) {
 	var n int32 = 3_000 // send a huge number for lookup
 
-	res, err := scl.LookupByName("testSec-", model.GET_GREATER, n)
+	res, err := scl.LookupByName(randDigit(1), model.GET_GREATER, n)
 	if err != nil {
 		log.Println(err)
 	} else {
