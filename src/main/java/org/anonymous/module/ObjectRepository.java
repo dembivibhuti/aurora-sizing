@@ -262,7 +262,7 @@ public class ObjectRepository implements AutoCloseable {
 
             for (int i = 0; i < numObjects; i++) {
                 DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
-                dbRecordMetaData.name = String.format(OBJ_NAME_FRMT_V2, objClassId, memSize, i);
+                dbRecordMetaData.name = String.format(OBJ_NAME_FRMT_V2, rowNum, objClassId, memSize, i);
                 dbRecordMetaData.typeId = objClassId;
                 dbRecordMetaData.memSize = memSize;
                 objForRow.add(dbRecordMetaData);
