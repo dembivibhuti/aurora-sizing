@@ -214,7 +214,7 @@ public class ObjectRepository implements AutoCloseable {
         AtomicLong rowsCompleteCounter = new AtomicLong();
         executorService.execute(() -> {
             while (true) {
-                System.out.print("Rows Complete = " + rowsCompleteCounter.get() + "\r");
+                System.out.print("Rows Validated = " + rowsCompleteCounter.get() + "\r");
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
