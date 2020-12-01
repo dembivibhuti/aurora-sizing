@@ -209,7 +209,7 @@ public class ObjectRepository implements AutoCloseable {
         }
 
         //Mapify the CSV
-        LOGGER.info("Starting to Mapify the CSV .....");
+        LOGGER.info("Starting to Verify the CSV .....");
         long rowNum = 0;
         AtomicLong rowsCompleteCounter = new AtomicLong();
         for (String[] row : allData) {
