@@ -256,7 +256,7 @@ public class ObjectRepository implements AutoCloseable {
                 ResultSet rs = objsInDBStmt.executeQuery();
                 while (rs.next()) {
                     String name = rs.getString("name");
-                    long typeId = rs.getInt("typeId");
+                    int typeId = rs.getInt("typeId");
                     byte[] mem = rs.getBytes("mem");
 
                     if (typeId != rowMap.get(name).typeId) {
