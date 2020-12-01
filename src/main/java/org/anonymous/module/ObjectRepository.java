@@ -296,6 +296,18 @@ public class ObjectRepository implements AutoCloseable {
         long expectedTotalObjectCount = 0;
         long objectsInDb = 0;
 
+        try (Connection connection = rwConnectionProvider.getConnection();
+             PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
+        ) {
+            ResultSet rs = objsInDBStmt.executeQuery();
+            rs.next();
+            objectsInDb = rs.getLong(1);
+            rs.close();
+            LOGGER.info("Objects in DB number = {}", objectsInDb);
+        } catch (SQLException sqlException) {
+            LOGGER.error("error in finding object count", sqlException);
+        }
+
         //Mapify the CSV
         LOGGER.info("Starting to Analyze the CSV .....");
         long rowNum = 0;
@@ -335,18 +347,6 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Mapified CSV Contains {} entries == number of rows to be processed", mapifiedCSV.size());
         LOGGER.info("Expected number of Objects to be added = {}", expectedObjectCount);
 
-        try (Connection connection = rwConnectionProvider.getConnection();
-             PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
-        ) {
-            ResultSet rs = objsInDBStmt.executeQuery();
-            rs.next();
-            objectsInDb = rs.getLong(1);
-            rs.close();
-            LOGGER.info("Objects in DB number = {}", objectsInDb);
-        } catch (SQLException sqlException) {
-            LOGGER.error("error in finding object count", sqlException);
-        }
-
 
         AtomicLong rowsCompleteCounter = new AtomicLong();
         executorService.execute(() -> {
@@ -378,7 +378,7 @@ public class ObjectRepository implements AutoCloseable {
         private final List<DBRecordMetaData> dbRecordMetaData;
         private final AtomicLong rowsCompleteCounter;
 
-        InsertionTask(long rowNum, List<DBRecordMetaData> dbRecordMetaData, AtomicLong rowsCompleteCounter) {
+        InsertionTask(long rowNum, List<DBRecordMetaData> dbRecordMetaData, AtomicLong rowsCompleteCounter ) {
             this.dbRecordMetaData = dbRecordMetaData;
             this.rowNum = rowNum;
             this.rowsCompleteCounter = rowsCompleteCounter;
@@ -389,6 +389,7 @@ public class ObjectRepository implements AutoCloseable {
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement insertRec = connection.prepareStatement(INSERT_RECORDS)) {
+                int recsAdded = 0;
                 for (DBRecordMetaData dbRecordMetaData : dbRecordMetaData) {
                     insertRec.setString(1, dbRecordMetaData.name);
                     insertRec.setInt(2, dbRecordMetaData.typeId);
@@ -402,6 +403,9 @@ public class ObjectRepository implements AutoCloseable {
                     insertRec.setBytes(10, getSizedByteArray(dbRecordMetaData.memSize));
                     insertRec.setString(11, dbRecordMetaData.name);
                     insertRec.executeUpdate();
+                    if (recsAdded++ > 20000) { // Commit if nece
+                        connection.commit();
+                    }
                 }
                 connection.commit();
             } catch (PSQLException ex) {
