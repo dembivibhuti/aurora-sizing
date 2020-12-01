@@ -24,9 +24,9 @@ public class ObjectLoadFromCSV {
             List<String[]> allData = csvReader.readAll();
 
             if("true".equals(System.getProperty("recon"))) {
-                objectRepository.checkReconDataLoadFromCSV(allData);
+                objectRepository.reconFromCSV(allData);
             } else {
-                objectRepository.insertObjectsFromCSV(allData, timekeeper);
+                objectRepository.dataLoadFromCSV(allData);
             }
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -37,7 +37,7 @@ public class ObjectRepository implements AutoCloseable {
     private static final Gauge fetchAndParseResultSet = Gauge.build().name("fetch_parse_resultset").help("Fetch and Parse Resultset").labelNames("db_ops").register();
     private static final byte[] BYTES_560 = getSizedByteArray(560);
     public static final String TEST_SEC_010_D_D = "testSec-%010d-%d";
-    public static final String OBJ_NAME_FRMT_V2 = "%d-%d-%d"; // <classId>-<size>-<serial>
+    public static final String OBJ_NAME_FRMT_V2 = "%d-%d-%d-%d"; // <csvrownum>-><classId>-<size>-<serial>
     private final ConnectionProvider roConnectionProvider;
     private final ConnectionProvider rwConnectionProvider;
 
@@ -193,11 +193,63 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public void checkReconDataLoadFromCSV(List<String[]> allData) {
+    public void reconFromCSV(List<String[]> allData) {
         long expectedObjectCount = 0;
         long objectsInDb = 0;
 
         //Mapify the CSV
+        LOGGER.info("Starting to Mapify the CSV .....");
+        Map<Long, List<DBRecordMetaData>> mapifiedCSV = new HashMap<>();
+        long rowNum = 0;
+        for (String[] row : allData) {
+            int objClassId = Integer.parseInt(row[0]);
+            int memSize = Integer.parseInt(row[1]);
+            int numObjects = Integer.parseInt(row[2]);
+
+            expectedObjectCount += numObjects;
+            List<DBRecordMetaData> objForRow = new ArrayList<>();
+
+            for (int i = 0; i < numObjects; i++) {
+                DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
+                dbRecordMetaData.name = String.format(OBJ_NAME_FRMT_V2, rowNum, objClassId, memSize, i);
+                dbRecordMetaData.typeId = objClassId;
+                dbRecordMetaData.memSize = memSize;
+                objForRow.add(dbRecordMetaData);
+            }
+            mapifiedCSV.put(rowNum, objForRow);
+            rowNum++;
+        }
+        LOGGER.info("Number of Rows in CSV = {}", rowNum);
+        LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
+        LOGGER.info("Mapified CSV Contains {} entries == number of rows in csv", mapifiedCSV.size());
+
+        try (Connection connection = rwConnectionProvider.getConnection();
+             PreparedStatement objsInDBStmt = connection.prepareStatement(COUNT_RECORDS)
+        ) {
+            ResultSet rs = objsInDBStmt.executeQuery();
+            rs.next();
+            objectsInDb = rs.getLong(1);
+            rs.close();
+            LOGGER.info("Objects in DB number = {}", objectsInDb);
+        } catch (SQLException sqlException) {
+            LOGGER.error("error in finding object count", sqlException);
+        }
+
+        for(Map.Entry<Long, List<DBRecordMetaData>> row: mapifiedCSV.entrySet() ) {
+
+        }
+
+
+
+    }
+
+
+    public void dataLoadFromCSV(List<String[]> allData) {
+        long expectedObjectCount = 0;
+        long objectsInDb = 0;
+
+        //Mapify the CSV
+        LOGGER.info("Starting to Mapify the CSV .....");
         Map<Long, List<DBRecordMetaData>> mapifiedCSV = new HashMap<>();
         long rowNum = 0;
         for (String[] row : allData) {
@@ -235,6 +287,8 @@ public class ObjectRepository implements AutoCloseable {
         }
 
         long start = Long.parseLong(System.getProperty("serialStart"));
+        long end = Math.min(start + 30000, rowNum);
+        LOGGER.info("Processing Rows from Row Num = {} to {}", start, end);
         AtomicLong rowsCompleteCounter = new AtomicLong();
         executorService.execute(() -> {
             while(true) {
@@ -247,7 +301,7 @@ public class ObjectRepository implements AutoCloseable {
             }
         });
 
-        for(long i = start; i< rowNum; i++) {
+        for(long i = start; i< end; i++) {
             executorService.execute(new InsertionTask(i, mapifiedCSV.get(i), rowsCompleteCounter));
         }
 
