@@ -313,7 +313,7 @@ public class ObjectRepository implements AutoCloseable {
 
         AtomicLong rowsCompleteCounter = new AtomicLong();
         executorService.execute(() -> {
-            while(rowsCompleteCounter.get() >= batchSize) {
+            while(rowsCompleteCounter.get() < batchSize) {
                 System.out.print("Rows Complete = " + rowsCompleteCounter.get() + "\r");
                 try {
                     Thread.sleep(3000);
