@@ -243,6 +243,7 @@ public class ObjectRepository implements AutoCloseable {
         }
         LOGGER.info("Number of Rows in CSV = {}", rowNum);
         LOGGER.info("Expected number of Objects = {}", expectedObjectCount);
+        LOGGER.info("Done. Press ctrl + c");
     }
 
     class ReconTask2 implements Runnable {
