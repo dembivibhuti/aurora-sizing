@@ -252,9 +252,10 @@ public class ObjectRepository implements AutoCloseable {
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement objsInDBStmt = connection.prepareStatement(String.format(GET_MANY_RECORDS_SUMM, String.format("%d-", rowNum) + "%"))
             ) {
-                System.out.println(objsInDBStmt);
                 ResultSet rs = objsInDBStmt.executeQuery();
+                long objsFound = 0;
                 while (rs.next()) {
+                    objsFound++;
                     String name = rs.getString("name");
                     int typeId = rs.getInt("typeId");
                     byte[] mem = rs.getBytes("mem");
@@ -266,6 +267,9 @@ public class ObjectRepository implements AutoCloseable {
                     if (mem.length != rowMap.get(name).memSize) {
                         LOGGER.error("Mem Size Mismatch {} Expected = {} Actual = {}", name, rowMap.get(name).memSize, mem.length);
                     }
+                }
+                if(objsFound < rowMap.size()) {
+                    LOGGER.error("Less Objects Found for Row = {} Expected = {} Actual = {}", rowNum, rowMap.size(), objsFound);
                 }
                 rs.close();
                 rowsCompleteCounter.incrementAndGet();
