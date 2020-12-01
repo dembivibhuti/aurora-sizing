@@ -250,7 +250,7 @@ public class ObjectRepository implements AutoCloseable {
         @Override
         public void run() {
             try (Connection connection = rwConnectionProvider.getConnection();
-                 PreparedStatement objsInDBStmt = connection.prepareStatement(String.format(GET_MANY_RECORDS_SUMM, rowNum))
+                 PreparedStatement objsInDBStmt = connection.prepareStatement(String.format(GET_MANY_RECORDS_SUMM, String.format("%d-", rowNum) + "%"))
             ) {
 
                 ResultSet rs = objsInDBStmt.executeQuery();
