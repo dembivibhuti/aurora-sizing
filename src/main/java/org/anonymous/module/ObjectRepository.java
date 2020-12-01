@@ -171,7 +171,6 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-
     class DBRecordMetaData {
         String name;
         int typeId;
@@ -235,22 +234,34 @@ public class ObjectRepository implements AutoCloseable {
             LOGGER.error("error in finding object count", sqlException);
         }
 
-        for(Map.Entry<Long, List<DBRecordMetaData>> row: mapifiedCSV.entrySet() ) {
+        for (Map.Entry<Long, List<DBRecordMetaData>> row : mapifiedCSV.entrySet()) {
             try (Connection connection = rwConnectionProvider.getConnection();
-                 PreparedStatement objsInDBStmt = connection.prepareStatement(GET_MANY_RECORDS_SUMM)
+                 PreparedStatement objsInDBStmt = connection.prepareStatement(String.format(GET_MANY_RECORDS_SUMM, row.getKey()))
             ) {
+                Map<String, DBRecordMetaData> rowMap = new HashMap<>();
+                for (DBRecordMetaData dbRecordMetaData : row.getValue()) {
+                    rowMap.put(dbRecordMetaData.name, dbRecordMetaData);
+                }
                 ResultSet rs = objsInDBStmt.executeQuery();
-                rs.next();
-                objectsInDb = rs.getLong(1);
+                while (rs.next()) {
+                    String name = rs.getString("name");
+                    long typeId = rs.getInt("typeId");
+                    byte[] mem = rs.getBytes("mem");
+
+                    if (typeId != rowMap.get(name).typeId) {
+                        LOGGER.error("Type ID Mismatch {} Expected = {} Actual = {}", name, rowMap.get(name).typeId, typeId);
+                    }
+
+                    if (mem.length != rowMap.get(name).memSize) {
+                        LOGGER.error("Mem Size Mismatch {} Expected = {} Actual = {}", name, rowMap.get(name).memSize, mem.length);
+                    }
+                }
                 rs.close();
-                LOGGER.info("Objects in DB number = {}", objectsInDb);
+                System.out.print("Rows Complete = " + row.getKey() + "\r");
             } catch (SQLException sqlException) {
-                LOGGER.error("error in finding object count", sqlException);
+                LOGGER.error("error in validating object", sqlException);
             }
         }
-
-
-
     }
 
 
@@ -278,13 +289,13 @@ public class ObjectRepository implements AutoCloseable {
         long expectedObjectCount = 0;
         Map<Long, List<DBRecordMetaData>> mapifiedCSV = new HashMap<>();
         for (long i = start; i < end; i++) {
-            String[] row = allData.get((int)i);
+            String[] row = allData.get((int) i);
             int objClassId = Integer.parseInt(row[0]);
             int memSize = Integer.parseInt(row[1]);
             int numObjects = Integer.parseInt(row[2]);
             expectedObjectCount += numObjects;
 
-           List<DBRecordMetaData> objForRow = new ArrayList<>();
+            List<DBRecordMetaData> objForRow = new ArrayList<>();
             for (int j = 0; j < numObjects; j++) {
                 DBRecordMetaData dbRecordMetaData = new DBRecordMetaData();
                 dbRecordMetaData.name = String.format(OBJ_NAME_FRMT_V2, i, objClassId, memSize, j);
@@ -313,7 +324,7 @@ public class ObjectRepository implements AutoCloseable {
 
         AtomicLong rowsCompleteCounter = new AtomicLong();
         executorService.execute(() -> {
-            while(rowsCompleteCounter.get() < batchSize) {
+            while (rowsCompleteCounter.get() < batchSize) {
                 System.out.print("Rows Complete = " + rowsCompleteCounter.get() + "\r");
                 try {
                     Thread.sleep(3000);
@@ -323,7 +334,7 @@ public class ObjectRepository implements AutoCloseable {
             }
         });
 
-        for(long i = start; i< end; i++) {
+        for (long i = start; i < end; i++) {
             executorService.execute(new InsertionTask(i, mapifiedCSV.get(i), rowsCompleteCounter));
         }
 
@@ -434,7 +445,7 @@ public class ObjectRepository implements AutoCloseable {
 
                 if (!inCSV.equals(inDB)) {
                     //LOGGER.error("in - equal data for = {} Object Exists in DB = {}", csvEntry.getKey(), inDB != null);
-                    if( null == inDB) {
+                    if (null == inDB) {
                         absentRecCounter.incrementAndGet();
                         absentRecords.add(inCSV);
                     } else {
@@ -449,7 +460,7 @@ public class ObjectRepository implements AutoCloseable {
             Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
             Iterator<Long> randLongStream = new SplittableRandom().longs().iterator();
             byte[] objPropertyMem = getSizedByteArray(100);
-            Set<ObjectDataHolder> objectDataHolders = absentRecords.stream().map( dbRecordMetaData -> {
+            Set<ObjectDataHolder> objectDataHolders = absentRecords.stream().map(dbRecordMetaData -> {
                 Timestamp timeStampCreated = new Timestamp(randIntStream.next() * 1000L);
 
                 ObjectDataHolder holder = new ObjectDataHolder();
