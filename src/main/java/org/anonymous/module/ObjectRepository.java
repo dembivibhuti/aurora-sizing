@@ -255,6 +255,7 @@ public class ObjectRepository implements AutoCloseable {
 
 
     public void dataLoadFromCSV(List<String[]> allData) {
+        long batchSize = 30000;
         long expectedObjectCount = 0;
         long objectsInDb = 0;
 
@@ -270,7 +271,7 @@ public class ObjectRepository implements AutoCloseable {
         LOGGER.info("Total Expected number of Objects = {}", expectedObjectCount);
 
         long start = Long.parseLong(System.getProperty("serialStart"));
-        long end = Math.min(start + 30000, rowNum);
+        long end = Math.min(start + batchSize, rowNum);
         LOGGER.info("Processing Rows from Row Num = {} to {}", start, end);
 
         LOGGER.info("Starting to Mapify the CSV .....");
@@ -307,12 +308,12 @@ public class ObjectRepository implements AutoCloseable {
         }
 
 
-        AtomicLong rowsCompleteCounter = new AtomicLong();
+        AtomicLong rowsCompleteCounter = new AtomicLong(1);
         executorService.execute(() -> {
-            while(true) {
+            while(rowsCompleteCounter.get() != batchSize) {
                 System.out.print("Rows Complete = " + rowsCompleteCounter.get() + "\r");
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(3000);
                 } catch (InterruptedException e) {
 
                 }
