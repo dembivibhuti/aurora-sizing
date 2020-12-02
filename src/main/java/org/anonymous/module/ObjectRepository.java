@@ -405,6 +405,7 @@ public class ObjectRepository implements AutoCloseable {
                     insertRec.executeUpdate();
                     if (recsAdded++ > 20000) { // Commit if nece
                         connection.commit();
+                        recsAdded = 0;
                     }
                 }
                 connection.commit();
