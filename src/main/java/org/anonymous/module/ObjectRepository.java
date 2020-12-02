@@ -794,15 +794,16 @@ public class ObjectRepository implements AutoCloseable {
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
                 .prepareStatement(String.format(LOOKUP_OBJECTS, exp.first, exp.second))) {
-
             lookupStmt.setString(1, name.toLowerCase());
             lookupStmt.setInt(2, limit);
 
+            System.out.println(lookupStmt);
             ResultSet rs = lookupStmt.executeQuery();
 
             while (rs.next()) {
                 secKeys.add(rs.getString(1));
             }
+            System.out.println(" Result Length = " + secKeys.size());
             rs.close();
 
         } catch (Exception ex) {
