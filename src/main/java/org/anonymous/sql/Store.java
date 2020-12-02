@@ -29,9 +29,9 @@ public class Store {
                     "   mem = ?\n" +
                     "WHERE name = ? AND updateCount = ? AND dbIdUpdated = ?";
 
-    public static final String LOOKUP_OBJECTS = "select name from objects where nameLower %s ? order by name %s LIMIT ?";
+    public static final String LOOKUP_OBJECTS = "select name from objects where nameLower %s ? order by nameLower %s LIMIT ?";
 
-    public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where nameLower %s ? and typeId = ? order by name %s LIMIT ?";
+    public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where nameLower %s ? and typeId = ? order by nameLower %s LIMIT ?";
 
     public static final String OBJ_EXISTS = "Select count(1) from objects where nameLower = ?";
 
