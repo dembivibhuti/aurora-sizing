@@ -51,34 +51,39 @@ func startTest(metrics *model.Metrics) {
 }
 
 func pairityWithSaral(scl model.SSClient) {
-	// var n int32 = 3_000 // send a huge number for lookup
+	var n int32 = 75 // send a huge number for lookup
 
-	i := 1
-    for i < 3000 {
-        resp, err := scl.GetObjectExt("232574-46439-1-1326302")
-        if err != nil {
-            log.Println(err)
-            return // retry to create a new connection
+    	/*i := 1
+    	  for i < 3000 {
+    	      resp, err := scl.GetObjectExt("232574-46439-1-1326302")
+    	      if err != nil {
+    	          log.Println(err)
+    	          return // retry to create a new connection
+    	      }
+    	      _ = resp
+    	      i += 1
+    	  }*/
+
+    res, err := scl.LookupByName(randDigit(3), model.GET_GREATER, n)
+    if err != nil {
+        log.Println(err)
+    } else {
+        if len(res) < 75 {
+            log.Println("got less than 75 recs in lookup")
         }
-        _ = resp
-        i += 1
+        i := 1
+        for i < 40  {
+            for key := range res {
+                resp, err := scl.GetObjectExt(key)
+                if err != nil {
+                    log.Println(err)
+                    return // retry to create a new connection
+                }
+                _ = resp
+                 i += 1
+            }
+        }
     }
-
-	/*
-	res, err := scl.LookupByName(randDigit(1), model.GET_GREATER, n)
-	if err != nil {
-		log.Println(err)
-	} else {
-		for _ = range res {
-			resp, err := scl.GetObjectExt("232574-46439-1-1326302")
-			if err != nil {
-				log.Println(err)
-				return // retry to create a new connection
-			}
-			_ = resp
-		}
-	}
-	*/
 }
 
 func startMetricsServer(addr string) {
