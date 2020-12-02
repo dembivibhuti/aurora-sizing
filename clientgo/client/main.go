@@ -34,7 +34,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for { // infinite for loop
-			    pattern = startTest(metrics, pattern)
+				pattern = startTest(metrics, pattern)
 			}
 		}()
 	}
@@ -44,57 +44,58 @@ func main() {
 	//ssMain(sscl)
 }
 
-func startTest(metrics *model.Metrics, pattern) string {
+func startTest(metrics *model.Metrics, pattern string) string {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC, metrics)
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
 	return pairityWithSaral(sscl, pattern)
 }
 
-func pairityWithSaral(scl model.SSClient, pattern) string {
+func pairityWithSaral(scl model.SSClient, pattern string) string {
 	var n int32 = 75 // send a huge number for lookup
 
-    /*i := 1
-      for i < 3000 {
-          resp, err := scl.GetObjectExt("232574-46439-1-1326302")
-          if err != nil {
-              log.Println(err)
-              return // retry to create a new connection
-          }
-          _ = resp
-          i += 1
-      }*/
+	/*i := 1
+	  for i < 3000 {
+	      resp, err := scl.GetObjectExt("232574-46439-1-1326302")
+	      if err != nil {
+	          log.Println(err)
+	          return // retry to create a new connection
+	      }
+	      _ = resp
+	      i += 1
+	  }*/
 
-    res, err := scl.LookupByName(pattern, model.GET_GREATER, n)
-    if err != nil {
-        log.Println(err)
-    } else {
-        var keys []string
-        for key := range res {
-            keys = append(keys, key)
-        }
-        keysLen := len(keys)
-        if keysLen < 75 {
-            log.Printf("got less than 75 recs in lookup. Got %d, Pattern %s", keysLen, pattern)
-        } else {
-            return randDigit(3)
-        }
+	res, err := scl.LookupByName(pattern, model.GET_GREATER, n)
+	if err != nil {
+		log.Println(err)
+	} else {
+		var keys []string
+		for key := range res {
+			keys = append(keys, key)
+		}
+		keysLen := len(keys)
+		if keysLen < 75 {
+			log.Printf("got less than 75 recs in lookup. Got %d, Pattern %s", keysLen, pattern)
+		} else {
+			return randDigit(3)
+		}
 
-        i := 1
-        var key string
-        for i < 40 {
-            for _, key = range keys {
-                resp, err := scl.GetObjectExt(key)
-                if err != nil {
-                    log.Println(err)
-                    return // retry to create a new connection
-                }
-                _ = resp
-                i += 1
-            }
-        }
-        return key
-    }
+		i := 1
+		var key string
+		for i < 40 {
+			for _, key = range keys {
+				resp, err := scl.GetObjectExt(key)
+				if err != nil {
+					log.Println(err)
+					return randDigit(3) // retry to create a new connection
+				}
+				_ = resp
+				i += 1
+			}
+		}
+		return key
+	}
+	return randDigit(3)
 }
 
 func startMetricsServer(addr string) {
