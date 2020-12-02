@@ -51,7 +51,7 @@ func startTest(metrics *model.Metrics) {
 }
 
 func pairityWithSaral(scl model.SSClient) {
-	var n int32 = 3_000 // send a huge number for lookup
+	// var n int32 = 3_000 // send a huge number for lookup
 
 	i := 1
     for i < 3000 {
