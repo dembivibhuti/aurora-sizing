@@ -76,7 +76,6 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 		keysLen := len(keys)
 		if keysLen < 75 {
 			log.Printf("got less than 75 recs in lookup. Got %d, Pattern %s", keysLen, pattern)
-		} else {
 			return randDigit(3)
 		}
 
