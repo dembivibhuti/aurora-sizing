@@ -57,7 +57,7 @@ func pairityWithSaral(scl model.SSClient) {
 	if err != nil {
 		log.Println(err)
 	} else {
-		for _ := range res {
+		for _ = range res {
 			resp, err := scl.GetObjectExt("232574-46439-1-1326302")
 			if err != nil {
 				log.Println(err)
