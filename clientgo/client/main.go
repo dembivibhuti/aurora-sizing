@@ -68,13 +68,18 @@ func pairityWithSaral(scl model.SSClient) {
     if err != nil {
         log.Println(err)
     } else {
-        resLen := len(res)
-        if resLen < 75 {
-            log.Printf("got less than 75 recs in lookup. Got %d, Pattern %s", resLen, pattern)
+        var keys []string
+        for key := range res {
+            keys = append(keys, key)
         }
+        keysLen := len(keys)
+        if keysLen < 75 {
+            log.Printf("got less than 75 recs in lookup. Got %d, Pattern %s", keysLen, pattern)
+        }
+
         i := 1
         for i < 40 {
-            for key := range res {
+            for _, key := range keys {
                 resp, err := scl.GetObjectExt(key)
                 if err != nil {
                     log.Println(err)
