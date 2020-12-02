@@ -58,7 +58,7 @@ func pairityWithSaral(scl model.SSClient) {
 		log.Println(err)
 	} else {
 		for objName := range res {
-			resp, err := scl.GetObjectExt(objName)
+			resp, err := scl.GetObjectExt("232574-46439-1-1326302")
 			if err != nil {
 				log.Println(err)
 				return // retry to create a new connection
