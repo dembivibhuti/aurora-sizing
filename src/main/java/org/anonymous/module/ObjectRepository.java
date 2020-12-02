@@ -797,13 +797,10 @@ public class ObjectRepository implements AutoCloseable {
             lookupStmt.setString(1, name.toLowerCase());
             lookupStmt.setInt(2, limit);
 
-            System.out.println(lookupStmt);
             ResultSet rs = lookupStmt.executeQuery();
-
             while (rs.next()) {
                 secKeys.add(rs.getString(1));
             }
-            System.out.println(" Result Length = " + secKeys.size());
             rs.close();
 
         } catch (Exception ex) {
