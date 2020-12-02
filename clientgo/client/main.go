@@ -28,12 +28,13 @@ func main() {
 	metrics := model.NewMetrics()
 	metrics.Register(prometheus.DefaultRegisterer)
 	var wg sync.WaitGroup
+	pattern := randDigit(3)
 	for i := 0; i < 500; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for { // infinite for loop
-				startTest(metrics)
+			    pattern = startTest(metrics, pattern)
 			}
 		}()
 	}
@@ -43,14 +44,14 @@ func main() {
 	//ssMain(sscl)
 }
 
-func startTest(metrics *model.Metrics) {
+func startTest(metrics *model.Metrics, pattern) string {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC, metrics)
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
-	pairityWithSaral(sscl)
+	return pairityWithSaral(sscl, pattern)
 }
 
-func pairityWithSaral(scl model.SSClient) {
+func pairityWithSaral(scl model.SSClient, pattern) string {
 	var n int32 = 75 // send a huge number for lookup
 
     /*i := 1
@@ -63,7 +64,7 @@ func pairityWithSaral(scl model.SSClient) {
           _ = resp
           i += 1
       }*/
-    pattern := randDigit(3)
+
     res, err := scl.LookupByName(pattern, model.GET_GREATER, n)
     if err != nil {
         log.Println(err)
@@ -75,11 +76,14 @@ func pairityWithSaral(scl model.SSClient) {
         keysLen := len(keys)
         if keysLen < 75 {
             log.Printf("got less than 75 recs in lookup. Got %d, Pattern %s", keysLen, pattern)
+        } else {
+            return randDigit(3)
         }
 
         i := 1
+        var key string
         for i < 40 {
-            for _, key := range keys {
+            for _, key = range keys {
                 resp, err := scl.GetObjectExt(key)
                 if err != nil {
                     log.Println(err)
@@ -89,6 +93,7 @@ func pairityWithSaral(scl model.SSClient) {
                 i += 1
             }
         }
+        return key
     }
 }
 
