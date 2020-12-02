@@ -53,6 +53,18 @@ func startTest(metrics *model.Metrics) {
 func pairityWithSaral(scl model.SSClient) {
 	var n int32 = 3_000 // send a huge number for lookup
 
+	n := 1
+    for n < 3000 {
+        resp, err := scl.GetObjectExt("232574-46439-1-1326302")
+        if err != nil {
+            log.Println(err)
+            return // retry to create a new connection
+        }
+        _ = resp
+        n += 1
+    }
+
+	/*
 	res, err := scl.LookupByName(randDigit(1), model.GET_GREATER, n)
 	if err != nil {
 		log.Println(err)
@@ -66,6 +78,7 @@ func pairityWithSaral(scl model.SSClient) {
 			_ = resp
 		}
 	}
+	*/
 }
 
 func startMetricsServer(addr string) {
