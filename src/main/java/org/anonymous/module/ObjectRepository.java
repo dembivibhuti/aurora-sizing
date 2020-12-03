@@ -793,7 +793,7 @@ public class ObjectRepository implements AutoCloseable {
         Pair<String, String> exp = expression(typeId);
         List<String> secKeys = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
-                .prepareStatement(String.format(LOOKUP_OBJECTS, exp.first/*, exp.second*/))) {
+                .prepareStatement(String.format(LOOKUP_OBJECTS, exp.first, exp.second))) {
             lookupStmt.setString(1, name.toLowerCase());
             lookupStmt.setInt(2, limit);
 
