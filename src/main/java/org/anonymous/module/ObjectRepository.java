@@ -802,7 +802,7 @@ public class ObjectRepository implements AutoCloseable {
                 secKeys.add(rs.getString(1));
             }
             rs.close();
-
+            connection.commit();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -1126,6 +1126,7 @@ public class ObjectRepository implements AutoCloseable {
             try {
                 rs.close();
                 getFullObjStmt.close();
+                connection.commit();
                 connection.close();
             } catch (Exception exception) {
                 LOGGER.error("error in getFullObject() finally, error in closing the connection", exception);
