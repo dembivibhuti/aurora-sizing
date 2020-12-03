@@ -81,7 +81,7 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 
 		i := 1
 		var key string
-		for i < 40 {
+		for i < 400 {
 			for _, key = range keys {
 				resp, err := scl.GetObjectExt(key)
 				if err != nil {
