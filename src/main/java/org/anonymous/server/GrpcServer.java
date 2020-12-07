@@ -36,7 +36,7 @@ public class GrpcServer {
                 FileReader filereader = new FileReader("C:/Users/Ria Bhatia/IdeaProjects/aurora-sizing/data/index/ClassicIndex.csv");
                 CSVReader csvReader = new CSVReaderBuilder(filereader) .withSkipLines(1).build();
                 List<String[]> allData = csvReader.readAll();
-                objectRepositiory.insertIndexObjectsFromCSV(allData);
+                objectRepositiory.insertIndexObjectsFromCSV2(allData);
             } else {
                 LOGGER.info("Starting in Aurora Mode");
             }
