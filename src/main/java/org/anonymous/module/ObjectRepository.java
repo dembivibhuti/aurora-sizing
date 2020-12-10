@@ -1496,16 +1496,6 @@ public class ObjectRepository implements AutoCloseable {
 
 
     public void executeInsertion(HashMap<String, List<Record>> map, HashMap<String, QueryData> insertQueryDetailsMap) {
-        for(String tableName : map.keySet()){
-            System.out.println(tableName + " -> " + map.get(tableName));
-        }
-        System.out.println("Second Map");
-        for(String tableName : insertQueryDetailsMap.keySet()){
-            System.out.println(tableName + " -> " + insertQueryDetailsMap.get(tableName).getQuery());
-            for(int j : insertQueryDetailsMap.get(tableName).getQueryColoumMap().keySet()){
-                System.out.println(j + " -> -> " + insertQueryDetailsMap.get(tableName).getQueryColoumMap().get(j));
-            }
-        }
         for (String tableName : map.keySet()){
             executorService.execute(new ObjectRepository.IndexInsertionTask(insertQueryDetailsMap.get(tableName).getQueryColoumMap(), map.get(tableName),
                     insertQueryDetailsMap.get(tableName).getQuery()));
@@ -1564,12 +1554,10 @@ public class ObjectRepository implements AutoCloseable {
 
                 for(Record rec : list){
                     query = String.format("%s %s %s %s", query, rec.getCol_name(), rec.getCol_type_val(), "NOT NULL, ");
-
                 }
                 query = String.format("%s %s", query, "name varchar(32) NOT NULL, nameLower varchar(32) NOT NULL, PRIMARY KEY(name) )");
                 System.out.println("------>" + query);
                 connection.prepareStatement(query).executeUpdate();
-
             }
             connection.commit();
         } catch (SQLException sqlException) {
@@ -1584,7 +1572,7 @@ public class ObjectRepository implements AutoCloseable {
                 String table_name = entry.getKey();
                 String indexName = "index_on_" + table_name;
                 connection.prepareStatement(String.format(CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME, indexName,  table_name)).executeUpdate();
-                System.out.println("IndexCreatedfor" + table_name);
+                System.out.println("Index Created for" + table_name);
 
             }
             connection.commit();
@@ -1633,7 +1621,6 @@ public class ObjectRepository implements AutoCloseable {
 
         @Override
         public void run() {
-            //Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement insertRec = connection.prepareStatement(query)) {
                 int recsAdded = 0;
@@ -1665,9 +1652,9 @@ public class ObjectRepository implements AutoCloseable {
                     }
 
                 }
-                System.out.println(query.substring(0, 25) + " Executed ");
                 insertRec.executeBatch();
                 connection.commit();
+                System.out.println(query.substring(0, 25) + " All records Inserted ");
             } catch (PSQLException ex) {
                 LOGGER.error("Error PSQLException", ex);
             } catch (SQLException sqlException) {
