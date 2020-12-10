@@ -1486,4 +1486,273 @@ public class ObjectRepository implements AutoCloseable {
         executorService.shutdown();
     }
 
+    public void insertIndexRecordsFromCSV(List<String[]> allData){
+        HashMap<String, List<Record>> map = mapifyCSV(allData);
+        createIndexTable(map);
+        createIndexOnName(map);
+        HashMap<String, QueryData> insertQueryDetailsMap = getInsertQueryDetails(map);
+        executeInsertion(map, insertQueryDetailsMap);
+    }
+
+
+    public void executeInsertion(HashMap<String, List<Record>> map, HashMap<String, QueryData> insertQueryDetailsMap) {
+        for(String tableName : map.keySet()){
+            System.out.println(tableName + " -> " + map.get(tableName));
+        }
+        System.out.println("Second Map");
+        for(String tableName : insertQueryDetailsMap.keySet()){
+            System.out.println(tableName + " -> " + insertQueryDetailsMap.get(tableName).getQuery());
+            for(int j : insertQueryDetailsMap.get(tableName).getQueryColoumMap().keySet()){
+                System.out.println(j + " -> -> " + insertQueryDetailsMap.get(tableName).getQueryColoumMap().get(j));
+            }
+        }
+        for (String tableName : map.keySet()){
+            executorService.execute(new ObjectRepository.IndexInsertionTask(insertQueryDetailsMap.get(tableName).getQueryColoumMap(), map.get(tableName),
+                    insertQueryDetailsMap.get(tableName).getQuery()));
+
+        }
+        executorService.shutdown();
+
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
+        } catch (InterruptedException it) {
+            LOGGER.error("failed in executor service. Please clean and re-run", it);
+        }
+    }
+
+    public HashMap<String, QueryData> getInsertQueryDetails(HashMap<String, List<Record>> map){
+        HashMap<String, QueryData> insertQueryDetailsMap = new HashMap<>();
+        for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+            String table_name = entry.getKey();
+            List<Record> list = entry.getValue();
+            String colNames = "";
+            Map<Integer, String> queryMap = new HashMap<>();
+            int colNo = 1;
+
+            for(Record rec : list){
+                colNames = String.format("%s%s%s", colNames, rec.getCol_name(), ", ");
+                if(rec.getCol_type().contains("String")){
+                    String stringWithAvgLength = String.format("String%s", rec.getAvg_length());
+                    queryMap.put(colNo, stringWithAvgLength);
+                }
+                else{
+                    queryMap.put(colNo, rec.getCol_type());
+                }
+                colNo++;
+            }
+            colNames = String.format("%s%s%s", colNames, "name, nameLower", "");
+            queryMap.put(colNo, "name");
+            colNo++;
+            queryMap.put(colNo, "nameLower");
+
+            String query = String.format(INSERT_CSV_INDEX_RECORD, table_name, colNames , String.join(",", Collections.nCopies(list.size() + 2, "?")));
+            QueryData queryData = new QueryData(query, (HashMap<Integer, String>) queryMap);
+            insertQueryDetailsMap.put(table_name, queryData);
+        }
+        return insertQueryDetailsMap;
+    }
+
+
+    public void createIndexTable(HashMap<String, List<Record>> map){
+        try (Connection connection = rwConnectionProvider.getConnection();) {
+            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+
+                String table_name = entry.getKey();
+                List<Record> list = entry.getValue();
+
+                String query = String.format("create table %s (", table_name);
+
+                for(Record rec : list){
+                    query = String.format("%s %s %s %s", query, rec.getCol_name(), rec.getCol_type_val(), "NOT NULL, ");
+
+                }
+                query = String.format("%s %s", query, "name varchar(32) NOT NULL, nameLower varchar(32) NOT NULL, PRIMARY KEY(name) )");
+                System.out.println("------>" + query);
+                connection.prepareStatement(query).executeUpdate();
+
+            }
+            connection.commit();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
+
+    public void createIndexOnName(HashMap<String, List<Record>> map){
+        try (Connection connection = rwConnectionProvider.getConnection();) {
+            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+
+                String table_name = entry.getKey();
+                String indexName = "index_on_" + table_name;
+                connection.prepareStatement(String.format(CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME, indexName,  table_name)).executeUpdate();
+                System.out.println("IndexCreatedfor" + table_name);
+
+            }
+            connection.commit();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
+
+    public HashMap<String, List<Record>> mapifyCSV (List<String[]> allData){
+        HashMap<String, List<Record>> map = new HashMap<>();
+        for(String[] row: allData){
+            String table_name = row[0];
+            int col_id = Integer.parseInt(row[1]);
+            String col_name = row[2];
+            String col_type = row[3];
+            String col_type_val = (row[3].contains("String")) ? "varchar": "float";
+            int col_size = Integer.parseInt(row[4]);
+            int noOfObjects = Integer.parseInt(row[5]);
+            double avgLength = (!row[6].isEmpty()) ? Double.parseDouble(row[6]) : 0;
+
+            Record rec = new Record(col_id, col_name, col_type, col_type_val, col_size, noOfObjects, avgLength);
+
+            if(map.containsKey(table_name)){
+                List<Record> list = map.get(table_name);
+                list.add(rec);
+            }else{
+                List<Record> list = new ArrayList<>();
+                list.add(rec);
+                map.put(table_name, list);
+            }
+        }
+        return map;
+    }
+    class IndexInsertionTask implements Runnable {
+
+        private final Map<Integer, String> tablemap;
+        private final List<Record> recordList;
+        private final String query;
+
+        public IndexInsertionTask(HashMap<Integer, String> tablemap, List<Record> recordList, String query) {
+            this.tablemap = tablemap;
+            this.recordList = recordList;
+            this.query  = query;
+
+        }
+
+        @Override
+        public void run() {
+            //Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            try (Connection connection = rwConnectionProvider.getConnection();
+                 PreparedStatement insertRec = connection.prepareStatement(query)) {
+                int recsAdded = 0;
+                System.out.println(connection + "---------->" + query.substring(0, 25));
+                Random random = new Random();
+
+                String str = "ABCDEFGHIGKLMNOPabcdefghijklmnopqrsthdhkshdkshksr";
+
+                for (int i = 0; i < recordList.get(0).getNumberOfObjects(); i++) {
+                    long millis = System.currentTimeMillis();
+                    for(int j: tablemap.keySet()){
+                        if(tablemap.get(j).contains("String")){
+                            insertRec.setString(j, str.substring(0, (int)Math.ceil(Double.parseDouble(tablemap.get(j).substring(6)))));
+                        }else if(tablemap.get(j).contains("Double")){
+                            insertRec.setDouble(j, random.nextDouble());
+                        }else if(tablemap.get(j).contains("Date") || tablemap.get(j).contains("Time")){
+                            insertRec.setDouble(j, millis);
+                        }else {
+                            insertRec.setString(j,String.format("testSec-%d-%d", random.nextInt(), i));
+                        }
+                    }
+                    insertRec.addBatch();
+                    if(recsAdded++ > 20000){
+                        insertRec.executeBatch();
+                        connection.commit();
+                        System.out.println("Inserted");
+                        System.out.println(query.substring(0, 25) + "     ->    " + i);
+                        recsAdded = 0;
+                    }
+
+                }
+                System.out.println(query.substring(0, 25) + " Executed ");
+                insertRec.executeBatch();
+                connection.commit();
+            } catch (PSQLException ex) {
+                LOGGER.error("Error PSQLException", ex);
+            } catch (SQLException sqlException) {
+                LOGGER.error("Error SQLException", sqlException);
+            } catch (Throwable th) {
+                LOGGER.error("Error Throwable", th);
+            }
+        }
+    }
+
+
+    public void insertFromOneTableToOther(String oldTable, String newTable){
+        //createNewTable(newTable);
+        int offsetStartFromHere = 0;
+        int limitBatchSize = 10000;
+        int totalNoOfRows = countRecs(oldTable);
+        int rowsLeftToFetch = totalNoOfRows - offsetStartFromHere;
+
+
+        while(limitBatchSize <= rowsLeftToFetch){
+            insertIntoNewTable(oldTable, newTable, offsetStartFromHere, limitBatchSize);
+            offsetStartFromHere+=limitBatchSize;
+            rowsLeftToFetch = totalNoOfRows - offsetStartFromHere;
+        }
+        if(rowsLeftToFetch > 0){
+            insertIntoNewTable(oldTable, newTable, offsetStartFromHere, limitBatchSize);
+        }
+    }
+
+    public void insertIntoNewTable(String oldTable, String newTable, int offset, int limit){
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getIndexRecords = connection.prepareStatement(String.format("select name from %s LIMIT %s OFFSET %s", oldTable, limit, offset ));
+             PreparedStatement insertRecs = connection.prepareStatement(String.format("insert into %s values (?,?,?,?, ?)", newTable))) {
+            ResultSet rs = getIndexRecords.executeQuery();
+            int recordCount = 0;
+
+            String str = "fhjekherkjthekjtketkethkethkejthkettekrhterte";
+
+            Random random = new Random();
+            while (rs.next()) {
+
+                insertRecs.setString(1, str.substring(0, (int)Math.ceil(7.93)));
+                insertRecs.setDouble(2, random.nextDouble());
+                insertRecs.setDouble(3, System.currentTimeMillis());
+                insertRecs.setString(4, rs.getString("name"));
+                insertRecs.setString(5, rs.getString("name").toLowerCase());
+                insertRecs.addBatch();
+
+                if(recordCount++ > 5000){
+                    insertRecs.executeBatch();
+                    connection.commit();
+                    System.out.println("Records updated till now " + recordCount);
+                    recordCount = 0;
+                }
+            }
+            insertRecs.executeBatch();
+            connection.commit();
+            rs.close();
+
+        } catch (SQLException throwables) {
+            System.out.println("Error Here");
+            throwables.printStackTrace();
+        }
+    }
+
+    public int countRecs(String tableName) {
+        int val = 0;
+        try (Connection connection = rwConnectionProvider.getConnection();
+             PreparedStatement lookupStmt = connection.prepareStatement(String.format(COUNT_RECORDS_FOR_ANY_TABLE, tableName))) {
+            ResultSet rs = lookupStmt.executeQuery();
+            while (rs.next()) {
+                val = rs.getInt(1);
+            }
+            rs.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return val;
+    }
+
+
+
+
+
+
+
+
 }
