@@ -6,10 +6,7 @@ import io.grpc.ServerInterceptors;
 //import io.prometheus.client.exporter.MetricsServlet;
 import me.dinowernli.grpc.prometheus.Configuration;
 import me.dinowernli.grpc.prometheus.MonitoringServerInterceptor;
-import org.anonymous.connection.ConnectionProviderHolder;
-import org.anonymous.connection.HikariCPConnectionProvider;
-import org.anonymous.connection.SimpleJDBCConnectionProvider;
-import org.anonymous.connection.TomcatJDBCConnectionProvider;
+import org.anonymous.connection.*;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.stats.MetricsServlet;
 import org.anonymous.util.TimeKeeper;
@@ -41,6 +38,9 @@ public class GrpcServer {
                 break;
             case "simple":
                 connectionProviderHolder = SimpleJDBCConnectionProvider.create();
+                break;
+            case "nopool":
+                connectionProviderHolder = NoPoolConnectionProvider.create();
                 break;
             default:
                 throw new RuntimeException(" -DdataSource.poolType is a mandatory arguement ");

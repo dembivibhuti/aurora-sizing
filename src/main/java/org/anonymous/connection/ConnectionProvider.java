@@ -16,4 +16,5 @@ public interface ConnectionProvider extends AutoCloseable {
     Future<Connection> getConnectionAsync() throws SQLException;
 
     void close();
+
 }

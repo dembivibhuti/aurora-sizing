@@ -23,10 +23,6 @@ public class SimpleJDBCConnectionProvider implements ConnectionProvider {
         ds = new SimpleDataSource2("in-mem", 20000, 10, Connection.TRANSACTION_READ_COMMITTED, false, 5000, dataSource);
     }
 
-    public static boolean isInMemDB() {
-        return null == System.getProperty("dataSourceClassName");
-    }
-
     public static ConnectionProviderHolder create() {
         /*
          * RO endpoint has a TTL of 1s, we should honor that here. Setting this aggressively makes sure that when the PG
@@ -53,6 +49,10 @@ public class SimpleJDBCConnectionProvider implements ConnectionProvider {
         SimpleDataSource2.PoolProperties rwprops = getRWProperties();
         holder.rwConnectionProvider = new SimpleJDBCConnectionProvider(rwprops);
         return holder;
+    }
+
+    public static boolean isInMemDB() {
+        return null == System.getProperty("dataSourceClassName");
     }
 
     private static SimpleDataSource2.PoolProperties getRWProperties() {
