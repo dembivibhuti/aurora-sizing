@@ -59,6 +59,7 @@ public class NoPoolConnectionProvider implements ConnectionProvider {
         dataSource.setServerNames(new String[]{serverName});
         dataSource.setPortNumbers(new int[]{Integer.parseInt(System.getProperty("dataSource.portNumber"))});
         dataSource.setCurrentSchema(System.getProperty("dataSource.currentSchema"));
+        dataSource.setConnectTimeout(0); //infinite timeout
         if (System.getProperty("javax.net.ssl.trustStore") != null) {
             dataSource.setSsl(true);
             dataSource.setSslmode("verify-full");
