@@ -261,6 +261,52 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         }
     }
 
+    @Override
+    public void getIndexMsgByName(CmdMsgIndexGetByName request, StreamObserver<CmdMsgIndexGetByNameResponse> responseObserver) {
+        LOGGER.trace("got request getIndexObject()");
+        try {
+            CmdMsgIndexGetByNameResponse response = objectRepository.getIndexObjectsFromCSV(request.getIndexId(), request.getSecurityName());
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.error("Caught Exception in getIndexObjectByName()", e);
+        }
+    }
+
+    @Override
+    public void getIndexMsgManyByNameExtStream(CmdMsgIndexGetManyByNameExt request, StreamObserver<CmdMsgIndexGetManyByNameResponseStream> responseObserver) {
+        LOGGER.trace("got request getIndexMsgManyByNameExtStream()");
+        try {
+            List<CmdMsgIndexGetManyByNameResponseStream> responseMessageList = objectRepository.getIdxManyByNameStreamFromCSV(request.getIndexId(), request.getSecurityNameList());
+            responseMessageList.forEach(responseObserver::onNext);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.trace("Caught Exception in getIndexMsgManyByNameExtStream()", e);
+        }
+    }
+
+    @Override
+    public void getIndexRecordInBatches(CmdMsgIndexGetByNameByLimit request, StreamObserver<CmdMsgIndexGetByNameByLimitResponse> responseObserver) {
+        LOGGER.trace("got request getIndexRecordInBatches()");
+        try {
+            int offsetStartFromHere = 0;
+            int limitBatchSize = 1000;
+
+            while (true) {
+                List<CmdMsgIndexGetByNameByLimitResponse> responseMessageList = objectRepository.indexRecordsInBatch(offsetStartFromHere, limitBatchSize, request.getTableName());
+                responseMessageList.forEach(responseObserver::onNext);
+                if (responseMessageList.size() < limitBatchSize) {
+                    break;
+                }
+                offsetStartFromHere += limitBatchSize;
+            }
+
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.trace("Caught Exception in getIndexRecordInBatches()", e);
+        }
+    }
+
     private void sync(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver, Gauge.Timer timer, long spanID) {
         CmdGetByNameExtResponse response;
         Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess;

@@ -1730,4 +1730,108 @@ public class ObjectRepository implements AutoCloseable {
         }
         return val;
     }
+
+    public CmdMsgIndexGetByNameResponse getIndexObjectsFromCSV (final String tableName, String securityName){
+        CmdMsgIndexGetByNameResponse response = null;
+
+        try(Connection connection = rwConnectionProvider.getConnection();){
+            String stmtQuery = String.format(GET_FULL_INDEX_RECORD , "*", tableName, securityName);
+            ResultSet rs = connection.prepareStatement(stmtQuery).executeQuery();
+
+            if(rs.next()) {
+                CmdMsgIndexGetByNameResponse.MsgOnSuccess.Builder msgOnSuccess = CmdMsgIndexGetByNameResponse.MsgOnSuccess.newBuilder().setSecurityName(securityName);
+                int countOfCols = rs.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= countOfCols - 2; i++) {
+                    String colName = rs.getMetaData().getColumnName(i);
+                    String colType = rs.getMetaData().getColumnTypeName(i);
+
+                    if (colType.contains("VARCHAR")) {
+                        msgOnSuccess.putStringVal(colName, rs.getString(i));
+                    }else {
+                        msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
+                    }
+                }
+                response = CmdMsgIndexGetByNameResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+            }
+            else{
+                LOGGER.error("Object Doesn't exist");
+                response = CmdMsgIndexGetByNameResponse.newBuilder().setErrorCode(1).build();
+            }
+            rs.close();
+        }catch (Exception e){
+            System.out.println("ERROR");
+        }
+
+        return response;
+    }
+
+    public List<CmdMsgIndexGetManyByNameResponseStream> getIdxManyByNameStreamFromCSV(String tableName, ProtocolStringList securityNameList) {
+        List<CmdMsgIndexGetManyByNameResponseStream> responseMessages = new ArrayList<>();
+        String sql = String.format(GET_MANY_INDEX_RECORDS, tableName, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
+        CmdMsgIndexGetManyByNameResponseStream response;
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getManyStmt = connection.prepareStatement(sql)) {
+
+            for (int i = 0; i < securityNameList.toArray().length; i++) {
+                getManyStmt.setString(i + 1, securityNameList.get(i).toLowerCase());
+            }
+            ResultSet rs = getManyStmt.executeQuery();
+            while (rs.next()) {
+                CmdMsgIndexGetManyByNameResponseStream.MsgOnSuccess.Builder msgOnSuccess = CmdMsgIndexGetManyByNameResponseStream.MsgOnSuccess.newBuilder().setSecurityName(rs.getString("name"));
+                int countOfCols = rs.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= countOfCols - 2; i++) {
+                    String colName = rs.getMetaData().getColumnName(i);
+                    String colType = rs.getMetaData().getColumnTypeName(i);
+
+                    if (colType.contains("VARCHAR")) {
+                        msgOnSuccess.putStringVal(colName, rs.getString(i));
+                    } else {
+                        msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
+                    }
+                }
+                response = CmdMsgIndexGetManyByNameResponseStream.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+                responseMessages.add(response);
+            }
+            rs.close();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+        return responseMessages;
+    }
+    public List<CmdMsgIndexGetByNameByLimitResponse> indexRecordsInBatch(int offsetStartFromHere, int limitBatchSize, String tableName) {
+        List<CmdMsgIndexGetByNameByLimitResponse> responseMessages = new ArrayList<>();
+        CmdMsgIndexGetByNameByLimitResponse response;
+        String query = String.format(INSERT_INDEX_RECORDS_WITH_LIMIT, tableName, limitBatchSize, offsetStartFromHere);
+
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getIndexRecords = connection.prepareStatement(query)) {
+            ResultSet rs = getIndexRecords.executeQuery();
+            while (rs.next()) {
+
+                CmdMsgIndexGetByNameByLimitResponse.MsgOnSuccess.Builder msgOnSuccess =
+                        CmdMsgIndexGetByNameByLimitResponse.MsgOnSuccess.newBuilder().setSecurityName(rs.getString("name"));
+                int countOfCols = rs.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= countOfCols - 2; i++) {
+                    String colName = rs.getMetaData().getColumnName(i);
+                    String colType = rs.getMetaData().getColumnTypeName(i);
+
+                    if (colType.contains("VARCHAR")) {
+                        msgOnSuccess.putStringVal(colName, rs.getString(i));
+                    } else {
+                        msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
+                    }
+                }
+                response = CmdMsgIndexGetByNameByLimitResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+                responseMessages.add(response);
+            }
+            rs.close();
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return responseMessages;
+    }
 }

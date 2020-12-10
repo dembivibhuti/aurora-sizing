@@ -135,4 +135,6 @@ public class Store {
     public static final String INSERT_TEST_INDEX_RECORDS = "insert into test_table values (?, ?, ?, ?)";
 
     public static final String INSERT_CSV_INDEX_RECORD = "insert into %s (%s) values (%s)";
+
+    public static final String INSERT_INDEX_RECORDS_WITH_LIMIT = "select * from %s LIMIT %s OFFSET %s";
 }

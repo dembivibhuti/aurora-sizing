@@ -48,6 +48,11 @@ public class Client {
         getObjectByName(objSvcStub);
         objSvcStub.withWaitForReady();
         getObjectByNameExt(objSvcStub);
+        getIndexRecordByNameCSV(objSvcStub);
+        objSvcStub.withWaitForReady();
+        getIndexObjectManyByNameExtStream(objSvcStub);
+        objSvcStub.withWaitForReady();
+        getIndexObjectBatch(objSvcStub);
 
         // Transaction Service
         CompletableFuture<Void> future = new CompletableFuture();
@@ -149,6 +154,41 @@ public class Client {
     private static void getObjectByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdGetByNameResponse response = stub.getObject(CmdGetByName.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-0").build());
         System.out.println("Response received from getObjectByName: \n" + response.getSecurity());
+    }
+
+    private static void getIndexRecordByNameCSV(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdMsgIndexGetByNameResponse response = stub.getIndexMsgByName(CmdMsgIndexGetByName.newBuilder().setSecurityName("testSec--2014566981-87").setIndexId("Table_TT").build());
+        System.out.println("Response received from getIdxByName2: \n" + response);
+    }
+
+    private static void getIndexObjectManyByNameExtStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdMsgIndexGetManyByNameExt request= CmdMsgIndexGetManyByNameExt.newBuilder().addSecurityName("testSec--2014566981-87").addSecurityName("testSec-104888214-88").addSecurityName("tdestSec--1772058975-102").setIndexId("Table_TT").build();
+        try {
+            Iterator<CmdMsgIndexGetManyByNameResponseStream> response = stub.getIndexMsgManyByNameExtStream(request);
+            System.out.println("Response received from getIndexObjectManyByNameExtStream:");
+            while (response.hasNext()) {
+                System.out.println(response.next());
+            }
+        }catch (Exception e) {
+            LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);
+        }
+    }
+
+
+    private static void getIndexObjectBatch (ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdMsgIndexGetByNameByLimit request= CmdMsgIndexGetByNameByLimit.newBuilder().setTableName("Table_TT").build();
+        try {
+            Iterator<CmdMsgIndexGetByNameByLimitResponse> response = stub.getIndexRecordInBatches(request);
+            System.out.println("Response received from getIndexObjectBatch:");
+            int i = 0;
+            while (response.hasNext()) {
+                System.out.println(i);
+                System.out.println(response.next());
+                i++;
+            }
+        }catch (Exception e) {
+            LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);
+        }
     }
 
     private static void transactionTest(TransactionServiceGrpc.TransactionServiceStub stub, CompletableFuture<Void> future) throws InterruptedException {

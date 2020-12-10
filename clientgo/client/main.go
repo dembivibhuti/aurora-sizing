@@ -97,6 +97,41 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 	return randDigit(3)
 }
 
+//func pairityWithSaral(scl model.SSClient, pattern string) string {
+//	var n int32 = 100 // send a huge number for lookup
+//	res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	for k := range res {
+//		//fmt.Println("Lookup: ", k)
+//		resp, err := scl.GetObject(k)
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		fmt.Print("Get Object Mem By Name Response: ", resp)
+//		fmt.Println("================")
+//
+//		respCh, err := scl.GetIndexMsgByName(k, "test_table")
+//		fmt.Print("Get Index Object By Name : ", respCh)
+//		fmt.Println("================")
+//	}
+//
+//}
+
+func pairityWithSaralVersion2(scl model.SSClient) {
+	respCh, err := scl.GetIndexRecordInBatches("Table_TT")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for k := range respCh {
+		fmt.Print("Get Index Object In Batches : ", k)
+		fmt.Println("================")
+	}
+
+}
+
 func startMetricsServer(addr string) {
 	http.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
