@@ -45,7 +45,10 @@ public class NoPoolConnectionProvider implements ConnectionProvider {
 
     @Override
     public Connection getConnection() throws SQLException {
-        return this.dataSource.getConnection();
+        Connection connection = this.dataSource.getConnection();
+        connection.setAutoCommit(false);
+        //connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        return connection;
     }
 
     private DataSource createDataSource(final String serverName) {
