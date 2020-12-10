@@ -31,6 +31,10 @@ type ObjServiceClient interface {
 	GetObjectManyByNameExtStream(ctx context.Context, in *CmdGetManyByNameExt, opts ...grpc.CallOption) (ObjService_GetObjectManyByNameExtStreamClient, error)
 	ChangeInitData(ctx context.Context, in *CmdChangeInitData, opts ...grpc.CallOption) (*CmdChangeInitDataResponse, error)
 	ChangeInitDataExt(ctx context.Context, in *CmdChangeInitDataExt, opts ...grpc.CallOption) (*CmdChangeInitDataExtResponse, error)
+	GetIdxByName(ctx context.Context, in *CmdIdxGetByName, opts ...grpc.CallOption) (*CmdIdxGetByNameResponse, error)
+	GetIndexMsgByName(ctx context.Context, in *CmdMsgIndexGetByName, opts ...grpc.CallOption) (*CmdMsgIndexGetByNameResponse, error)
+	GetIndexMsgManyByNameExtStream(ctx context.Context, in *CmdMsgIndexGetManyByNameExt, opts ...grpc.CallOption) (ObjService_GetIndexMsgManyByNameExtStreamClient, error)
+	GetIndexRecordInBatches(ctx context.Context, in *CmdMsgIndexGetByNameByLimit, opts ...grpc.CallOption) (ObjService_GetIndexRecordInBatchesClient, error)
 }
 
 type objServiceClient struct {
@@ -259,6 +263,88 @@ func (c *objServiceClient) ChangeInitDataExt(ctx context.Context, in *CmdChangeI
 	return out, nil
 }
 
+func (c *objServiceClient) GetIdxByName(ctx context.Context, in *CmdIdxGetByName, opts ...grpc.CallOption) (*CmdIdxGetByNameResponse, error) {
+	out := new(CmdIdxGetByNameResponse)
+	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_idx_by_name", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *objServiceClient) GetIndexMsgByName(ctx context.Context, in *CmdMsgIndexGetByName, opts ...grpc.CallOption) (*CmdMsgIndexGetByNameResponse, error) {
+	out := new(CmdMsgIndexGetByNameResponse)
+	err := c.cc.Invoke(ctx, "/org.anonymous.grpc.ObjService/get_index_msg_by_name", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *objServiceClient) GetIndexMsgManyByNameExtStream(ctx context.Context, in *CmdMsgIndexGetManyByNameExt, opts ...grpc.CallOption) (ObjService_GetIndexMsgManyByNameExtStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ObjService_serviceDesc.Streams[4], "/org.anonymous.grpc.ObjService/get_index_msg_many_by_name_ext_stream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &objServiceGetIndexMsgManyByNameExtStreamClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ObjService_GetIndexMsgManyByNameExtStreamClient interface {
+	Recv() (*CmdMsgIndexGetManyByNameResponseStream, error)
+	grpc.ClientStream
+}
+
+type objServiceGetIndexMsgManyByNameExtStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *objServiceGetIndexMsgManyByNameExtStreamClient) Recv() (*CmdMsgIndexGetManyByNameResponseStream, error) {
+	m := new(CmdMsgIndexGetManyByNameResponseStream)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *objServiceClient) GetIndexRecordInBatches(ctx context.Context, in *CmdMsgIndexGetByNameByLimit, opts ...grpc.CallOption) (ObjService_GetIndexRecordInBatchesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ObjService_serviceDesc.Streams[5], "/org.anonymous.grpc.ObjService/get_index_record_in_batches", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &objServiceGetIndexRecordInBatchesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ObjService_GetIndexRecordInBatchesClient interface {
+	Recv() (*CmdMsgIndexGetByNameByLimitResponse, error)
+	grpc.ClientStream
+}
+
+type objServiceGetIndexRecordInBatchesClient struct {
+	grpc.ClientStream
+}
+
+func (x *objServiceGetIndexRecordInBatchesClient) Recv() (*CmdMsgIndexGetByNameByLimitResponse, error) {
+	m := new(CmdMsgIndexGetByNameByLimitResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ObjServiceServer is the server API for ObjService service.
 // All implementations must embed UnimplementedObjServiceServer
 // for forward compatibility
@@ -277,6 +363,10 @@ type ObjServiceServer interface {
 	GetObjectManyByNameExtStream(*CmdGetManyByNameExt, ObjService_GetObjectManyByNameExtStreamServer) error
 	ChangeInitData(context.Context, *CmdChangeInitData) (*CmdChangeInitDataResponse, error)
 	ChangeInitDataExt(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error)
+	GetIdxByName(context.Context, *CmdIdxGetByName) (*CmdIdxGetByNameResponse, error)
+	GetIndexMsgByName(context.Context, *CmdMsgIndexGetByName) (*CmdMsgIndexGetByNameResponse, error)
+	GetIndexMsgManyByNameExtStream(*CmdMsgIndexGetManyByNameExt, ObjService_GetIndexMsgManyByNameExtStreamServer) error
+	GetIndexRecordInBatches(*CmdMsgIndexGetByNameByLimit, ObjService_GetIndexRecordInBatchesServer) error
 	mustEmbedUnimplementedObjServiceServer()
 }
 
@@ -326,6 +416,18 @@ func (UnimplementedObjServiceServer) ChangeInitData(context.Context, *CmdChangeI
 func (UnimplementedObjServiceServer) ChangeInitDataExt(context.Context, *CmdChangeInitDataExt) (*CmdChangeInitDataExtResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeInitDataExt not implemented")
 }
+func (UnimplementedObjServiceServer) GetIdxByName(context.Context, *CmdIdxGetByName) (*CmdIdxGetByNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIdxByName not implemented")
+}
+func (UnimplementedObjServiceServer) GetIndexMsgByName(context.Context, *CmdMsgIndexGetByName) (*CmdMsgIndexGetByNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIndexMsgByName not implemented")
+}
+func (UnimplementedObjServiceServer) GetIndexMsgManyByNameExtStream(*CmdMsgIndexGetManyByNameExt, ObjService_GetIndexMsgManyByNameExtStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetIndexMsgManyByNameExtStream not implemented")
+}
+func (UnimplementedObjServiceServer) GetIndexRecordInBatches(*CmdMsgIndexGetByNameByLimit, ObjService_GetIndexRecordInBatchesServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetIndexRecordInBatches not implemented")
+}
 func (UnimplementedObjServiceServer) mustEmbedUnimplementedObjServiceServer() {}
 
 // UnsafeObjServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -335,7 +437,7 @@ type UnsafeObjServiceServer interface {
 	mustEmbedUnimplementedObjServiceServer()
 }
 
-func RegisterObjServiceServer(s *grpc.Server, srv ObjServiceServer) {
+func RegisterObjServiceServer(s grpc.ServiceRegistrar, srv ObjServiceServer) {
 	s.RegisterService(&_ObjService_serviceDesc, srv)
 }
 
@@ -349,7 +451,7 @@ func _ObjService_Connect_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/Connect",
+		FullMethod: "/org.anonymous.grpc.ObjService/connect",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).Connect(ctx, req.(*CmdConnect))
@@ -367,7 +469,7 @@ func _ObjService_ConnectExt_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/ConnectExt",
+		FullMethod: "/org.anonymous.grpc.ObjService/connect_ext",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).ConnectExt(ctx, req.(*CmdConnectExt))
@@ -385,7 +487,7 @@ func _ObjService_LookupByName_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/LookupByName",
+		FullMethod: "/org.anonymous.grpc.ObjService/lookup_by_name",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).LookupByName(ctx, req.(*CmdLookupByName))
@@ -424,7 +526,7 @@ func _ObjService_LookupByType_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/LookupByType",
+		FullMethod: "/org.anonymous.grpc.ObjService/lookup_by_type",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).LookupByType(ctx, req.(*CmdNameLookupByType))
@@ -463,7 +565,7 @@ func _ObjService_GetObject_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObject",
+		FullMethod: "/org.anonymous.grpc.ObjService/get_object",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).GetObject(ctx, req.(*CmdGetByName))
@@ -481,7 +583,7 @@ func _ObjService_GetObjectExt_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectExt",
+		FullMethod: "/org.anonymous.grpc.ObjService/get_object_ext",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).GetObjectExt(ctx, req.(*CmdGetByNameExt))
@@ -499,7 +601,7 @@ func _ObjService_GetObjectManyByName_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectManyByName",
+		FullMethod: "/org.anonymous.grpc.ObjService/get_object_many_by_name",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).GetObjectManyByName(ctx, req.(*CmdGetManyByName))
@@ -538,7 +640,7 @@ func _ObjService_GetObjectManyByNameExt_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/GetObjectManyByNameExt",
+		FullMethod: "/org.anonymous.grpc.ObjService/get_object_many_by_name_ext",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).GetObjectManyByNameExt(ctx, req.(*CmdGetManyByNameExt))
@@ -577,7 +679,7 @@ func _ObjService_ChangeInitData_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/ChangeInitData",
+		FullMethod: "/org.anonymous.grpc.ObjService/change_init_data",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).ChangeInitData(ctx, req.(*CmdChangeInitData))
@@ -595,12 +697,90 @@ func _ObjService_ChangeInitDataExt_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjService/ChangeInitDataExt",
+		FullMethod: "/org.anonymous.grpc.ObjService/change_init_data_ext",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjServiceServer).ChangeInitDataExt(ctx, req.(*CmdChangeInitDataExt))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_GetIdxByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdIdxGetByName)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).GetIdxByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/get_idx_by_name",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).GetIdxByName(ctx, req.(*CmdIdxGetByName))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_GetIndexMsgByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CmdMsgIndexGetByName)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjServiceServer).GetIndexMsgByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/org.anonymous.grpc.ObjService/get_index_msg_by_name",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjServiceServer).GetIndexMsgByName(ctx, req.(*CmdMsgIndexGetByName))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjService_GetIndexMsgManyByNameExtStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(CmdMsgIndexGetManyByNameExt)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ObjServiceServer).GetIndexMsgManyByNameExtStream(m, &objServiceGetIndexMsgManyByNameExtStreamServer{stream})
+}
+
+type ObjService_GetIndexMsgManyByNameExtStreamServer interface {
+	Send(*CmdMsgIndexGetManyByNameResponseStream) error
+	grpc.ServerStream
+}
+
+type objServiceGetIndexMsgManyByNameExtStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *objServiceGetIndexMsgManyByNameExtStreamServer) Send(m *CmdMsgIndexGetManyByNameResponseStream) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _ObjService_GetIndexRecordInBatches_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(CmdMsgIndexGetByNameByLimit)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ObjServiceServer).GetIndexRecordInBatches(m, &objServiceGetIndexRecordInBatchesServer{stream})
+}
+
+type ObjService_GetIndexRecordInBatchesServer interface {
+	Send(*CmdMsgIndexGetByNameByLimitResponse) error
+	grpc.ServerStream
+}
+
+type objServiceGetIndexRecordInBatchesServer struct {
+	grpc.ServerStream
+}
+
+func (x *objServiceGetIndexRecordInBatchesServer) Send(m *CmdMsgIndexGetByNameByLimitResponse) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _ObjService_serviceDesc = grpc.ServiceDesc{
@@ -647,6 +827,14 @@ var _ObjService_serviceDesc = grpc.ServiceDesc{
 			MethodName: "change_init_data_ext",
 			Handler:    _ObjService_ChangeInitDataExt_Handler,
 		},
+		{
+			MethodName: "get_idx_by_name",
+			Handler:    _ObjService_GetIdxByName_Handler,
+		},
+		{
+			MethodName: "get_index_msg_by_name",
+			Handler:    _ObjService_GetIndexMsgByName_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -667,6 +855,16 @@ var _ObjService_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "get_object_many_by_name_ext_stream",
 			Handler:       _ObjService_GetObjectManyByNameExtStream_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "get_index_msg_many_by_name_ext_stream",
+			Handler:       _ObjService_GetIndexMsgManyByNameExtStream_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "get_index_record_in_batches",
+			Handler:       _ObjService_GetIndexRecordInBatches_Handler,
 			ServerStreams: true,
 		},
 	},

@@ -1,4 +1,4 @@
-testclient:
+testclient: clean proto
 	go build -o testclient -v ./client/
 
 

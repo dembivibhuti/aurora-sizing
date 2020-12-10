@@ -51,17 +51,19 @@ public class Client {
         objSvcStub.withWaitForReady();
 
 //        //Get Index Record By Name Call
-        getIndexRecordByName(objSvcStub);
-        objSvcStub.withWaitForReady();
-        getIndexRecordByNameCSV(objSvcStub);
-        objSvcStub.withWaitForReady();
-        getIndexObjectManyByNameExtStream(objSvcStub);
+//        getIndexRecordByName(objSvcStub);
+//        objSvcStub.withWaitForReady();
+//        getIndexRecordByNameCSV(objSvcStub);
+//        objSvcStub.withWaitForReady();
+//        getIndexObjectManyByNameExtStream(objSvcStub);
+//        objSvcStub.withWaitForReady();
+        getIndexObjectBatch(objSvcStub);
 
         // Transaction Service
-        CompletableFuture<Void> future = new CompletableFuture();
-        TransactionServiceGrpc.TransactionServiceStub asyncStub = TransactionServiceGrpc.newStub(channel);
-        transactionTest(asyncStub, future);
-        future.join();
+//        CompletableFuture<Void> future = new CompletableFuture();
+//        TransactionServiceGrpc.TransactionServiceStub asyncStub = TransactionServiceGrpc.newStub(channel);
+//        transactionTest(asyncStub, future);
+//        future.join();
         channel.shutdown();
 
     }
@@ -175,6 +177,22 @@ public class Client {
             System.out.println("Response received from getIndexObjectManyByNameExtStream:");
             while (response.hasNext()) {
                 System.out.println(response.next());
+            }
+        }catch (Exception e) {
+            LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);
+        }
+    }
+
+    private static void getIndexObjectBatch (ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdMsgIndexGetByNameByLimit request= CmdMsgIndexGetByNameByLimit.newBuilder().setTableName("Table_TT").build();
+        try {
+            Iterator<CmdMsgIndexGetByNameByLimitResponse> response = stub.getIndexRecordInBatches(request);
+            System.out.println("Response received from getIndexObjectBatch:");
+            int i = 0;
+            while (response.hasNext()) {
+                System.out.println(i);
+                System.out.println(response.next());
+                i++;
             }
         }catch (Exception e) {
             LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);

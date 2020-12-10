@@ -13,6 +13,7 @@ public class Store {
     public static final String CREATE_RECORD_INDEX_BY_TYPEID_NAME = "create unique index object_typeid_name on objects(typeId, nameLower)";
     public static final String CREATE_RECORD_INDEX_BY_LOWER_NAME = "create unique index object_lower_name on objects(nameLower)";
     public static final String CREATE_RECORD_INDEX_BY_NAME = "create unique index object_name on objects(name)";
+    public static final String CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME= "create unique index %s on %s(nameLower)";
 
     public static final String INSERT_RECORDS = "insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -40,6 +41,8 @@ public class Store {
     public static final String GET_MEM = "select mem from objects where nameLower = ?";
 
     public static final String COUNT_RECORDS = "select count(name) from objects";
+
+    public static final String COUNT_RECORDS_FOR_ANY_TABLE = "select count(name) from %s";
 
     public static final String GET_MANY_SDB_RECORDS = "select sdbDiskMem from objects where nameLower in (%s)";
 
@@ -123,5 +126,7 @@ public class Store {
     public static final String INSERT_TEST_INDEX_RECORDS = "insert into test_table values (?, ?, ?, ?)";
 
     public static final String INSERT_CSV_INDEX_RECORD = "insert into %s (%s) values (%s)";
+
+    public static final String INSERT_INDEX_RECORDS_WITH_LIMIT = "select * from %s LIMIT %s OFFSET %s";
 
 }

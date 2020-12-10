@@ -17,13 +17,10 @@ public class ObjectLoadFromCSV {
         try {
             ObjectRepository objectRepository = new ObjectRepository(holder.roConnectionProvider, holder.rwConnectionProvider);
             TimeKeeper timekeeper = new TimeKeeper("load", false);
-
-            FileReader filereader = new FileReader("/home/ec2-user/environment/aurora-sizing/TestData.csv");
+            FileReader filereader = new FileReader("C:/Users/Ria Bhatia/IdeaProjects/aurora-sizing/data/index/ClassicIndex.csv");
             CSVReader csvReader = new CSVReaderBuilder(filereader) .withSkipLines(1).build();
             List<String[]> allData = csvReader.readAll();
-
-            //objectRepository.insertObjectsFromCSV(9, allData, timekeeper);
-            objectRepository.insertObjectsFromCSV(9, allData, timekeeper);
+            objectRepository.insertIndexRecordsFromCSV(allData);
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {

@@ -310,4 +310,26 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.trace("Caught Exception in getIndexMsgManyByNameExtStream()", e);
         }
     }
+
+    @Override
+    public void getIndexRecordInBatches(CmdMsgIndexGetByNameByLimit request, StreamObserver<CmdMsgIndexGetByNameByLimitResponse> responseObserver) {
+        LOGGER.trace("got request getIndexRecordInBatches()");
+        try {
+            int offsetStartFromHere = 0;
+            int limitBatchSize = 1000;
+
+            while (true) {
+                List<CmdMsgIndexGetByNameByLimitResponse> responseMessageList = objectRepository.indexRecordsInBatch(offsetStartFromHere, limitBatchSize, request.getTableName());
+                responseMessageList.forEach(responseObserver::onNext);
+                if (responseMessageList.size() < limitBatchSize) {
+                    break;
+                }
+                offsetStartFromHere += limitBatchSize;
+            }
+
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.trace("Caught Exception in getIndexRecordInBatches()", e);
+        }
+    }
 }

@@ -286,6 +286,50 @@ func (s *SSClient) GetObjectManyExt(snames []string) (<-chan *model.ObjectExt, e
 	}()
 	return ch, nil
 }
+
+func (s *SSClient) GetIndexRecordInBatches(tablename string) (<-chan *model.Record2, error) {
+	ctx := context.Background()
+	strmCl, err := s.client.GetIndexRecordInBatches(ctx, &pb.CmdMsgIndexGetByNameByLimit{
+		TableName: tablename,
+	})
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	ch := make(chan *model.Record2)
+
+	go func() {
+		for {
+			resp, err := strmCl.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			v := resp.GetMsgOnSuccess()
+
+			if v == nil {
+				continue
+			}
+
+			obj := &model.Record2{
+				SecName:   v.GetSecurityName(),
+				StringVal: v.GetStringVal(),
+				DoubleVal: v.GetDoubleVal(),
+			}
+
+			ch <- obj
+		}
+
+		close(ch)
+	}()
+	return ch, nil
+}
+
 func (s *SSClient) GetIndexManyByNameStream(snames []string, tableName string) (<-chan *model.Record2, error) {
 	ctx := context.Background()
 	strmCl, err := s.client.GetIndexMsgManyByNameExtStream(ctx, &pb.CmdMsgIndexGetManyByNameExt{

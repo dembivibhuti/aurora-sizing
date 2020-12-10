@@ -871,29 +871,7 @@ public class ObjectRepository implements AutoCloseable {
         return completableFuture;
     }
 
-    public CompletableFuture<Long> countRecs(TimeKeeper lookupTimeKeeper) {
-        CompletableFuture<Long> completableFuture = new CompletableFuture();
-        executorService.submit(() -> {
-            long spanId = lookupTimeKeeper.start();
 
-            try (Connection connection = rwConnectionProvider.getConnection();
-                 PreparedStatement lookupStmt = connection.prepareStatement(COUNT_RECORDS)) {
-                ResultSet rs = lookupStmt.executeQuery();
-                Long x = null;
-                while (rs.next()) {
-                    x = rs.getLong(1);
-                }
-                rs.close();
-                lookupTimeKeeper.stop(spanId);
-                completableFuture.complete(x);
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                completableFuture.completeExceptionally(ex);
-            }
-        });
-        return completableFuture;
-    }
 
     public List<ByteString> getManyMemByName(ProtocolStringList securityNameList) {
         List<ByteString> secMem = new ArrayList<>();
@@ -1160,13 +1138,77 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-    public void insertIndexObjectsFromCSV2(List<String[]> allData) {
-        HashMap<String, List<Record>> map = new HashMap<>();
-        HashMap<String, QueryData> insertQueryDetailsMap = new HashMap<>();
-        mapifyCSV(map, allData);
-        createIndexTable(map);
-        getInsertQueryDetails(map, insertQueryDetailsMap);
 
+    public List<CmdMsgIndexGetByNameByLimitResponse> indexRecordsInBatch(int offsetStartFromHere, int limitBatchSize, String tableName) {
+        List<CmdMsgIndexGetByNameByLimitResponse> responseMessages = new ArrayList<>();
+        CmdMsgIndexGetByNameByLimitResponse response;
+        String query = String.format(INSERT_INDEX_RECORDS_WITH_LIMIT, tableName, limitBatchSize, offsetStartFromHere);
+
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getIndexRecords = connection.prepareStatement(query)) {
+             ResultSet rs = getIndexRecords.executeQuery();
+               while (rs.next()) {
+
+                 CmdMsgIndexGetByNameByLimitResponse.MsgOnSuccess.Builder msgOnSuccess =
+                        CmdMsgIndexGetByNameByLimitResponse.MsgOnSuccess.newBuilder().setSecurityName(rs.getString("name"));
+                  int countOfCols = rs.getMetaData().getColumnCount();
+
+                  for (int i = 1; i <= countOfCols - 2; i++) {
+                    String colName = rs.getMetaData().getColumnName(i);
+                    String colType = rs.getMetaData().getColumnTypeName(i);
+
+                    if (colType.contains("VARCHAR")) {
+                        msgOnSuccess.putStringVal(colName, rs.getString(i));
+                    } else {
+                        msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
+                    }
+                   }
+                 response = CmdMsgIndexGetByNameByLimitResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+                 responseMessages.add(response);
+               }
+            rs.close();
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return responseMessages;
+    }
+
+    public CompletableFuture<Long> countRecs(TimeKeeper lookupTimeKeeper) {
+        CompletableFuture<Long> completableFuture = new CompletableFuture();
+        executorService.submit(() -> {
+            long spanId = lookupTimeKeeper.start();
+
+            try (Connection connection = rwConnectionProvider.getConnection();
+                 PreparedStatement lookupStmt = connection.prepareStatement(COUNT_RECORDS)) {
+                ResultSet rs = lookupStmt.executeQuery();
+                Long x = null;
+                while (rs.next()) {
+                    x = rs.getLong(1);
+                }
+                rs.close();
+                lookupTimeKeeper.stop(spanId);
+                completableFuture.complete(x);
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                completableFuture.completeExceptionally(ex);
+            }
+        });
+        return completableFuture;
+    }
+
+    public void insertIndexRecordsFromCSV(List<String[]> allData){
+        HashMap<String, List<Record>> map = mapifyCSV(allData);
+        createIndexTable(map);
+        createIndexOnName(map);
+
+        HashMap<String, QueryData> insertQueryDetailsMap = getInsertQueryDetails(map);
+        executeInsertion(map, insertQueryDetailsMap);
+    }
+
+
+    public void executeInsertion(HashMap<String, List<Record>> map, HashMap<String, QueryData> insertQueryDetailsMap) {
         for(String tableName : map.keySet()){
             System.out.println(tableName + " -> " + map.get(tableName));
         }
@@ -1177,41 +1219,50 @@ public class ObjectRepository implements AutoCloseable {
                 System.out.println(j + " -> -> " + insertQueryDetailsMap.get(tableName).getQueryColoumMap().get(j));
             }
         }
-        for (String tableName :  map.keySet())
+        for (String tableName : map.keySet()){
             executorService.execute(new ObjectRepository.IndexInsertionTask(insertQueryDetailsMap.get(tableName).getQueryColoumMap(), map.get(tableName),
                     insertQueryDetailsMap.get(tableName).getQuery()));
+
+        }
         executorService.shutdown();
+
         try {
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
         } catch (InterruptedException it) {
-            LOGGER.error("Failure in executor service. Please clean and re-run", it);
+            LOGGER.error("failed in executor service. Please clean and re-run", it);
         }
-
-
     }
 
-
-    public void getInsertQueryDetails(HashMap<String, List<Record>> map, HashMap<String, QueryData> insertQueryDetailsMap){
+    public HashMap<String, QueryData> getInsertQueryDetails(HashMap<String, List<Record>> map){
+        HashMap<String, QueryData> insertQueryDetailsMap = new HashMap<>();
         for(Map.Entry<String, List<Record>> entry : map.entrySet()){
             String table_name = entry.getKey();
             List<Record> list = entry.getValue();
             String colNames = "";
             Map<Integer, String> queryMap = new HashMap<>();
             int colNo = 1;
+
             for(Record rec : list){
-                colNames = colNames + rec.getCol_name() + ", ";
-                queryMap.put(colNo, rec.getCol_type());
+                colNames = String.format("%s%s%s", colNames, rec.getCol_name(), ", ");
+                if(rec.getCol_type().contains("String")){
+                    String stringWithAvgLength = String.format("String%s", rec.getAvg_length());
+                    queryMap.put(colNo, stringWithAvgLength);
+                }
+                else{
+                    queryMap.put(colNo, rec.getCol_type());
+                }
                 colNo++;
             }
-            colNames = colNames + "name, nameLower";
+            colNames = String.format("%s%s%s", colNames, "name, nameLower", "");
             queryMap.put(colNo, "name");
             colNo++;
             queryMap.put(colNo, "nameLower");
 
-            String query = String.format(INSERT_CSV_INDEX_RECORD, table_name, colNames, String.join(",", Collections.nCopies(list.size() + 2, "?")));
+            String query = String.format(INSERT_CSV_INDEX_RECORD, table_name, colNames , String.join(",", Collections.nCopies(list.size() + 2, "?")));
             QueryData queryData = new QueryData(query, (HashMap<Integer, String>) queryMap);
             insertQueryDetailsMap.put(table_name, queryData);
         }
+        return insertQueryDetailsMap;
     }
 
 
@@ -1222,15 +1273,17 @@ public class ObjectRepository implements AutoCloseable {
                 String table_name = entry.getKey();
                 List<Record> list = entry.getValue();
 
-                String query = "create table " + table_name + "( ";
+                String query = String.format("create table %s (", table_name);
 
                 for(Record rec : list){
-                    String col_details = rec.getCol_name() + " "+ rec.getCol_type_val() + "(" + rec.getCol_size() + ")" + " NOT NULL";
-                    query = query + col_details + ", ";
+                    query = String.format("%s %s %s %s", query, rec.getCol_name(), rec.getCol_type_val(), "NOT NULL, ");
+
                 }
 
-                query = query + " name varchar(32) NOT NULL, nameLower varchar(32) NOT NULL, PRIMARY KEY(name))";
+                query = String.format("%s %s", query, "name varchar(32) NOT NULL, nameLower varchar(32) NOT NULL, PRIMARY KEY(name) )");
+                System.out.println("------>" + query);
                 connection.prepareStatement(query).executeUpdate();
+
             }
             connection.commit();
         } catch (SQLException sqlException) {
@@ -1238,13 +1291,30 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public void mapifyCSV (HashMap<String, List<Record>> map, List<String[]> allData){
+    public void createIndexOnName(HashMap<String, List<Record>> map){
+        try (Connection connection = rwConnectionProvider.getConnection();) {
+            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+
+                String table_name = entry.getKey();
+                String indexName = "index_on_" + table_name;
+                connection.prepareStatement(String.format(CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME, indexName,  table_name)).executeUpdate();
+                System.out.println("IndexCreatedfor" + table_name);
+
+            }
+            connection.commit();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
+
+    public HashMap<String, List<Record>> mapifyCSV (List<String[]> allData){
+        HashMap<String, List<Record>> map = new HashMap<>();
         for(String[] row: allData){
             String table_name = row[0];
             int col_id = Integer.parseInt(row[1]);
             String col_name = row[2];
             String col_type = row[3];
-            String col_type_val = (row[3].contains("String")) ? "varchar": "double";
+            String col_type_val = (row[3].contains("String")) ? "varchar": "float";
             int col_size = Integer.parseInt(row[4]);
             int noOfObjects = Integer.parseInt(row[5]);
             double avgLength = (!row[6].isEmpty()) ? Double.parseDouble(row[6]) : 0;
@@ -1260,19 +1330,19 @@ public class ObjectRepository implements AutoCloseable {
                 map.put(table_name, list);
             }
         }
+        return map;
     }
-
     class IndexInsertionTask implements Runnable {
 
         private final Map<Integer, String> tablemap;
         private final List<Record> recordList;
         private final String query;
 
-
-        IndexInsertionTask(HashMap<Integer, String> tablemap, List<Record> recordList, String query) {
+        public IndexInsertionTask(HashMap<Integer, String> tablemap, List<Record> recordList, String query) {
             this.tablemap = tablemap;
             this.recordList = recordList;
             this.query  = query;
+
         }
 
         @Override
@@ -1281,15 +1351,16 @@ public class ObjectRepository implements AutoCloseable {
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement insertRec = connection.prepareStatement(query)) {
                 int recsAdded = 0;
-                System.out.println("Reached");
+                System.out.println(connection + "---------->" + query.substring(0, 25));
                 Random random = new Random();
-                long millis = System.currentTimeMillis();
-                String str = "ABCDEFGHIGKLMNOPabcdefghijklmnopqrsthdhkshdkshksr";
-                for (int i = 0; i < recordList.get(0).getNumberOfObjects(); i++) {
 
+                String str = "ABCDEFGHIGKLMNOPabcdefghijklmnopqrsthdhkshdkshksr";
+
+                for (int i = 0; i < recordList.get(0).getNumberOfObjects(); i++) {
+                    long millis = System.currentTimeMillis();
                     for(int j: tablemap.keySet()){
                         if(tablemap.get(j).contains("String")){
-                            insertRec.setString(j, str.substring(0, (int) Math.ceil(recordList.get(0).getAvg_length())));
+                            insertRec.setString(j, str.substring(0, (int)Math.ceil(Double.parseDouble(tablemap.get(j).substring(6)))));
                         }else if(tablemap.get(j).contains("Double")){
                             insertRec.setDouble(j, random.nextDouble());
                         }else if(tablemap.get(j).contains("Date") || tablemap.get(j).contains("Time")){
@@ -1299,26 +1370,115 @@ public class ObjectRepository implements AutoCloseable {
                         }
                     }
                     insertRec.addBatch();
-                    if(recsAdded++ > 20000){
+                    if(recsAdded++ > 200){
                         insertRec.executeBatch();
                         connection.commit();
                         System.out.println("Inserted");
                         System.out.println(query.substring(0, 25) + "     ->    " + i);
                         recsAdded = 0;
                     }
+
                 }
                 System.out.println(query.substring(0, 25) + " Executed ");
                 insertRec.executeBatch();
                 connection.commit();
             } catch (PSQLException ex) {
-                LOGGER.error("Error PSQLException Row Num = {} ", ex);
+                LOGGER.error("Error PSQLException", ex);
             } catch (SQLException sqlException) {
-                LOGGER.error("Error SQLException Row Num = {} ", sqlException);
+                LOGGER.error("Error SQLException", sqlException);
             } catch (Throwable th) {
-                LOGGER.error("Error Throwable Row Num = {} ", th);
+                LOGGER.error("Error Throwable", th);
             }
         }
     }
+
+
+    public void insertFromOneTableToOther(String oldTable, String newTable){
+        //createNewTable(newTable);
+        int offsetStartFromHere = 0;
+        int limitBatchSize = 10000;
+        int totalNoOfRows = countRecs(oldTable); // 2
+        int rowsLeftToFetch = totalNoOfRows - offsetStartFromHere;
+
+
+        while(limitBatchSize <= rowsLeftToFetch){
+            insertIntoNewTable(oldTable, newTable, offsetStartFromHere, limitBatchSize);
+            offsetStartFromHere+=limitBatchSize; // 2
+            rowsLeftToFetch = totalNoOfRows - offsetStartFromHere; // 0
+        }
+        if(rowsLeftToFetch > 0){
+            insertIntoNewTable(oldTable, newTable, offsetStartFromHere, limitBatchSize);
+        }
+    }
+
+    // public void createNewTable(String newTable){
+    //     String sql = String.format("create table %s (string_val varchar NOT NULL, double_val float NOT NULL, date float NOT NULL, name varchar NOT NULL, nameLower varchar NOT NULL, %s)", newTable, "PRIMARY KEY(name)");
+    //     try (Connection connection = rwConnectionProvider.getConnection();){
+    //         connection.prepareStatement(sql).executeUpdate();
+    //      }catch(Exception ex){
+    //         LOGGER.error("Error in creating table");
+    //     }
+
+
+    // }
+
+
+    public void insertIntoNewTable(String oldTable, String newTable, int offset, int limit){
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getIndexRecords = connection.prepareStatement(String.format("select name from %s LIMIT %s OFFSET %s", oldTable, limit, offset ));
+             PreparedStatement insertRecs = connection.prepareStatement(String.format("insert into %s values (?,?,?,?, ?)", newTable))) {
+            ResultSet rs = getIndexRecords.executeQuery();
+            int recordCount = 0;
+
+            String str = "fhjekherkjthekjtketkethkethkejthkettekrhterte";
+
+            Random random = new Random();
+            while (rs.next()) {
+
+                insertRecs.setString(1, str.substring(0, (int)Math.ceil(7.93)));
+                insertRecs.setDouble(2, random.nextDouble());
+                insertRecs.setDouble(3, System.currentTimeMillis());
+                insertRecs.setString(4, rs.getString("name"));
+                insertRecs.setString(5, rs.getString("name").toLowerCase());
+                insertRecs.addBatch();
+
+                if(recordCount++ > 5000){
+                    insertRecs.executeBatch();
+                    connection.commit();
+                    System.out.println("Records updated till now " + recordCount);
+                    recordCount = 0;
+                }
+
+
+
+
+            }
+            insertRecs.executeBatch();
+            connection.commit();
+            rs.close();
+
+        } catch (SQLException throwables) {
+            System.out.println("Error Here");
+            throwables.printStackTrace();
+        }
+    }
+
+    public int countRecs(String tableName) {
+        int val = 0;
+        try (Connection connection = rwConnectionProvider.getConnection();
+             PreparedStatement lookupStmt = connection.prepareStatement(String.format(COUNT_RECORDS_FOR_ANY_TABLE, tableName))) {
+            ResultSet rs = lookupStmt.executeQuery();
+            while (rs.next()) {
+                val = rs.getInt(1);
+            }
+            rs.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return val;
+    }
+
+
 
 
 }

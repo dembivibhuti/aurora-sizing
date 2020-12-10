@@ -40,14 +40,17 @@ func main() {
 	}
 	startMetricsServer(*promScrapePort)
 	wg.Wait()
+	//sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
+	//defer sscl.Close()
 	//ssMain(sscl)
+	//pairityWithSaralVersion2(sscl)
 }
 
 func startTest(metrics *model.Metrics) {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC)
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
-	pairityWithSaral(sscl)
+	pairityWithSaralVersion2(sscl)
 }
 
 func pairityWithSaral(scl model.SSClient) {
@@ -69,6 +72,19 @@ func pairityWithSaral(scl model.SSClient) {
 		fmt.Print("Get Index Object By Name : ", respCh)
 		fmt.Println("================")
 	}
+}
+
+func pairityWithSaralVersion2(scl model.SSClient) {
+	respCh, err := scl.GetIndexRecordInBatches("Table_TT")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for k := range respCh {
+		fmt.Print("Get Index Object In Batches : ", k)
+		fmt.Println("================")
+	}
+
 }
 
 func startMetricsServer(addr string) {

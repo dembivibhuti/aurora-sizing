@@ -19,6 +19,7 @@ type Reader interface {
 	GetIdxByName(sname string) (*Record, error)
 	GetIndexMsgByName(sname string, indexName string) (*Record2, error)
 	GetIndexManyByNameStream([]string, string) (<-chan *Record2, error)
+	GetIndexRecordInBatches(tableName string) (<-chan *Record2, error)
 }
 
 type Transactor interface {
