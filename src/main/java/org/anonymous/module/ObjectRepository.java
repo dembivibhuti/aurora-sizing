@@ -1556,7 +1556,6 @@ public class ObjectRepository implements AutoCloseable {
                     query = String.format("%s %s %s %s", query, rec.getCol_name(), rec.getCol_type_val(), "NOT NULL, ");
                 }
                 query = String.format("%s %s", query, "name varchar(32) NOT NULL, nameLower varchar(32) NOT NULL, PRIMARY KEY(name) )");
-                System.out.println("------>" + query);
                 connection.prepareStatement(query).executeUpdate();
             }
             connection.commit();
@@ -1567,13 +1566,10 @@ public class ObjectRepository implements AutoCloseable {
 
     public void createIndexOnName(HashMap<String, List<Record>> map){
         try (Connection connection = rwConnectionProvider.getConnection();) {
-            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
-
+            for(Map.Entry<String, List<Record>> entry : map.entrySet()) {
                 String table_name = entry.getKey();
                 String indexName = "index_on_" + table_name;
-                connection.prepareStatement(String.format(CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME, indexName,  table_name)).executeUpdate();
-                System.out.println("Index Created for" + table_name);
-
+                connection.prepareStatement(String.format(CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME, indexName, table_name)).executeUpdate();
             }
             connection.commit();
         } catch (SQLException sqlException) {
@@ -1624,13 +1620,13 @@ public class ObjectRepository implements AutoCloseable {
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement insertRec = connection.prepareStatement(query)) {
                 int recsAdded = 0;
-                System.out.println(connection + "---------->" + query.substring(0, 25));
                 Random random = new Random();
 
-                String str = "ABCDEFGHIGKLMNOPabcdefghijklmnopqrsthdhkshdkshksr";
+                String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
                 for (int i = 0; i < recordList.get(0).getNumberOfObjects(); i++) {
                     long millis = System.currentTimeMillis();
+                    String name = String.format("testSec-%d-%d", random.nextInt(), i);
                     for(int j: tablemap.keySet()){
                         if(tablemap.get(j).contains("String")){
                             insertRec.setString(j, str.substring(0, (int)Math.ceil(Double.parseDouble(tablemap.get(j).substring(6)))));
@@ -1638,23 +1634,24 @@ public class ObjectRepository implements AutoCloseable {
                             insertRec.setDouble(j, random.nextDouble());
                         }else if(tablemap.get(j).contains("Date") || tablemap.get(j).contains("Time")){
                             insertRec.setDouble(j, millis);
-                        }else {
-                            insertRec.setString(j,String.format("testSec-%d-%d", random.nextInt(), i));
+                        }else if(tablemap.get(j).contains("lower")) {
+                            insertRec.setString(j, name.toLowerCase());
+                        } else{
+                            insertRec.setString(j, name);
                         }
                     }
                     insertRec.addBatch();
                     if(recsAdded++ > 20000){
                         insertRec.executeBatch();
                         connection.commit();
-                        System.out.println("Inserted");
-                        System.out.println(query.substring(0, 25) + "     ->    " + i);
+                        System.out.println("Records added in " + query.substring(12, 23) + "--->" + i);
                         recsAdded = 0;
                     }
 
                 }
                 insertRec.executeBatch();
                 connection.commit();
-                System.out.println(query.substring(0, 25) + " All records Inserted ");
+                System.out.println("Insertion Completed for table: " + query.substring(12, 23));
             } catch (PSQLException ex) {
                 LOGGER.error("Error PSQLException", ex);
             } catch (SQLException sqlException) {
@@ -1667,10 +1664,9 @@ public class ObjectRepository implements AutoCloseable {
 
 
     public void insertFromOneTableToOther(String oldTable, String newTable){
-        //createNewTable(newTable);
         int offsetStartFromHere = 0;
         int limitBatchSize = 10000;
-        int totalNoOfRows = countRecs(oldTable);
+        int totalNoOfRows = countRecs("objects");
         int rowsLeftToFetch = totalNoOfRows - offsetStartFromHere;
 
 
@@ -1680,18 +1676,18 @@ public class ObjectRepository implements AutoCloseable {
             rowsLeftToFetch = totalNoOfRows - offsetStartFromHere;
         }
         if(rowsLeftToFetch > 0){
-            insertIntoNewTable(oldTable, newTable, offsetStartFromHere, limitBatchSize);
+            insertIntoNewTable(oldTable, newTable, offsetStartFromHere, rowsLeftToFetch);
         }
     }
 
     public void insertIntoNewTable(String oldTable, String newTable, int offset, int limit){
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getIndexRecords = connection.prepareStatement(String.format("select name from %s LIMIT %s OFFSET %s", oldTable, limit, offset ));
-             PreparedStatement insertRecs = connection.prepareStatement(String.format("insert into %s values (?,?,?,?, ?)", newTable))) {
-            ResultSet rs = getIndexRecords.executeQuery();
-            int recordCount = 0;
+             PreparedStatement insertRecs = connection.prepareStatement(String.format("insert into %s values (?,?,?,?,?)", newTable))) {
+             ResultSet rs = getIndexRecords.executeQuery();
+             int recordCount = 0;
 
-            String str = "fhjekherkjthekjtketkethkethkejthkettekrhterte";
+            String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
             Random random = new Random();
             while (rs.next()) {
@@ -1706,7 +1702,7 @@ public class ObjectRepository implements AutoCloseable {
                 if(recordCount++ > 5000){
                     insertRecs.executeBatch();
                     connection.commit();
-                    System.out.println("Records updated till now " + recordCount);
+                    System.out.println("Records updated till now " + offset);
                     recordCount = 0;
                 }
             }
@@ -1715,7 +1711,7 @@ public class ObjectRepository implements AutoCloseable {
             rs.close();
 
         } catch (SQLException throwables) {
-            System.out.println("Error Here");
+            System.out.println("Error Here in Insert Into New Table");
             throwables.printStackTrace();
         }
     }
@@ -1734,12 +1730,4 @@ public class ObjectRepository implements AutoCloseable {
         }
         return val;
     }
-
-
-
-
-
-
-
-
 }
