@@ -75,12 +75,12 @@ func pairityWithSaral(scl model.SSClient) {
 }
 
 func pairityWithSaralVersion2(scl model.SSClient) {
-	respCh, err := scl.GetIndexRecordInBatches("Table_TT")
+	respCh, err := scl.GetIndexRecordMany("", "Table_TT")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for k := range respCh {
+	for _, k := range respCh {
 		fmt.Print("Get Index Object In Batches : ", k)
 		fmt.Println("================")
 	}

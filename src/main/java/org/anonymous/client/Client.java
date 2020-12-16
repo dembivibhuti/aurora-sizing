@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class Client {
@@ -63,11 +62,11 @@ public class Client {
 
 
         // Transaction Service
-        CompletableFuture<Void> future = new CompletableFuture();
-        TransactionServiceGrpc.TransactionServiceStub asyncStub = TransactionServiceGrpc.newStub(channel);
-        //indexFetch(asyncStub, future);
-        future.join();
-        channel.shutdown();
+//        CompletableFuture<Void> future = new CompletableFuture();
+//        TransactionServiceGrpc.TransactionServiceStub asyncStub = TransactionServiceGrpc.newStub(channel);
+//        indexFetch(asyncStub, future);
+//        future.join();
+//        channel.shutdown();
 
     }
 
@@ -142,14 +141,14 @@ public class Client {
     }
 
     private static void getObjectManyByNameExtStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdGetManyByNameExt request = CmdGetManyByNameExt.newBuilder().addSecurityNames("testSec-0").addSecurityNames("testSec-1").addSecurityNames("testSec-2").build();
+        CmdGetManyByNameExt request= CmdGetManyByNameExt.newBuilder().addSecurityNames("testSec-0").addSecurityNames("testSec-1").addSecurityNames("testSec-2").build();
         try {
             Iterator<CmdGetManyByNameExtResponseStream> response = stub.getObjectManyByNameExtStream(request);
             System.out.println("Response received from getObjectManyByNameExtStream:");
             while (response.hasNext()) {
                 System.out.println(response.next().getMsgOnSuccess().getHasSucceeded());
             }
-        } catch (Exception e) {
+        }catch (Exception e) {
             LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Ext stream", e);
         }
     }
@@ -158,7 +157,6 @@ public class Client {
         CmdGetByNameExtResponse response = stub.getObjectExt(CmdGetByNameExt.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-0").build());
         System.out.println("Response received from getObjectByNameExt: \n" + response);
     }
-
     private static void getObjectByName(ObjServiceGrpc.ObjServiceBlockingStub stub) {
         CmdGetByNameResponse response = stub.getObject(CmdGetByName.newBuilder().setMsgType(CmdType.CMD_GET_BY_NAME).setSecurityName("testSec-0").build());
         System.out.println("Response received from getObjectByName: \n" + response.getSecurity());
@@ -175,20 +173,20 @@ public class Client {
     }
 
     private static void getIndexObjectManyByNameExtStream(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdMsgIndexGetManyByNameExt request = CmdMsgIndexGetManyByNameExt.newBuilder().addSecurityName("testSec--2014566981-87").addSecurityName("testSec-104888214-88").addSecurityName("tdestSec--1772058975-102").setIndexId("Table_TT").build();
+        CmdMsgIndexGetManyByNameExt request= CmdMsgIndexGetManyByNameExt.newBuilder().addSecurityName("testSec--2014566981-87").addSecurityName("testSec-104888214-88").addSecurityName("tdestSec--1772058975-102").setIndexId("Table_TT").build();
         try {
             Iterator<CmdMsgIndexGetManyByNameResponseStream> response = stub.getIndexMsgManyByNameExtStream(request);
             System.out.println("Response received from getIndexObjectManyByNameExtStream:");
             while (response.hasNext()) {
                 System.out.println(response.next());
             }
-        } catch (Exception e) {
+        }catch (Exception e) {
             LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);
         }
     }
 
-    private static void getIndexObjectBatch(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdMsgIndexGetByNameByLimit request = CmdMsgIndexGetByNameByLimit.newBuilder().setTableName("Table_TT").build();
+    private static void getIndexObjectBatch (ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdMsgIndexGetByNameByLimit request= CmdMsgIndexGetByNameByLimit.newBuilder().setTableName("Table_TT").build();
         try {
             Iterator<CmdMsgIndexGetByNameByLimitResponse> response = stub.getIndexRecordInBatches(request);
             System.out.println("Response received from getIndexObjectBatch:");
@@ -198,23 +196,7 @@ public class Client {
                 System.out.println(response.next());
                 i++;
             }
-        } catch (Exception e) {
-            LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);
-        }
-    }
-
-    private static void getIndexRecordMany(ObjServiceGrpc.ObjServiceBlockingStub stub) {
-        CmdMsgIndexGetByNameWithClient request = CmdMsgIndexGetByNameWithClient.newBuilder().setTableName("objects").setRecordName("").build();
-        try {
-            CmdMsgIndexGetByNameWithClientResponse response = stub.getIndexRecordMany(request);
-            System.out.println("Response received from getIndexObjectBatch:");
-            int i = 0;
-
-            for (IndexRecord record : response.getMsgOnSuccess().getIndexRecordsList()) {
-                System.out.println(record);
-            }
-            i++;
-        } catch (Exception e) {
+        }catch (Exception e) {
             LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);
         }
     }
@@ -285,4 +267,21 @@ public class Client {
     }
 
 
+    private static void getIndexRecordMany(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdMsgIndexGetByNameWithClient request = CmdMsgIndexGetByNameWithClient.newBuilder().setTableName("Table_TT").setRecordName("").build();
+        try {
+            CmdMsgIndexGetByNameWithClientResponse response = stub.getIndexRecordMany(request);
+            System.out.println("Response received from getIndexObjectBatch:");
+            int i = 0;
+
+            for (IndexRecord record : response.getMsgOnSuccess().getIndexRecordsList()) {
+                System.out.println(record);
+                System.out.println(i);
+                i++;
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);
+        }
+    }
 }

@@ -18,6 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TransactionServiceClient interface {
 	Transaction(ctx context.Context, opts ...grpc.CallOption) (TransactionService_TransactionClient, error)
+	GetIndexRecordWithClient(ctx context.Context, opts ...grpc.CallOption) (TransactionService_GetIndexRecordWithClientClient, error)
 }
 
 type transactionServiceClient struct {
@@ -62,11 +63,46 @@ func (x *transactionServiceTransactionClient) CloseAndRecv() (*TransMsgResponse,
 	return m, nil
 }
 
+func (c *transactionServiceClient) GetIndexRecordWithClient(ctx context.Context, opts ...grpc.CallOption) (TransactionService_GetIndexRecordWithClientClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_TransactionService_serviceDesc.Streams[1], "/org.anonymous.grpc.TransactionService/get_index_record_with_client", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &transactionServiceGetIndexRecordWithClientClient{stream}
+	return x, nil
+}
+
+type TransactionService_GetIndexRecordWithClientClient interface {
+	Send(*CmdMsgIndexGetByNameWithClient) error
+	CloseAndRecv() (*CmdMsgIndexGetByNameWithClientResponse, error)
+	grpc.ClientStream
+}
+
+type transactionServiceGetIndexRecordWithClientClient struct {
+	grpc.ClientStream
+}
+
+func (x *transactionServiceGetIndexRecordWithClientClient) Send(m *CmdMsgIndexGetByNameWithClient) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *transactionServiceGetIndexRecordWithClientClient) CloseAndRecv() (*CmdMsgIndexGetByNameWithClientResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(CmdMsgIndexGetByNameWithClientResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // TransactionServiceServer is the server API for TransactionService service.
 // All implementations must embed UnimplementedTransactionServiceServer
 // for forward compatibility
 type TransactionServiceServer interface {
 	Transaction(TransactionService_TransactionServer) error
+	GetIndexRecordWithClient(TransactionService_GetIndexRecordWithClientServer) error
 	mustEmbedUnimplementedTransactionServiceServer()
 }
 
@@ -76,6 +112,9 @@ type UnimplementedTransactionServiceServer struct {
 
 func (UnimplementedTransactionServiceServer) Transaction(TransactionService_TransactionServer) error {
 	return status.Errorf(codes.Unimplemented, "method Transaction not implemented")
+}
+func (UnimplementedTransactionServiceServer) GetIndexRecordWithClient(TransactionService_GetIndexRecordWithClientServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetIndexRecordWithClient not implemented")
 }
 func (UnimplementedTransactionServiceServer) mustEmbedUnimplementedTransactionServiceServer() {}
 
@@ -116,6 +155,32 @@ func (x *transactionServiceTransactionServer) Recv() (*CmdTransactionRequest, er
 	return m, nil
 }
 
+func _TransactionService_GetIndexRecordWithClient_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(TransactionServiceServer).GetIndexRecordWithClient(&transactionServiceGetIndexRecordWithClientServer{stream})
+}
+
+type TransactionService_GetIndexRecordWithClientServer interface {
+	SendAndClose(*CmdMsgIndexGetByNameWithClientResponse) error
+	Recv() (*CmdMsgIndexGetByNameWithClient, error)
+	grpc.ServerStream
+}
+
+type transactionServiceGetIndexRecordWithClientServer struct {
+	grpc.ServerStream
+}
+
+func (x *transactionServiceGetIndexRecordWithClientServer) SendAndClose(m *CmdMsgIndexGetByNameWithClientResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *transactionServiceGetIndexRecordWithClientServer) Recv() (*CmdMsgIndexGetByNameWithClient, error) {
+	m := new(CmdMsgIndexGetByNameWithClient)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _TransactionService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "org.anonymous.grpc.TransactionService",
 	HandlerType: (*TransactionServiceServer)(nil),
@@ -124,6 +189,11 @@ var _TransactionService_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "transaction",
 			Handler:       _TransactionService_Transaction_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "get_index_record_with_client",
+			Handler:       _TransactionService_GetIndexRecordWithClient_Handler,
 			ClientStreams: true,
 		},
 	},
