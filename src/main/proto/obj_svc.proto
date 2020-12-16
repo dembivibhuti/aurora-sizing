@@ -38,5 +38,5 @@ service ObjService {
 	rpc get_index_msg_by_name(CmdMsgIndexGetByName) returns (CmdMsgIndexGetByNameResponse);
 	rpc get_index_msg_many_by_name_ext_stream(CmdMsgIndexGetManyByNameExt) returns (stream CmdMsgIndexGetManyByNameResponseStream);
 	rpc get_index_record_in_batches(CmdMsgIndexGetByNameByLimit) returns (stream CmdMsgIndexGetByNameByLimitResponse);
-	rpc get_index_record_with_client(stream CmdMsgIndexGetByNameWithClient) returns (CmdMsgIndexGetByNameWithClientResponse);
+	rpc get_index_record_many(CmdMsgIndexGetByNameWithClient) returns (CmdMsgIndexGetByNameWithClientResponse);
 }

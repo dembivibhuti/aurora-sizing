@@ -124,8 +124,8 @@ public class ObjectRepository implements AutoCloseable {
 
         try (Connection connection = rwConnectionProvider.getConnection(); PreparedStatement insertRec = connection
                 .prepareStatement(INSERT_RECORDS);
-             PreparedStatement insertIndexRec = connection .prepareStatement(INSERT_INDEX_RECORDS);
-             PreparedStatement testInsertIndexRec = connection .prepareStatement(INSERT_TEST_INDEX_RECORDS);) {
+             PreparedStatement insertIndexRec = connection.prepareStatement(INSERT_INDEX_RECORDS);
+             PreparedStatement testInsertIndexRec = connection.prepareStatement(INSERT_TEST_INDEX_RECORDS);) {
 
             byte[] sdbMem = getSizedByteArray(1);
             byte[] mem = getSizedByteArray(1);
@@ -230,7 +230,7 @@ public class ObjectRepository implements AutoCloseable {
             lookupStmt.setString(1, indxKey);
             ResultSet rs = lookupStmt.executeQuery();
 
-            if(rs.next()) {
+            if (rs.next()) {
                 msgOnSuccess = CmdIdxGetByNameResponse.MsgOnSuccess.newBuilder().
                         setHasSucceeded(true).
                         setName(rs.getString("creator_name")).
@@ -243,14 +243,14 @@ public class ObjectRepository implements AutoCloseable {
         return Optional.ofNullable(msgOnSuccess);
     }
 
-    public CmdMsgIndexGetByNameResponse getIndexObjectsFromCSV (final String tableName, String securityName){
+    public CmdMsgIndexGetByNameResponse getIndexObjectsFromCSV(final String tableName, String securityName) {
         CmdMsgIndexGetByNameResponse response = null;
 
-        try(Connection connection = rwConnectionProvider.getConnection();){
-            String stmtQuery = String.format(GET_FULL_INDEX_RECORD , "*", tableName, securityName);
+        try (Connection connection = rwConnectionProvider.getConnection();) {
+            String stmtQuery = String.format(GET_FULL_INDEX_RECORD, "*", tableName, securityName);
             ResultSet rs = connection.prepareStatement(stmtQuery).executeQuery();
 
-            if(rs.next()) {
+            if (rs.next()) {
                 CmdMsgIndexGetByNameResponse.MsgOnSuccess.Builder msgOnSuccess = CmdMsgIndexGetByNameResponse.MsgOnSuccess.newBuilder().setSecurityName(securityName);
                 int countOfCols = rs.getMetaData().getColumnCount();
 
@@ -260,18 +260,17 @@ public class ObjectRepository implements AutoCloseable {
 
                     if (colType.contains("VARCHAR")) {
                         msgOnSuccess.putStringVal(colName, rs.getString(i));
-                    }else {
+                    } else {
                         msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
                     }
                 }
-                  response = CmdMsgIndexGetByNameResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
-              }
-            else{
-                  LOGGER.error("Object Doesn't exist");
-                  response = CmdMsgIndexGetByNameResponse.newBuilder().setErrorCode(1).build();
-              }
-         rs.close();
-        }catch (Exception e){
+                response = CmdMsgIndexGetByNameResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+            } else {
+                LOGGER.error("Object Doesn't exist");
+                response = CmdMsgIndexGetByNameResponse.newBuilder().setErrorCode(1).build();
+            }
+            rs.close();
+        } catch (Exception e) {
             System.out.println("ERROR");
         }
 
@@ -317,39 +316,39 @@ public class ObjectRepository implements AutoCloseable {
         HashMap<String, List<Record>> map = new HashMap<>();
         try (Connection connection = rwConnectionProvider.getConnection();) {
 
-            for(String[] row: allData){
+            for (String[] row : allData) {
 
                 String table_name = row[0];
                 int col_id = Integer.parseInt(row[1]);
                 String col_name = row[2];
                 String col_type = row[3];
-                String col_type_val = (row[3].contains("String")) ? "varchar": "double";
+                String col_type_val = (row[3].contains("String")) ? "varchar" : "double";
                 int col_size = Integer.parseInt(row[4]);
                 int noOfObjects = Integer.parseInt(row[5]);
                 double avgLength = (!row[6].isEmpty()) ? Double.parseDouble(row[6]) : 0;
 
                 Record rec = new Record(col_id, col_name, col_type, col_type_val, col_size, noOfObjects, avgLength);
 
-                if(map.containsKey(table_name)){
+                if (map.containsKey(table_name)) {
                     List<Record> list = map.get(table_name);
                     list.add(rec);
-                }else{
+                } else {
                     List<Record> list = new ArrayList<>();
                     list.add(rec);
                     map.put(table_name, list);
                 }
             }
 
-            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+            for (Map.Entry<String, List<Record>> entry : map.entrySet()) {
 
                 String table_name = entry.getKey();
                 List<Record> list = entry.getValue();
 
                 String query = "create table " + table_name + "( ";
 
-                for(Record rec : list){
-                 String col_details = rec.getCol_name() + " "+ rec.getCol_type_val() + "(" + rec.getCol_size() + ")" + " NOT NULL";
-                 query = query + col_details + ", ";
+                for (Record rec : list) {
+                    String col_details = rec.getCol_name() + " " + rec.getCol_type_val() + "(" + rec.getCol_size() + ")" + " NOT NULL";
+                    query = query + col_details + ", ";
 
                 }
 
@@ -358,51 +357,50 @@ public class ObjectRepository implements AutoCloseable {
             }
             connection.commit();
 
-            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
-             String table_name = entry.getKey();
-             List<Record> list = entry.getValue();
+            for (Map.Entry<String, List<Record>> entry : map.entrySet()) {
+                String table_name = entry.getKey();
+                List<Record> list = entry.getValue();
 
-             int noOfObjects = 0;
+                int noOfObjects = 0;
 
-             for(Record rec : list){
-                 noOfObjects = rec.getNumberOfObjects();
-                 break;
-             }
+                for (Record rec : list) {
+                    noOfObjects = rec.getNumberOfObjects();
+                    break;
+                }
 
-             String insertQuery = "insert into %s (%s) values (%s)";
+                String insertQuery = "insert into %s (%s) values (%s)";
 
-             for(int i = 0; i < noOfObjects; i++){
-                 String query = "",value = "", cols = "";
+                for (int i = 0; i < noOfObjects; i++) {
+                    String query = "", value = "", cols = "";
 
-                 Random random = new Random();
-                 long millis = System.currentTimeMillis();
+                    Random random = new Random();
+                    long millis = System.currentTimeMillis();
 
-                 for(Record rec : list){
-                     cols = cols + rec.getCol_name() + ", ";
+                    for (Record rec : list) {
+                        cols = cols + rec.getCol_name() + ", ";
 
-                     if(rec.getCol_type().equals("String")){
-                         int avgLengthOfString = (int) Math.ceil(rec.getAvg_length());
-                         String randomString = UUID.randomUUID().toString().substring(0, avgLengthOfString);
-                         value = value + "'" + randomString + "',";
-                     }
-                     else if(rec.getCol_type().equals("Double")){
-                         value = value + " " + random.nextDouble() + ",";
-                     }else{
-                         value = value + "'" + millis + "',";
-                     }
+                        if (rec.getCol_type().equals("String")) {
+                            int avgLengthOfString = (int) Math.ceil(rec.getAvg_length());
+                            String randomString = UUID.randomUUID().toString().substring(0, avgLengthOfString);
+                            value = value + "'" + randomString + "',";
+                        } else if (rec.getCol_type().equals("Double")) {
+                            value = value + " " + random.nextDouble() + ",";
+                        } else {
+                            value = value + "'" + millis + "',";
+                        }
 
-                 }
+                    }
 
-                 Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
-                 String nameOfString = String.format("testSec-%d-%d", randIntStream.next(), i);
+                    Iterator<Integer> randIntStream = new SplittableRandom().ints().iterator();
+                    String nameOfString = String.format("testSec-%d-%d", randIntStream.next(), i);
 
-                 cols = cols + "name, nameLower";
-                 value = value + "'"+ nameOfString + "'," + "'"+ nameOfString.toLowerCase()+ "'";
+                    cols = cols + "name, nameLower";
+                    value = value + "'" + nameOfString + "'," + "'" + nameOfString.toLowerCase() + "'";
 
-                 query = String.format(insertQuery, table_name, cols, value);
-                 connection.prepareStatement(query).executeUpdate();
-             }
-               connection.commit();
+                    query = String.format(insertQuery, table_name, cols, value);
+                    connection.prepareStatement(query).executeUpdate();
+                }
+                connection.commit();
             }
 
         } catch (SQLException sqlException) {
@@ -872,7 +870,6 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-
     public List<ByteString> getManyMemByName(ProtocolStringList securityNameList) {
         List<ByteString> secMem = new ArrayList<>();
         String sql = String.format(GET_MANY_MEM_RECORDS, String.join(",", Collections.nCopies(securityNameList.size(), "?")));
@@ -1138,7 +1135,6 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-
     public List<CmdMsgIndexGetByNameByLimitResponse> indexRecordsInBatch(int offsetStartFromHere, int limitBatchSize, String tableName) {
         List<CmdMsgIndexGetByNameByLimitResponse> responseMessages = new ArrayList<>();
         CmdMsgIndexGetByNameByLimitResponse response;
@@ -1146,14 +1142,14 @@ public class ObjectRepository implements AutoCloseable {
 
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getIndexRecords = connection.prepareStatement(query)) {
-             ResultSet rs = getIndexRecords.executeQuery();
-               while (rs.next()) {
+            ResultSet rs = getIndexRecords.executeQuery();
+            while (rs.next()) {
 
-                 CmdMsgIndexGetByNameByLimitResponse.MsgOnSuccess.Builder msgOnSuccess =
+                CmdMsgIndexGetByNameByLimitResponse.MsgOnSuccess.Builder msgOnSuccess =
                         CmdMsgIndexGetByNameByLimitResponse.MsgOnSuccess.newBuilder().setSecurityName(rs.getString("name"));
-                  int countOfCols = rs.getMetaData().getColumnCount();
+                int countOfCols = rs.getMetaData().getColumnCount();
 
-                  for (int i = 1; i <= countOfCols - 2; i++) {
+                for (int i = 1; i <= countOfCols - 2; i++) {
                     String colName = rs.getMetaData().getColumnName(i);
                     String colType = rs.getMetaData().getColumnTypeName(i);
 
@@ -1162,10 +1158,10 @@ public class ObjectRepository implements AutoCloseable {
                     } else {
                         msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
                     }
-                   }
-                 response = CmdMsgIndexGetByNameByLimitResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
-                 responseMessages.add(response);
-               }
+                }
+                response = CmdMsgIndexGetByNameByLimitResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+                responseMessages.add(response);
+            }
             rs.close();
 
         } catch (SQLException throwables) {
@@ -1175,22 +1171,22 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-    public List<CmdMsgIndexGetByNameWithClientResponse>  indexRecordsInBatchWithClient(String recordName, String tableName) {
-        List<CmdMsgIndexGetByNameWithClientResponse> responseMessageList = new ArrayList<>();
-        CmdMsgIndexGetByNameWithClientResponse response;
+    public CmdMsgIndexGetByNameWithClientResponse getIndexRecordMany(String recordName, String tableName) {
+        CmdMsgIndexGetByNameWithClientResponse response  = null;
 
 
         try (Connection connection = roConnectionProvider.getConnection();
-             PreparedStatement getIndexRecords = connection.prepareStatement(GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES)) {
-//            getIndexRecords.setString(1, tableName);
+             PreparedStatement getIndexRecords = connection.prepareStatement(String.format(GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES, tableName))) {
             getIndexRecords.setString(1, recordName);
             ResultSet rs = getIndexRecords.executeQuery();
 
+            CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess.Builder msgOnSuccess =
+                    CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess
+                            .newBuilder();
 
             while (rs.next()) {
 
-                CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess.Builder msgOnSuccess =
-                        CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess.newBuilder().setSecurityName(rs.getString("name"));
+                IndexRecord.Builder idxRecBuilder = IndexRecord.newBuilder().setSecurityName(rs.getString("name"));
                 int countOfCols = rs.getMetaData().getColumnCount();
 
                 for (int i = 1; i <= countOfCols - 2; i++) {
@@ -1198,20 +1194,19 @@ public class ObjectRepository implements AutoCloseable {
                     String colType = rs.getMetaData().getColumnTypeName(i);
 
                     if (colType.contains("VARCHAR") || colType.contains("varchar")) {
-                        msgOnSuccess.putStringVal(colName, rs.getString(i));
+                        idxRecBuilder.putStringVal(colName, rs.getString(i));
                     } else {
-                        msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
+                        idxRecBuilder.putDoubleVal(colName, rs.getDouble(i));
                     }
                 }
-                response = CmdMsgIndexGetByNameWithClientResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
-                responseMessageList.add(response);
+                msgOnSuccess.getIndexRecordsList().add(idxRecBuilder.build());
             }
             rs.close();
-
+            response = CmdMsgIndexGetByNameWithClientResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        return responseMessageList;
+        return response;
     }
 
     public CompletableFuture<Long> countRecs(TimeKeeper lookupTimeKeeper) {
@@ -1238,7 +1233,7 @@ public class ObjectRepository implements AutoCloseable {
         return completableFuture;
     }
 
-    public void insertIndexRecordsFromCSV(List<String[]> allData){
+    public void insertIndexRecordsFromCSV(List<String[]> allData) {
         HashMap<String, List<Record>> map = mapifyCSV(allData);
         createIndexTable(map);
         createIndexOnName(map);
@@ -1249,17 +1244,17 @@ public class ObjectRepository implements AutoCloseable {
 
 
     public void executeInsertion(HashMap<String, List<Record>> map, HashMap<String, QueryData> insertQueryDetailsMap) {
-        for(String tableName : map.keySet()){
+        for (String tableName : map.keySet()) {
             System.out.println(tableName + " -> " + map.get(tableName));
         }
         System.out.println("Second Map");
-        for(String tableName : insertQueryDetailsMap.keySet()){
+        for (String tableName : insertQueryDetailsMap.keySet()) {
             System.out.println(tableName + " -> " + insertQueryDetailsMap.get(tableName).getQuery());
-            for(int j : insertQueryDetailsMap.get(tableName).getQueryColoumMap().keySet()){
+            for (int j : insertQueryDetailsMap.get(tableName).getQueryColoumMap().keySet()) {
                 System.out.println(j + " -> -> " + insertQueryDetailsMap.get(tableName).getQueryColoumMap().get(j));
             }
         }
-        for (String tableName : map.keySet()){
+        for (String tableName : map.keySet()) {
             executorService.execute(new ObjectRepository.IndexInsertionTask(insertQueryDetailsMap.get(tableName).getQueryColoumMap(), map.get(tableName),
                     insertQueryDetailsMap.get(tableName).getQuery()));
 
@@ -1273,22 +1268,21 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public HashMap<String, QueryData> getInsertQueryDetails(HashMap<String, List<Record>> map){
+    public HashMap<String, QueryData> getInsertQueryDetails(HashMap<String, List<Record>> map) {
         HashMap<String, QueryData> insertQueryDetailsMap = new HashMap<>();
-        for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+        for (Map.Entry<String, List<Record>> entry : map.entrySet()) {
             String table_name = entry.getKey();
             List<Record> list = entry.getValue();
             String colNames = "";
             Map<Integer, String> queryMap = new HashMap<>();
             int colNo = 1;
 
-            for(Record rec : list){
+            for (Record rec : list) {
                 colNames = String.format("%s%s%s", colNames, rec.getCol_name(), ", ");
-                if(rec.getCol_type().contains("String")){
+                if (rec.getCol_type().contains("String")) {
                     String stringWithAvgLength = String.format("String%s", rec.getAvg_length());
                     queryMap.put(colNo, stringWithAvgLength);
-                }
-                else{
+                } else {
                     queryMap.put(colNo, rec.getCol_type());
                 }
                 colNo++;
@@ -1298,7 +1292,7 @@ public class ObjectRepository implements AutoCloseable {
             colNo++;
             queryMap.put(colNo, "nameLower");
 
-            String query = String.format(INSERT_CSV_INDEX_RECORD, table_name, colNames , String.join(",", Collections.nCopies(list.size() + 2, "?")));
+            String query = String.format(INSERT_CSV_INDEX_RECORD, table_name, colNames, String.join(",", Collections.nCopies(list.size() + 2, "?")));
             QueryData queryData = new QueryData(query, (HashMap<Integer, String>) queryMap);
             insertQueryDetailsMap.put(table_name, queryData);
         }
@@ -1306,16 +1300,16 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-    public void createIndexTable(HashMap<String, List<Record>> map){
+    public void createIndexTable(HashMap<String, List<Record>> map) {
         try (Connection connection = rwConnectionProvider.getConnection();) {
-            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+            for (Map.Entry<String, List<Record>> entry : map.entrySet()) {
 
                 String table_name = entry.getKey();
                 List<Record> list = entry.getValue();
 
                 String query = String.format("create table %s (", table_name);
 
-                for(Record rec : list){
+                for (Record rec : list) {
                     query = String.format("%s %s %s %s", query, rec.getCol_name(), rec.getCol_type_val(), "NOT NULL, ");
 
                 }
@@ -1331,13 +1325,13 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public void createIndexOnName(HashMap<String, List<Record>> map){
+    public void createIndexOnName(HashMap<String, List<Record>> map) {
         try (Connection connection = rwConnectionProvider.getConnection();) {
-            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+            for (Map.Entry<String, List<Record>> entry : map.entrySet()) {
 
                 String table_name = entry.getKey();
                 String indexName = "index_on_" + table_name;
-                connection.prepareStatement(String.format(CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME, indexName,  table_name)).executeUpdate();
+                connection.prepareStatement(String.format(CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME, indexName, table_name)).executeUpdate();
                 System.out.println("IndexCreatedfor" + table_name);
 
             }
@@ -1347,24 +1341,24 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public HashMap<String, List<Record>> mapifyCSV (List<String[]> allData){
+    public HashMap<String, List<Record>> mapifyCSV(List<String[]> allData) {
         HashMap<String, List<Record>> map = new HashMap<>();
-        for(String[] row: allData){
+        for (String[] row : allData) {
             String table_name = row[0];
             int col_id = Integer.parseInt(row[1]);
             String col_name = row[2];
             String col_type = row[3];
-            String col_type_val = (row[3].contains("String")) ? "varchar": "float";
+            String col_type_val = (row[3].contains("String")) ? "varchar" : "float";
             int col_size = Integer.parseInt(row[4]);
             int noOfObjects = Integer.parseInt(row[5]);
             double avgLength = (!row[6].isEmpty()) ? Double.parseDouble(row[6]) : 0;
 
             Record rec = new Record(col_id, col_name, col_type, col_type_val, col_size, noOfObjects, avgLength);
 
-            if(map.containsKey(table_name)){
+            if (map.containsKey(table_name)) {
                 List<Record> list = map.get(table_name);
                 list.add(rec);
-            }else{
+            } else {
                 List<Record> list = new ArrayList<>();
                 list.add(rec);
                 map.put(table_name, list);
@@ -1372,6 +1366,7 @@ public class ObjectRepository implements AutoCloseable {
         }
         return map;
     }
+
     class IndexInsertionTask implements Runnable {
 
         private final Map<Integer, String> tablemap;
@@ -1381,7 +1376,7 @@ public class ObjectRepository implements AutoCloseable {
         public IndexInsertionTask(HashMap<Integer, String> tablemap, List<Record> recordList, String query) {
             this.tablemap = tablemap;
             this.recordList = recordList;
-            this.query  = query;
+            this.query = query;
 
         }
 
@@ -1398,19 +1393,19 @@ public class ObjectRepository implements AutoCloseable {
 
                 for (int i = 0; i < recordList.get(0).getNumberOfObjects(); i++) {
                     long millis = System.currentTimeMillis();
-                    for(int j: tablemap.keySet()){
-                        if(tablemap.get(j).contains("String")){
-                            insertRec.setString(j, str.substring(0, (int)Math.ceil(Double.parseDouble(tablemap.get(j).substring(6)))));
-                        }else if(tablemap.get(j).contains("Double")){
+                    for (int j : tablemap.keySet()) {
+                        if (tablemap.get(j).contains("String")) {
+                            insertRec.setString(j, str.substring(0, (int) Math.ceil(Double.parseDouble(tablemap.get(j).substring(6)))));
+                        } else if (tablemap.get(j).contains("Double")) {
                             insertRec.setDouble(j, random.nextDouble());
-                        }else if(tablemap.get(j).contains("Date") || tablemap.get(j).contains("Time")){
+                        } else if (tablemap.get(j).contains("Date") || tablemap.get(j).contains("Time")) {
                             insertRec.setDouble(j, millis);
-                        }else {
-                            insertRec.setString(j,String.format("testSec-%d-%d", random.nextInt(), i));
+                        } else {
+                            insertRec.setString(j, String.format("testSec-%d-%d", random.nextInt(), i));
                         }
                     }
                     insertRec.addBatch();
-                    if(recsAdded++ > 200){
+                    if (recsAdded++ > 200) {
                         insertRec.executeBatch();
                         connection.commit();
                         System.out.println("Inserted");
@@ -1433,7 +1428,7 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-    public void insertFromOneTableToOther(String oldTable, String newTable){
+    public void insertFromOneTableToOther(String oldTable, String newTable) {
         //createNewTable(newTable);
         int offsetStartFromHere = 0;
         int limitBatchSize = 10000;
@@ -1441,12 +1436,12 @@ public class ObjectRepository implements AutoCloseable {
         int rowsLeftToFetch = totalNoOfRows - offsetStartFromHere;
 
 
-        while(limitBatchSize <= rowsLeftToFetch){
+        while (limitBatchSize <= rowsLeftToFetch) {
             insertIntoNewTable(oldTable, newTable, offsetStartFromHere, limitBatchSize);
-            offsetStartFromHere+=limitBatchSize; // 2
+            offsetStartFromHere += limitBatchSize; // 2
             rowsLeftToFetch = totalNoOfRows - offsetStartFromHere; // 0
         }
-        if(rowsLeftToFetch > 0){
+        if (rowsLeftToFetch > 0) {
             insertIntoNewTable(oldTable, newTable, offsetStartFromHere, limitBatchSize);
         }
     }
@@ -1463,9 +1458,9 @@ public class ObjectRepository implements AutoCloseable {
     // }
 
 
-    public void insertIntoNewTable(String oldTable, String newTable, int offset, int limit){
+    public void insertIntoNewTable(String oldTable, String newTable, int offset, int limit) {
         try (Connection connection = roConnectionProvider.getConnection();
-             PreparedStatement getIndexRecords = connection.prepareStatement(String.format("select name from %s LIMIT %s OFFSET %s", oldTable, limit, offset ));
+             PreparedStatement getIndexRecords = connection.prepareStatement(String.format("select name from %s LIMIT %s OFFSET %s", oldTable, limit, offset));
              PreparedStatement insertRecs = connection.prepareStatement(String.format("insert into %s values (?,?,?,?, ?)", newTable))) {
             ResultSet rs = getIndexRecords.executeQuery();
             int recordCount = 0;
@@ -1475,21 +1470,19 @@ public class ObjectRepository implements AutoCloseable {
             Random random = new Random();
             while (rs.next()) {
 
-                insertRecs.setString(1, str.substring(0, (int)Math.ceil(7.93)));
+                insertRecs.setString(1, str.substring(0, (int) Math.ceil(7.93)));
                 insertRecs.setDouble(2, random.nextDouble());
                 insertRecs.setDouble(3, System.currentTimeMillis());
                 insertRecs.setString(4, rs.getString("name"));
                 insertRecs.setString(5, rs.getString("name").toLowerCase());
                 insertRecs.addBatch();
 
-                if(recordCount++ > 5000){
+                if (recordCount++ > 5000) {
                     insertRecs.executeBatch();
                     connection.commit();
                     System.out.println("Records updated till now " + recordCount);
                     recordCount = 0;
                 }
-
-
 
 
             }
@@ -1517,8 +1510,6 @@ public class ObjectRepository implements AutoCloseable {
         }
         return val;
     }
-
-
 
 
 }

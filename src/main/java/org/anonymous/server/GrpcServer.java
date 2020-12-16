@@ -33,10 +33,10 @@ public class GrpcServer {
                 objectRepositiory.runDDL(false);
                 TimeKeeper timekeeper = new TimeKeeper("load", false);
                 objectRepositiory.load(6, 6, 32000, timekeeper).join();
-                FileReader filereader = new FileReader("C:/Users/Ria Bhatia/IdeaProjects/aurora-sizing/data/index/ClassicIndex.csv");
+                /*FileReader filereader = new FileReader("C:/Users/Ria Bhatia/IdeaProjects/aurora-sizing/data/index/ClassicIndex.csv");
                 CSVReader csvReader = new CSVReaderBuilder(filereader) .withSkipLines(1).build();
                 List<String[]> allData = csvReader.readAll();
-                objectRepositiory.insertIndexRecordsFromCSV(allData);
+                objectRepositiory.insertIndexRecordsFromCSV(allData);*/
                // objectRepositiory.insertFromOneTableToOther("Table_TETID", "Table_TT");
                 //objectRepositiory.insertFromOneTableToOther("Table_TETID", "Table_TT");
             } else {

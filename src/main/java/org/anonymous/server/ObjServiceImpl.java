@@ -359,25 +359,9 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
 
     @Override
-    public StreamObserver<CmdMsgIndexGetByNameWithClient> getIndexRecordWithClient(StreamObserver<CmdMsgIndexGetByNameWithClientResponse> responseObserver) {
-        return new StreamObserver<CmdMsgIndexGetByNameWithClient>() {
-            List<CmdMsgIndexGetByNameWithClientResponse> responseMessageList = new ArrayList<>();
-
-            @Override
-            public void onNext(CmdMsgIndexGetByNameWithClient request) {
-                responseMessageList = objectRepository.indexRecordsInBatchWithClient(request.getRecordName(), request.getTableName());
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                LOGGER.info("Error in fetching" + t);
-            }
-
-            @Override
-            public void onCompleted() {
-                responseMessageList.forEach(responseObserver::onNext);
-                responseObserver.onCompleted();
-            }
-        };
+    public void getIndexRecordMany(CmdMsgIndexGetByNameWithClient request, StreamObserver<CmdMsgIndexGetByNameWithClientResponse> responseObserver) {
+        CmdMsgIndexGetByNameWithClientResponse response = objectRepository.getIndexRecordMany(request.getRecordName(), request.getTableName());
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 }

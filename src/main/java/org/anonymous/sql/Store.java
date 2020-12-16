@@ -129,6 +129,6 @@ public class Store {
 
     public static final String INSERT_INDEX_RECORDS_WITH_LIMIT = "select * from %s LIMIT %s OFFSET %s";
 
-    public static final String GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES = "select * from objects where nameLower <= ? order by name asc LIMIT 100";
+    public static final String GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES = "select * from %s where nameLower >= ? order by name asc LIMIT 100";
 
 }
