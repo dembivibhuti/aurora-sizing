@@ -37,7 +37,7 @@ public class GrpcServer {
                 CSVReader csvReader = new CSVReaderBuilder(filereader) .withSkipLines(1).build();
                 List<String[]> allData = csvReader.readAll();
                 objectRepositiory.insertIndexRecordsFromCSV(allData);
-                objectRepositiory.insertFromOneTableToOther("Table_TETID", "Table_TT");
+               // objectRepositiory.insertFromOneTableToOther("Table_TETID", "Table_TT");
                 //objectRepositiory.insertFromOneTableToOther("Table_TETID", "Table_TT");
             } else {
                 LOGGER.info("Starting in Aurora Mode");

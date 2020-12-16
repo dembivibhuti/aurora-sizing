@@ -1,0 +1,27 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option go_package = "github.com/somnath67643/aurora-sizing/clientgo/baseproto";
+package org.anonymous.grpc;
+
+import "cmd_type.proto";
+
+message CmdMsgIndexGetByNameWithClient {
+	CmdType message_type = 1;
+	string table_name = 2;
+	string record_name = 3;
+
+}
+
+message CmdMsgIndexGetByNameWithClientResponse {
+	int32 has_succeeded = 1;
+	message MsgOnSuccess {
+	string security_name = 1;
+	map<string, double> double_val = 3;
+	map<string, string> string_val = 4;
+	}
+
+	oneof RequestResponse {
+		MsgOnSuccess msg_on_success = 2;
+		int32 error_code = 3;
+	}
+}

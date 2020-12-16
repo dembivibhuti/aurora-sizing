@@ -25,45 +25,46 @@ public class Client {
         connect(objSvcStub);
         objSvcStub.withWaitForReady();
         // Lookup calls
-        lookupByName(objSvcStub, 100);
-        objSvcStub.withWaitForReady();
-        lookupByType(objSvcStub, 100);
-        objSvcStub.withWaitForReady();
-        lookupByNameStream(objSvcStub, 100);
-        objSvcStub.withWaitForReady();
-        lookupByTypeStream(objSvcStub, 100);
-        objSvcStub.withWaitForReady();
-
-        // Get Object Many Calls
-        getObjectManyByName(objSvcStub);
-        objSvcStub.withWaitForReady();
-        getObjectManyByNameStream(objSvcStub);
-        objSvcStub.withWaitForReady();
-        getObjectManyByNameExt(objSvcStub);
-        objSvcStub.withWaitForReady();
-        getObjectManyByNameExtStream(objSvcStub);
-        objSvcStub.withWaitForReady();
-
-        // Get Object By Name Calls
-        getObjectByName(objSvcStub);
-        objSvcStub.withWaitForReady();
-        getObjectByNameExt(objSvcStub);
-        objSvcStub.withWaitForReady();
-
-//        //Get Index Record By Name Call
-//        getIndexRecordByName(objSvcStub);
+//        lookupByName(objSvcStub, 100);
 //        objSvcStub.withWaitForReady();
-//        getIndexRecordByNameCSV(objSvcStub);
+//        lookupByType(objSvcStub, 100);
 //        objSvcStub.withWaitForReady();
-//        getIndexObjectManyByNameExtStream(objSvcStub);
+//        lookupByNameStream(objSvcStub, 100);
 //        objSvcStub.withWaitForReady();
-        getIndexObjectBatch(objSvcStub);
+//        lookupByTypeStream(objSvcStub, 100);
+//        objSvcStub.withWaitForReady();
+//
+//        // Get Object Many Calls
+//        getObjectManyByName(objSvcStub);
+//        objSvcStub.withWaitForReady();
+//        getObjectManyByNameStream(objSvcStub);
+//        objSvcStub.withWaitForReady();
+//        getObjectManyByNameExt(objSvcStub);
+//        objSvcStub.withWaitForReady();
+//        getObjectManyByNameExtStream(objSvcStub);
+//        objSvcStub.withWaitForReady();
+//
+//        // Get Object By Name Calls
+//        getObjectByName(objSvcStub);
+//        objSvcStub.withWaitForReady();
+//        getObjectByNameExt(objSvcStub);
+//        objSvcStub.withWaitForReady();
+//
+////        //Get Index Record By Name Call
+////        getIndexRecordByName(objSvcStub);
+////        objSvcStub.withWaitForReady();
+////        getIndexRecordByNameCSV(objSvcStub);
+////        objSvcStub.withWaitForReady();
+////        getIndexObjectManyByNameExtStream(objSvcStub);
+////        objSvcStub.withWaitForReady();
+//        //getIndexObjectBatch(objSvcStub);
+
 
         // Transaction Service
-//        CompletableFuture<Void> future = new CompletableFuture();
-//        TransactionServiceGrpc.TransactionServiceStub asyncStub = TransactionServiceGrpc.newStub(channel);
-//        transactionTest(asyncStub, future);
-//        future.join();
+        CompletableFuture<Void> future = new CompletableFuture();
+        TransactionServiceGrpc.TransactionServiceStub asyncStub = TransactionServiceGrpc.newStub(channel);
+        indexFetch(asyncStub, future);
+        future.join();
         channel.shutdown();
 
     }
@@ -262,5 +263,63 @@ public class Client {
         CmdTrailer trailer = CmdTrailer.newBuilder().build();
         requestObserver.onNext(CmdTransactionRequest.newBuilder().setTrailer(trailer).setTransSeqValue(5).build());
         requestObserver.onCompleted();
+    }
+
+
+    private static void indexFetch(TransactionServiceGrpc.TransactionServiceStub stub, CompletableFuture<Void> future) throws InterruptedException {
+        final String[] str = {"0"};
+        int val = 1028;
+        int i = 0;
+        StreamObserver<CmdMsgIndexGetByNameWithClientResponse>  streamObserver = new StreamObserver<CmdMsgIndexGetByNameWithClientResponse> () {
+
+            @Override
+            public void onNext(CmdMsgIndexGetByNameWithClientResponse value) {
+                System.out.println(value.getMsgOnSuccess().getSecurityName()) ;
+                str[0] = value.getMsgOnSuccess().getSecurityName();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onCompleted() {
+                future.complete(null);
+            }
+        };
+        StreamObserver<CmdMsgIndexGetByNameWithClient> requestObserver = stub.getIndexRecordWithClient(streamObserver);
+
+        while(i<=10){
+            CmdMsgIndexGetByNameWithClient request = CmdMsgIndexGetByNameWithClient.newBuilder().setRecordName(str[0]).setTableName("Table_PB").build();
+            requestObserver.onNext(request);
+            Thread.sleep(500);
+            i++;
+        }
+
+        requestObserver.onCompleted();
+
+    }
+
+
+    private static void indexFetch2(ObjServiceGrpc.ObjServiceBlockingStub stub, CompletableFuture<Void> future) {
+        StreamObserver<CmdMsgIndexGetByNameWithClientResponse>  streamObserver = new StreamObserver<CmdMsgIndexGetByNameWithClientResponse> () {
+
+            @Override
+            public void onNext(CmdMsgIndexGetByNameWithClientResponse value) {
+
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onCompleted() {
+
+            }
+        };
+        //StreamObserver<CmdMsgIndexGetByNameWithClient> requestObserver = stub.getIndexRecordWithClient(streamObserver);
     }
 }

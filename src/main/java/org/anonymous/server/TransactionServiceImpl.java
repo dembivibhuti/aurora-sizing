@@ -1,9 +1,7 @@
 package org.anonymous.server;
 
 import io.grpc.stub.StreamObserver;
-import org.anonymous.grpc.CmdTransactionRequest;
-import org.anonymous.grpc.TransMsgResponse;
-import org.anonymous.grpc.TransactionServiceGrpc;
+import org.anonymous.grpc.*;
 import org.anonymous.module.ObjectRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.anonymous.sql.Store.GET_NXT_TXN_ID;
@@ -150,4 +150,28 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
             }
         };
     }
+
+    @Override
+    public StreamObserver<CmdMsgIndexGetByNameWithClient> getIndexRecordWithClient(StreamObserver<CmdMsgIndexGetByNameWithClientResponse> responseObserver) {
+        return new StreamObserver<CmdMsgIndexGetByNameWithClient>() {
+            List<CmdMsgIndexGetByNameWithClientResponse> responseMessageList = new ArrayList<>();
+
+            @Override
+            public void onNext(CmdMsgIndexGetByNameWithClient request) {
+                responseMessageList = objectRepository.indexRecordsInBatchWithClient(request.getRecordName(), request.getTableName());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                LOGGER.info("Error in fetching" + t);
+            }
+
+            @Override
+            public void onCompleted() {
+                responseMessageList.forEach(responseObserver::onNext);
+                responseObserver.onCompleted();
+            }
+        };
+    }
+
 }

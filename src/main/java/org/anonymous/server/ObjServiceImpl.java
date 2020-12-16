@@ -9,6 +9,7 @@ import org.anonymous.stats.Statistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,7 +78,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             List<String> results = objectRepository.lookup(prefix, typeid, limit);
             results.stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             responseObserver.onCompleted();
-            LOGGER.trace("elapsed time = " + (System.currentTimeMillis() - start ) / 1000 );
+            LOGGER.trace("elapsed time = " + (System.currentTimeMillis() - start) / 1000);
         } catch (Exception e) {
             LOGGER.error("Caught Exception in lookupByNameStream()", e);
         } finally {
@@ -93,7 +94,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         try {
             int limit = request.getCount();
             int typeid = request.getGetType().getNumber();
-            int objectType= request.getSecurityType();
+            int objectType = request.getSecurityType();
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
@@ -117,7 +118,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         try {
             int limit = request.getCount();
             int typeid = request.getGetType().getNumber();
-            int objectType= request.getSecurityType();
+            int objectType = request.getSecurityType();
             String prefix = "";
             if (request.getSecurityNamePrefix() != null) {
                 prefix = request.getSecurityNamePrefix();
@@ -248,9 +249,9 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             CmdGetByNameExtResponse response;
             Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getFullObject(request.getSecurityName());
 
-            if(msgOnSuccess.isPresent()){
+            if (msgOnSuccess.isPresent()) {
                 response = CmdGetByNameExtResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
-            }else{
+            } else {
                 LOGGER.error("Object Doesn't exist");
                 CmdGetByNameExtResponse.MsgOnFailure msgOnFailure = CmdGetByNameExtResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
                 response = CmdGetByNameExtResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
@@ -272,9 +273,9 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             CmdIdxGetByNameResponse response;
             Optional<CmdIdxGetByNameResponse.MsgOnSuccess> msgOnSuccess = objectRepository.getIdxRecords(request.getIdsName());
 
-            if(msgOnSuccess.isPresent()){
+            if (msgOnSuccess.isPresent()) {
                 response = CmdIdxGetByNameResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.get()).build();
-            }else{
+            } else {
                 LOGGER.error("Object Doesn't exist");
                 CmdIdxGetByNameResponse.MsgOnFailure msgOnFailure = CmdIdxGetByNameResponse.MsgOnFailure.newBuilder().setErrorType(ErrorType.ERR_OBJECT_NOT_FOUND).build();
                 response = CmdIdxGetByNameResponse.newBuilder().setMsgOnFailure(msgOnFailure).build();
@@ -287,6 +288,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         }
 
     }
+
     @Override
     public void getIndexMsgByName(CmdMsgIndexGetByName request, StreamObserver<CmdMsgIndexGetByNameResponse> responseObserver) {
         LOGGER.trace("got request getIndexObject()");
@@ -331,5 +333,51 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         } catch (Exception e) {
             LOGGER.trace("Caught Exception in getIndexRecordInBatches()", e);
         }
+    }
+
+//    @Override
+//    public StreamObserver<CmdMsgIndexGetByNameWithClient> getIndexRecordInBatchesWithClient(StreamObserver<CmdMsgIndexGetByNameWithClientResponse> responseObserver) {
+//        return new StreamObserver<CmdMsgIndexGetByNameWithClient> (){
+//            List<CmdMsgIndexGetByNameWithClientResponse> responseMessageList = new ArrayList<>();
+//            @Override
+//            public void onNext(CmdMsgIndexGetByNameWithClient request) {
+//                responseMessageList = objectRepository.indexRecordsInBatchWithClient(request.getRecordName(), request.getTableName());
+//            }
+//
+//            @Override
+//            public void onError(Throwable t) {
+//                LOGGER.info("Error in fetching" + t);
+//            }
+//
+//            @Override
+//            public void onCompleted() {
+//                responseMessageList.forEach(responseObserver::onNext);
+//                responseObserver.onCompleted();
+////            }
+//        };
+//    }
+
+
+    @Override
+    public StreamObserver<CmdMsgIndexGetByNameWithClient> getIndexRecordWithClient(StreamObserver<CmdMsgIndexGetByNameWithClientResponse> responseObserver) {
+        return new StreamObserver<CmdMsgIndexGetByNameWithClient>() {
+            List<CmdMsgIndexGetByNameWithClientResponse> responseMessageList = new ArrayList<>();
+
+            @Override
+            public void onNext(CmdMsgIndexGetByNameWithClient request) {
+                responseMessageList = objectRepository.indexRecordsInBatchWithClient(request.getRecordName(), request.getTableName());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                LOGGER.info("Error in fetching" + t);
+            }
+
+            @Override
+            public void onCompleted() {
+                responseMessageList.forEach(responseObserver::onNext);
+                responseObserver.onCompleted();
+            }
+        };
     }
 }

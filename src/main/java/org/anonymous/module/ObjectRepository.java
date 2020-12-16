@@ -1174,6 +1174,46 @@ public class ObjectRepository implements AutoCloseable {
         return responseMessages;
     }
 
+
+    public List<CmdMsgIndexGetByNameWithClientResponse>  indexRecordsInBatchWithClient(String recordName, String tableName) {
+        List<CmdMsgIndexGetByNameWithClientResponse> responseMessageList = new ArrayList<>();
+        CmdMsgIndexGetByNameWithClientResponse response;
+
+
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getIndexRecords = connection.prepareStatement(GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES)) {
+//            getIndexRecords.setString(1, tableName);
+            getIndexRecords.setString(1, recordName);
+            ResultSet rs = getIndexRecords.executeQuery();
+
+
+            while (rs.next()) {
+
+                CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess.Builder msgOnSuccess =
+                        CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess.newBuilder().setSecurityName(rs.getString("name"));
+                int countOfCols = rs.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= countOfCols - 2; i++) {
+                    String colName = rs.getMetaData().getColumnName(i);
+                    String colType = rs.getMetaData().getColumnTypeName(i);
+
+                    if (colType.contains("VARCHAR") || colType.contains("varchar")) {
+                        msgOnSuccess.putStringVal(colName, rs.getString(i));
+                    } else {
+                        msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
+                    }
+                }
+                response = CmdMsgIndexGetByNameWithClientResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+                responseMessageList.add(response);
+            }
+            rs.close();
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return responseMessageList;
+    }
+
     public CompletableFuture<Long> countRecs(TimeKeeper lookupTimeKeeper) {
         CompletableFuture<Long> completableFuture = new CompletableFuture();
         executorService.submit(() -> {
