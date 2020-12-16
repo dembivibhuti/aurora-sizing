@@ -132,20 +132,12 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 //}
 
 func pairityWithSaralVersion2(scl model.SSClient) {
-
-	respCh, err := scl.GetIndexRecordInBatches("test")
-
+	respCh, err := scl.GetIndexRecordMany("", "Table_TT")
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	for k := range respCh {
-		resp, err := scl.GetObject(k.SecName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("Name of Sec: ", k.SecName)
-		fmt.Println("Get Object Mem By Name Response: ", resp)
+	for _, k := range respCh {
+		fmt.Print("Get Index Object In Batches : ", k)
 		fmt.Println("================")
 	}
 }

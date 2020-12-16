@@ -1863,7 +1863,7 @@ public class ObjectRepository implements AutoCloseable {
                         idxRecBuilder.putDoubleVal(colName, rs.getDouble(i));
                     }
                 }
-                msgOnSuccess.getIndexRecordsList().add(idxRecBuilder.build());
+                msgOnSuccess.addIndexRecords(idxRecBuilder.build());
             }
             rs.close();
             response = CmdMsgIndexGetByNameWithClientResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
