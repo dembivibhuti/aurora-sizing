@@ -132,7 +132,7 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 //}
 
 func pairityWithSaralVersion2(scl model.SSClient) {
-	respCh, err := scl.GetIndexRecordMany("", "Table_TT")
+	respCh, err := scl.GetIndexRecordMany("", "test")
 	if err != nil {
 		log.Fatal(err)
 	}
