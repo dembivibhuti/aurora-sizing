@@ -1746,7 +1746,7 @@ public class ObjectRepository implements AutoCloseable {
                     String colName = rs.getMetaData().getColumnName(i);
                     String colType = rs.getMetaData().getColumnTypeName(i);
 
-                    if (colType.contains("VARCHAR")) {
+                    if (colType.contains("VARCHAR") || colType.contains("varchar")) {
                         msgOnSuccess.putStringVal(colName, rs.getString(i));
                     }else {
                         msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
@@ -1785,7 +1785,7 @@ public class ObjectRepository implements AutoCloseable {
                     String colName = rs.getMetaData().getColumnName(i);
                     String colType = rs.getMetaData().getColumnTypeName(i);
 
-                    if (colType.contains("VARCHAR")) {
+                    if (colType.contains("VARCHAR") || colType.contains("varchar")) {
                         msgOnSuccess.putStringVal(colName, rs.getString(i));
                     } else {
                         msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
@@ -1803,7 +1803,7 @@ public class ObjectRepository implements AutoCloseable {
     public List<CmdMsgIndexGetByNameByLimitResponse> indexRecordsInBatch(int offsetStartFromHere, int limitBatchSize, String tableName) {
         List<CmdMsgIndexGetByNameByLimitResponse> responseMessages = new ArrayList<>();
         CmdMsgIndexGetByNameByLimitResponse response;
-        String query = String.format(INSERT_INDEX_RECORDS_WITH_LIMIT, tableName, limitBatchSize, offsetStartFromHere);
+        String query = String.format(GET_FROM_INDEX_TABLE_WITH_LIMIT, tableName, limitBatchSize, offsetStartFromHere);
 
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getIndexRecords = connection.prepareStatement(query)) {
@@ -1818,7 +1818,7 @@ public class ObjectRepository implements AutoCloseable {
                     String colName = rs.getMetaData().getColumnName(i);
                     String colType = rs.getMetaData().getColumnTypeName(i);
 
-                    if (colType.contains("VARCHAR")) {
+                    if (colType.contains("VARCHAR") || colType.contains("varchar")) {
                         msgOnSuccess.putStringVal(colName, rs.getString(i));
                     } else {
                         msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));

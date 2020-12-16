@@ -29,12 +29,17 @@ func main() {
 	metrics.Register(prometheus.DefaultRegisterer)
 	var wg sync.WaitGroup
 	pattern := randDigit(3)
+	mode := 2
 	for i := 0; i < 500; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for { // infinite for loop
-				pattern = startTest(metrics, pattern)
+				if mode == 1 {
+					pattern = startTest(metrics, pattern)
+				} else {
+					startTest2(metrics)
+				}
 			}
 		}()
 	}
@@ -49,6 +54,13 @@ func startTest(metrics *model.Metrics, pattern string) string {
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
 	return pairityWithSaral(sscl, pattern)
+}
+
+func startTest2(metrics *model.Metrics) {
+	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC, metrics)
+	defer sscl.Close()
+	//sscl.EnableMetrics(":9090")
+	pairityWithSaralVersion2(sscl)
 }
 
 func pairityWithSaral(scl model.SSClient, pattern string) string {
@@ -120,16 +132,22 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 //}
 
 func pairityWithSaralVersion2(scl model.SSClient) {
-	respCh, err := scl.GetIndexRecordInBatches("Table_TT")
+
+	respCh, err := scl.GetIndexRecordInBatches("test")
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for k := range respCh {
-		fmt.Print("Get Index Object In Batches : ", k)
+		resp, err := scl.GetObject(k.SecName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Name of Sec: ", k.SecName)
+		fmt.Println("Get Object Mem By Name Response: ", resp)
 		fmt.Println("================")
 	}
-
 }
 
 func startMetricsServer(addr string) {
