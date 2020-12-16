@@ -53,6 +53,8 @@ public class Client {
         getIndexObjectManyByNameExtStream(objSvcStub);
         objSvcStub.withWaitForReady();
         getIndexObjectBatch(objSvcStub);
+        objSvcStub.withWaitForReady();
+        getIndexRecordMany(objSvcStub);
 
         // Transaction Service
         CompletableFuture<Void> future = new CompletableFuture();
@@ -187,6 +189,22 @@ public class Client {
                 i++;
             }
         }catch (Exception e) {
+            LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);
+        }
+    }
+
+    private static void getIndexRecordMany(ObjServiceGrpc.ObjServiceBlockingStub stub) {
+        CmdMsgIndexGetByNameWithClient request = CmdMsgIndexGetByNameWithClient.newBuilder().setTableName("objects").setRecordName("").build();
+        try {
+            CmdMsgIndexGetByNameWithClientResponse response = stub.getIndexRecordMany(request);
+            System.out.println("Response received from getIndexObjectBatch:");
+            int i = 0;
+
+            for (IndexRecord record : response.getMsgOnSuccess().getIndexRecordsList()) {
+                System.out.println(record);
+            }
+            i++;
+        } catch (Exception e) {
             LOGGER.error("Caught exception in Streaming Server-side Get Many by Name Index Object Ext stream", e);
         }
     }

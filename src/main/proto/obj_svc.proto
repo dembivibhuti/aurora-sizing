@@ -16,6 +16,7 @@ import "cmd_change_init_data_ext.proto";
 import "cmd_index_get_by_name.proto";
 import "cmd_index_get_many_by_name.proto";
 import "cmd_index_get_by_name_by_limit.proto";
+import "cmd_index_get_by_name_with_client.proto";
 
 service ObjService {
 	rpc connect(CmdConnect) returns (CmdConnectResponse);
@@ -35,4 +36,5 @@ service ObjService {
 	rpc get_index_msg_by_name(CmdMsgIndexGetByName) returns (CmdMsgIndexGetByNameResponse);
 	rpc get_index_msg_many_by_name_ext_stream(CmdMsgIndexGetManyByNameExt) returns (stream CmdMsgIndexGetManyByNameResponseStream);
 	rpc get_index_record_in_batches(CmdMsgIndexGetByNameByLimit) returns (stream CmdMsgIndexGetByNameByLimitResponse);
+	rpc get_index_record_many(CmdMsgIndexGetByNameWithClient) returns (CmdMsgIndexGetByNameWithClientResponse);
 }

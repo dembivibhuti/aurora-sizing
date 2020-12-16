@@ -1834,4 +1834,42 @@ public class ObjectRepository implements AutoCloseable {
         }
         return responseMessages;
     }
+
+    public CmdMsgIndexGetByNameWithClientResponse getIndexRecordMany(String recordName, String tableName) {
+        CmdMsgIndexGetByNameWithClientResponse response  = null;
+
+
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getIndexRecords = connection.prepareStatement(String.format(GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES, tableName))) {
+            getIndexRecords.setString(1, recordName);
+            ResultSet rs = getIndexRecords.executeQuery();
+
+            CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess.Builder msgOnSuccess =
+                    CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess
+                            .newBuilder();
+
+            while (rs.next()) {
+
+                IndexRecord.Builder idxRecBuilder = IndexRecord.newBuilder().setSecurityName(rs.getString("name"));
+                int countOfCols = rs.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= countOfCols - 2; i++) {
+                    String colName = rs.getMetaData().getColumnName(i);
+                    String colType = rs.getMetaData().getColumnTypeName(i);
+
+                    if (colType.contains("VARCHAR") || colType.contains("varchar")) {
+                        idxRecBuilder.putStringVal(colName, rs.getString(i));
+                    } else {
+                        idxRecBuilder.putDoubleVal(colName, rs.getDouble(i));
+                    }
+                }
+                msgOnSuccess.getIndexRecordsList().add(idxRecBuilder.build());
+            }
+            rs.close();
+            response = CmdMsgIndexGetByNameWithClientResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return response;
+    }
 }

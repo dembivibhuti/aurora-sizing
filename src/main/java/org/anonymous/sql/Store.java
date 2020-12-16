@@ -137,4 +137,6 @@ public class Store {
     public static final String INSERT_CSV_INDEX_RECORD = "insert into %s (%s) values (%s)";
 
     public static final String GET_FROM_INDEX_TABLE_WITH_LIMIT = "select * from %s LIMIT %s OFFSET %s";
+
+    public static final String GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES = "select * from %s where nameLower >= ? order by name asc LIMIT 100";
 }

@@ -307,6 +307,13 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         }
     }
 
+    @Override
+    public void getIndexRecordMany(CmdMsgIndexGetByNameWithClient request, StreamObserver<CmdMsgIndexGetByNameWithClientResponse> responseObserver) {
+        CmdMsgIndexGetByNameWithClientResponse response = objectRepository.getIndexRecordMany(request.getRecordName(), request.getTableName());
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
     private void sync(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver, Gauge.Timer timer, long spanID) {
         CmdGetByNameExtResponse response;
         Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess;
