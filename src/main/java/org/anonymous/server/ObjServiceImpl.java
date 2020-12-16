@@ -290,7 +290,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         LOGGER.trace("got request getIndexRecordInBatches()");
         try {
             int offsetStartFromHere = 0;
-            int limitBatchSize = 1000;
+            int limitBatchSize = 100;
 
             while (true) {
                 List<CmdMsgIndexGetByNameByLimitResponse> responseMessageList = objectRepository.indexRecordsInBatch(offsetStartFromHere, limitBatchSize, request.getTableName());
