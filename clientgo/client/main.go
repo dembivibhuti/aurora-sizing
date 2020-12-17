@@ -100,7 +100,7 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 
 		i := 1
 		var key string
-		for i < 400 {
+		//for i < 400 {
 			for _, key = range keys {
 				resp, err := scl.GetObjectExt(key)
 				if err != nil {
@@ -110,7 +110,7 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 				_ = resp
 				i += 1
 			}
-		}
+		//}
 		return key
 	}
 	return randDigit(3)
