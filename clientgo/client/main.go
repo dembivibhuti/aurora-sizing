@@ -145,8 +145,8 @@ func pairityWithSaralVersion2(scl model.SSClient, pattern string) string {
 		log.Println(err)
 	} else {
 		var keys []string
-		for _, key := range res {
-			keys = append(keys, key)
+		for _, rec := range res {
+			keys = append(keys, rec.SecurityName)
 		}
 		keysLen := len(keys)
 		if keysLen < 100 {
