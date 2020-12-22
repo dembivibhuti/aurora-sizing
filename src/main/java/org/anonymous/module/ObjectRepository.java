@@ -1602,6 +1602,7 @@ public class ObjectRepository implements AutoCloseable {
         }
         return map;
     }
+
     class IndexInsertionTask implements Runnable {
 
         private final Map<Integer, String> tablemap;
@@ -1617,16 +1618,18 @@ public class ObjectRepository implements AutoCloseable {
 
         @Override
         public void run() {
+            int prev = 0;
+            int offset = 0;
             try (Connection connection = rwConnectionProvider.getConnection();
                  PreparedStatement insertRec = connection.prepareStatement(query)) {
                 int recsAdded = 0;
                 Random random = new Random();
 
                 String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+                ResultSet rs = connection.prepareStatement("select name from objects limit 10000 offset 0").executeQuery();
 
-                for (int i = 0; i < recordList.get(0).getNumberOfObjects(); i++) {
+                for (int i = 0; i < recordList.get(0).getNumberOfObjects() && rs.next(); i++) {
                     long millis = System.currentTimeMillis();
-                    String name = String.format("testSec-%d-%d", random.nextInt(), i);
                     for(int j: tablemap.keySet()){
                         if(tablemap.get(j).contains("String")){
                             insertRec.setString(j, str.substring(0, (int)Math.ceil(Double.parseDouble(tablemap.get(j).substring(6)))));
@@ -1635,9 +1638,9 @@ public class ObjectRepository implements AutoCloseable {
                         }else if(tablemap.get(j).contains("Date") || tablemap.get(j).contains("Time")){
                             insertRec.setDouble(j, millis);
                         }else if(tablemap.get(j).contains("lower")) {
-                            insertRec.setString(j, name.toLowerCase());
+                            insertRec.setString(j, rs.getString("name").toLowerCase());
                         } else{
-                            insertRec.setString(j, name);
+                            insertRec.setString(j, rs.getString("name"));
                         }
                     }
                     insertRec.addBatch();
@@ -1647,10 +1650,17 @@ public class ObjectRepository implements AutoCloseable {
                         System.out.println("Records added in " + query.substring(12, 23) + "--->" + i);
                         recsAdded = 0;
                     }
-
+                    prev++;
+                    if (prev == 10000) {
+                        offset+= 10000;
+                        rs.close();
+                        rs = connection.prepareStatement(String.format("select name from objects limit 10000 offset %s", offset)).executeQuery();
+                        prev = 0;
+                    }
                 }
                 insertRec.executeBatch();
                 connection.commit();
+                rs.close();
                 System.out.println("Insertion Completed for table: " + query.substring(12, 23));
             } catch (PSQLException ex) {
                 LOGGER.error("Error PSQLException", ex);
@@ -1660,75 +1670,6 @@ public class ObjectRepository implements AutoCloseable {
                 LOGGER.error("Error Throwable", th);
             }
         }
-    }
-
-
-    public void insertFromOneTableToOther(String oldTable, String newTable){
-        int offsetStartFromHere = 0;
-        int limitBatchSize = 10000;
-        int totalNoOfRows = countRecs("objects");
-        int rowsLeftToFetch = totalNoOfRows - offsetStartFromHere;
-
-
-        while(limitBatchSize <= rowsLeftToFetch){
-            insertIntoNewTable(oldTable, newTable, offsetStartFromHere, limitBatchSize);
-            offsetStartFromHere+=limitBatchSize;
-            rowsLeftToFetch = totalNoOfRows - offsetStartFromHere;
-        }
-        if(rowsLeftToFetch > 0){
-            insertIntoNewTable(oldTable, newTable, offsetStartFromHere, rowsLeftToFetch);
-        }
-    }
-
-    public void insertIntoNewTable(String oldTable, String newTable, int offset, int limit){
-        try (Connection connection = roConnectionProvider.getConnection();
-             PreparedStatement getIndexRecords = connection.prepareStatement(String.format("select name from %s LIMIT %s OFFSET %s", oldTable, limit, offset ));
-             PreparedStatement insertRecs = connection.prepareStatement(String.format("insert into %s values (?,?,?,?,?)", newTable))) {
-             ResultSet rs = getIndexRecords.executeQuery();
-             int recordCount = 0;
-
-            String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-            Random random = new Random();
-            while (rs.next()) {
-
-                insertRecs.setString(1, str.substring(0, (int)Math.ceil(7.93)));
-                insertRecs.setDouble(2, random.nextDouble());
-                insertRecs.setDouble(3, System.currentTimeMillis());
-                insertRecs.setString(4, rs.getString("name"));
-                insertRecs.setString(5, rs.getString("name").toLowerCase());
-                insertRecs.addBatch();
-
-                if(recordCount++ > 5000){
-                    insertRecs.executeBatch();
-                    connection.commit();
-                    System.out.println("Records updated till now " + offset);
-                    recordCount = 0;
-                }
-            }
-            insertRecs.executeBatch();
-            connection.commit();
-            rs.close();
-
-        } catch (SQLException throwables) {
-            System.out.println("Error Here in Insert Into New Table");
-            throwables.printStackTrace();
-        }
-    }
-
-    public int countRecs(String tableName) {
-        int val = 0;
-        try (Connection connection = rwConnectionProvider.getConnection();
-             PreparedStatement lookupStmt = connection.prepareStatement(String.format(COUNT_RECORDS_FOR_ANY_TABLE, tableName))) {
-            ResultSet rs = lookupStmt.executeQuery();
-            while (rs.next()) {
-                val = rs.getInt(1);
-            }
-            rs.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return val;
     }
 
     public CmdMsgIndexGetByNameResponse getIndexObjectsFromCSV (final String tableName, String securityName){
