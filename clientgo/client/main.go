@@ -19,6 +19,7 @@ import (
 var (
 	serverAddr     = flag.String("sa", "localhost:8080", "the server port")
 	promScrapePort = flag.String("promscrapeport", ":8080", "the prometheus scrape port")
+	mode           = flag.String("mode", "2", "1 = Lookup and Get, 2 = Index Lookup and Get")
 )
 
 func main() {
@@ -28,17 +29,23 @@ func main() {
 	metrics := model.NewMetrics()
 	metrics.Register(prometheus.DefaultRegisterer)
 	var wg sync.WaitGroup
-	pattern := randDigit(3)
-	mode := 2
+
+	var pattern string
+	if *mode == "1" {
+		pattern = randDigit(3)
+	} else {
+		pattern = ""
+	}
+
 	for i := 0; i < 500; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for { // infinite for loop
-				if mode == 1 {
+				if *mode == "1" {
 					pattern = startTest(metrics, pattern)
 				} else {
-					startTest2(metrics)
+					pattern = startTest2(metrics, pattern)
 				}
 			}
 		}()
@@ -56,11 +63,11 @@ func startTest(metrics *model.Metrics, pattern string) string {
 	return pairityWithSaral(sscl, pattern)
 }
 
-func startTest2(metrics *model.Metrics) {
+func startTest2(metrics *model.Metrics, pattern string) string {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC, metrics)
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
-	pairityWithSaralVersion2(sscl)
+	return pairityWithSaralVersion2(sscl, pattern)
 }
 
 func pairityWithSaral(scl model.SSClient, pattern string) string {
@@ -93,7 +100,7 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 
 		i := 1
 		var key string
-		for i < 400 {
+		//for i < 400 {
 			for _, key = range keys {
 				resp, err := scl.GetObjectExt(key)
 				if err != nil {
@@ -103,7 +110,7 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 				_ = resp
 				i += 1
 			}
-		}
+		//}
 		return key
 	}
 	return randDigit(3)
@@ -131,15 +138,38 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 //
 //}
 
-func pairityWithSaralVersion2(scl model.SSClient) {
-	respCh, err := scl.GetIndexRecordMany("", "test")
+func pairityWithSaralVersion2(scl model.SSClient, pattern string) string {
+
+	res, err := scl.GetIndexRecordMany(pattern, "test")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+	} else {
+		var keys []string
+		for _, rec := range res {
+			keys = append(keys, rec.SecurityName)
+		}
+		keysLen := len(keys)
+		if keysLen < 100 {
+			log.Printf("got less than 100 recs in index lookup. Got %d, Pattern %s", keysLen, pattern)
+			return ""
+		}
+
+		i := 1
+		var key string
+		for i < 400 {
+			for _, key = range keys {
+				resp, err := scl.GetObjectExt(key)
+				if err != nil {
+					log.Println(err)
+					return "" // retry to create a new connection
+				}
+				_ = resp
+				i += 1
+			}
+		}
+		return key
 	}
-	for _, k := range respCh {
-		fmt.Print("Get Index Object In Batches : ", k)
-		fmt.Println("================")
-	}
+	return ""
 }
 
 func startMetricsServer(addr string) {

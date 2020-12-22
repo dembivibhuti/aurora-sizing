@@ -380,20 +380,14 @@ func (s *SSClient) GetIndexManyByNameStream(snames []string, tableName string) (
 	return ch, nil
 }
 
-func (s *SSClient) GetIndexRecordMany(sname string, tableName string) ([]string, error) {
+func (s *SSClient) GetIndexRecordMany(sname string, tableName string) ([]*pb.IndexRecord, error) {
 	ctx := context.Background()
 	strmCl, err := s.client.GetIndexRecordMany(ctx, &pb.CmdMsgIndexGetByNameWithClient{RecordName: sname, TableName: tableName})
 
 	if err != nil {
 		return nil, err
 	}
-	var slice []string
-
-	for _, k := range strmCl.GetMsgOnSuccess().GetIndexRecords() {
-		slice = append(slice, k.GetSecurityName())
-	}
-
-	return slice, nil
+	return strmCl.GetMsgOnSuccess().GetIndexRecords(), nil
 }
 
 /*
