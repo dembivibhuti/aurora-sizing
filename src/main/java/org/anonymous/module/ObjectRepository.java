@@ -789,6 +789,7 @@ public class ObjectRepository implements AutoCloseable {
         return pair;
     }
 
+    // Used in test
     public List<String> lookup(String name, int typeId, int limit) {
         Pair<String, String> exp = expression(typeId);
         List<String> secKeys = new ArrayList<>();
@@ -802,7 +803,7 @@ public class ObjectRepository implements AutoCloseable {
                 secKeys.add(rs.getString(1));
             }
             rs.close();
-            connection.commit();
+            // connection.commit(); //Making the Read-Only Connection Pool Auto-commit
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -1076,6 +1077,7 @@ public class ObjectRepository implements AutoCloseable {
         return Optional.ofNullable(arrayContainsMem);
     }
 
+    // Used in test
     public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
         CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
 
@@ -1126,7 +1128,7 @@ public class ObjectRepository implements AutoCloseable {
             try {
                 rs.close();
                 getFullObjStmt.close();
-                connection.commit();
+                //connection.commit(); // Making the Read-Only Connection Pool Auto-commit
                 connection.close();
             } catch (Exception exception) {
                 LOGGER.error("error in getFullObject() finally, error in closing the connection", exception);
