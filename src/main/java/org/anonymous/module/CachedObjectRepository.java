@@ -17,16 +17,18 @@ public class CachedObjectRepository implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(CachedObjectRepository.class);
 
     private final ObjectRepository delegate;
+    private final JedisPool pool;
 
-    // max pool size and end point externalize
-    JedisPoolConfig poolConfig = new JedisPoolConfig();
-    poolConfig.setMaxTotal(10000);
-    private final JedisPool pool = new JedisPool(poolConfig, "aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com");
-    // src/redis-cli -c -h aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com -p 6379
 
     public CachedObjectRepository(ObjectRepository objectRepository) {
-       this.delegate = objectRepository;
-   }
+        this.delegate = objectRepository;
+        // max pool size and end point externalize
+        // src/redis-cli -c -h aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com -p 6379
+
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(10000);
+        this.pool = new JedisPool(poolConfig, "aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com");
+    }
 
     @Override
     public void close() throws Exception {
@@ -41,18 +43,18 @@ public class CachedObjectRepository implements AutoCloseable {
         Optional<ObjectDTO> objectDTO = null;
         try (Jedis jedis = pool.getResource()) {
             byte[] fromCache = jedis.get(key.getBytes());
-            if( null != fromCache) {
+            if (null != fromCache) {
                 objectDTO = Optional.of(ObjectDTO.fromBytes(fromCache));
             } else {
                 objectDTO = delegate.getFullObject(key);
-                if(objectDTO.isPresent()) {
+                if (objectDTO.isPresent()) {
                     jedis.set(key.getBytes(), objectDTO.get().toBytes());
                 }
             }
         } catch (IOException e) {
             LOGGER.error("error in de-serializing the redis payload", e);
         }
-        if(objectDTO.isPresent()) {
+        if (objectDTO.isPresent()) {
             return Optional.of(objectDTO.get().toCmdGetByNameExtResponseMsgOnSuccess());
         } else {
             LOGGER.error("failed to find Obj. by key from both sources {}", key);
