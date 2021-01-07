@@ -19,7 +19,10 @@ public class CachedObjectRepository implements AutoCloseable {
     private final ObjectRepository delegate;
 
     // max pool size and end point externalize
-    private final JedisPool pool = new JedisPool(new JedisPoolConfig(), "aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com");
+    JedisPoolConfig poolConfig = new JedisPoolConfig();
+    poolConfig.setMaxTotal(10000);
+    private final JedisPool pool = new JedisPool(poolConfig, "aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com");
+    // src/redis-cli -c -h aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com -p 6379
 
     public CachedObjectRepository(ObjectRepository objectRepository) {
        this.delegate = objectRepository;
