@@ -5,6 +5,7 @@ import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Gauge;
 import org.anonymous.grpc.*;
 import org.anonymous.grpc.ObjServiceGrpc.ObjServiceImplBase;
+import org.anonymous.module.CachedObjectRepository;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.stats.Statistics;
 import org.slf4j.Logger;
@@ -20,11 +21,13 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     private static final Gauge getObjectExtGaugeTimer = Gauge.build().name("get_object_ext_mw").help("Get Object Ext on Middleware").labelNames("grpc_method").register();
     private static final Gauge lookupByNameObjectGaugeTimer = Gauge.build().name("lookup_by_name_mw").help("Lookup Object by Name on Middleware").labelNames("grpc_method").register();
     private static ObjectRepository objectRepository;
+    private static CachedObjectRepository cachedObjectRepository;
 
     private static final boolean NO_DB = ("true".equals(System.getProperty("stubbed")));
 
-    ObjServiceImpl(ObjectRepository objectRepositiory) {
+    ObjServiceImpl(ObjectRepository objectRepositiory, CachedObjectRepository cachedObjectRepository) {
         ObjServiceImpl.objectRepository = objectRepositiory;
+        ObjServiceImpl.cachedObjectRepository = cachedObjectRepository;
     }
 
     @Override
@@ -37,6 +40,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         Statistics.connect.stop(span);
     }
 
+    // Used in test
     @Override
     public void lookupByName(CmdLookupByName request, StreamObserver<CmdLookupByNameResponse> responseObserver) {
         LOGGER.trace("got request lookupByName()");
@@ -55,7 +59,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             LOGGER.trace("prefix = " + prefix);
 
             CmdLookupByNameResponse.Builder responseBuilder = CmdLookupByNameResponse.newBuilder();
-            objectRepository.lookup(prefix, typeid, limit).stream().forEach(key -> responseBuilder.addSecurityNames(key));
+            cachedObjectRepository.lookup(prefix, typeid, limit).stream().forEach(key -> responseBuilder.addSecurityNames(key));
             responseObserver.onNext(responseBuilder.build());
             timer.setDuration();
             responseObserver.onCompleted();
@@ -67,6 +71,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         }
     }
 
+    // Used in test
     @Override
     public void lookupByNameStream(CmdLookupByName request, StreamObserver<CmdLookupByNameResponseStream> responseObserver) {
         LOGGER.trace("got request lookupByNameStream()");
@@ -81,7 +86,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
                 prefix = request.getSecurityNamePrefix();
             }
             CmdLookupByNameResponseStream.Builder responseBuilder = CmdLookupByNameResponseStream.newBuilder();
-            List<String> results = objectRepository.lookup(prefix, typeid, limit);
+            List<String> results = cachedObjectRepository.lookup(prefix, typeid, limit);
             results.stream().forEach(key -> responseObserver.onNext(responseBuilder.setSecurityName(key).build()));
             timer.setDuration();
             responseObserver.onCompleted();
@@ -314,13 +319,14 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         responseObserver.onCompleted();
     }
 
+    // Used in test
     private void sync(CmdGetByNameExt request, StreamObserver<CmdGetByNameExtResponse> responseObserver, Gauge.Timer timer, long spanID) {
         CmdGetByNameExtResponse response;
         Optional<CmdGetByNameExtResponse.MsgOnSuccess> msgOnSuccess;
         if(NO_DB) {
             msgOnSuccess = objectRepository.getFullObjectStubbed(request.getSecurityName());
         } else {
-            msgOnSuccess = objectRepository.getFullObject(request.getSecurityName());
+            msgOnSuccess = cachedObjectRepository.getFullObject(request.getSecurityName());
         }
 
         if (msgOnSuccess.isPresent()) {

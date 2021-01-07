@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
 import io.prometheus.client.Gauge;
 import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.domain.ObjectDTO;
 import org.anonymous.grpc.*;
 import org.anonymous.stats.Statistics;
 import org.anonymous.util.StopWatch;
@@ -13,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.util.Date;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -279,7 +280,7 @@ public class ObjectRepository implements AutoCloseable {
                         LOGGER.error("Mem Size Mismatch {} Expected = {} Actual = {}", name, rowMap.get(name).memSize, mem.length);
                     }
                 }
-                if(objsFound < rowMap.size()) {
+                if (objsFound < rowMap.size()) {
                     LOGGER.error("Less Objects Found for Row = {} Expected = {} Actual = {}", rowNum, rowMap.size(), objsFound);
                 }
                 rs.close();
@@ -378,7 +379,7 @@ public class ObjectRepository implements AutoCloseable {
         private final List<DBRecordMetaData> dbRecordMetaData;
         private final AtomicLong rowsCompleteCounter;
 
-        InsertionTask(long rowNum, List<DBRecordMetaData> dbRecordMetaData, AtomicLong rowsCompleteCounter ) {
+        InsertionTask(long rowNum, List<DBRecordMetaData> dbRecordMetaData, AtomicLong rowsCompleteCounter) {
             this.dbRecordMetaData = dbRecordMetaData;
             this.rowNum = rowNum;
             this.rowsCompleteCounter = rowsCompleteCounter;
@@ -689,6 +690,7 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
+    @Deprecated
     class ObjectDataHolder {
         String name;
         int typeId;
@@ -1078,8 +1080,8 @@ public class ObjectRepository implements AutoCloseable {
     }
 
     // Used in test
-    public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(final String secKey) {
-        CmdGetByNameExtResponse.MsgOnSuccess msgOnSuccess = null;
+    public Optional<ObjectDTO> getFullObject(final String secKey) {
+        ObjectDTO objectDTO = null;
 
         long span = -1;
         Gauge.Timer timer1 = null;
@@ -1104,18 +1106,16 @@ public class ObjectRepository implements AutoCloseable {
             timer1 = fetchAndParseResultSet.labels("get_object_ext").startTimer();
             rs = getFullObjStmt.executeQuery();
             if (rs.next()) {
-                msgOnSuccess = CmdGetByNameExtResponse.MsgOnSuccess.newBuilder().
-                        setMem(ByteString.copyFrom(rs.getBytes("mem"))).
-                        setMetadata(Metadata.newBuilder().
-                                setSecurityName(rs.getString("name")).
-                                setSecurityType(rs.getInt("typeId")).
-                                setLastTxnId(rs.getLong("lastTransaction")).
-                                setUpdateCount(rs.getLong("updateCount")).
-                                setDateCreated(rs.getInt("dateCreated")).
-                                setDbIdUpdated(rs.getInt("dbIdUpdated")).
-                                setVersionInfo(rs.getInt("versionInfo")).
-                                setTimeUpdate(rs.getString("timeUpdated"))).
-                        build();
+                objectDTO = new ObjectDTO();
+                objectDTO.mem = rs.getBytes("mem");
+                objectDTO.name = rs.getString("name");
+                objectDTO.typeId = rs.getInt("typeId");
+                objectDTO.lastTransaction = rs.getLong("lastTransaction");
+                objectDTO.updateCount = rs.getLong("updateCount");
+                objectDTO.dateCreated = rs.getInt("dateCreated");
+                objectDTO.dbIdUpdated = rs.getInt("dbIdUpdated");
+                objectDTO.versionInfo = rs.getInt("versionInfo");
+                objectDTO.timeUpdated = rs.getString("timeUpdated");
             }
             timer1.setDuration();
             Statistics.getObjectExtDBResultSetFetch.stop(span);
@@ -1136,13 +1136,13 @@ public class ObjectRepository implements AutoCloseable {
             timer1.setDuration();
             Statistics.getObjectExtDBCloseResource.stop(span);
         }
-        return Optional.ofNullable(msgOnSuccess);
+        return Optional.ofNullable(objectDTO);
     }
 
     public CompletableFuture<Optional<CmdGetByNameExtResponse.MsgOnSuccess>> getFullObjectAsync(final String secKey) {
         CompletableFuture<Optional<CmdGetByNameExtResponse.MsgOnSuccess>> answer = new CompletableFuture<>();
         dbOpsExecutorService.execute(() -> {
-            answer.complete(getFullObject(secKey));
+            answer.complete(Optional.ofNullable(getFullObject(secKey).get().toCmdGetByNameExtResponseMsgOnSuccess()));
         });
         return answer;
     }
@@ -1488,7 +1488,7 @@ public class ObjectRepository implements AutoCloseable {
         executorService.shutdown();
     }
 
-    public void insertIndexRecordsFromCSV(List<String[]> allData){
+    public void insertIndexRecordsFromCSV(List<String[]> allData) {
         HashMap<String, List<Record>> map = mapifyCSV(allData);
         createIndexTable(map);
         createIndexOnName(map);
@@ -1498,7 +1498,7 @@ public class ObjectRepository implements AutoCloseable {
 
 
     public void executeInsertion(HashMap<String, List<Record>> map, HashMap<String, QueryData> insertQueryDetailsMap) {
-        for (String tableName : map.keySet()){
+        for (String tableName : map.keySet()) {
             executorService.execute(new ObjectRepository.IndexInsertionTask(insertQueryDetailsMap.get(tableName).getQueryColoumMap(), map.get(tableName),
                     insertQueryDetailsMap.get(tableName).getQuery()));
 
@@ -1512,22 +1512,21 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public HashMap<String, QueryData> getInsertQueryDetails(HashMap<String, List<Record>> map){
+    public HashMap<String, QueryData> getInsertQueryDetails(HashMap<String, List<Record>> map) {
         HashMap<String, QueryData> insertQueryDetailsMap = new HashMap<>();
-        for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+        for (Map.Entry<String, List<Record>> entry : map.entrySet()) {
             String table_name = entry.getKey();
             List<Record> list = entry.getValue();
             String colNames = "";
             Map<Integer, String> queryMap = new HashMap<>();
             int colNo = 1;
 
-            for(Record rec : list){
+            for (Record rec : list) {
                 colNames = String.format("%s%s%s", colNames, rec.getCol_name(), ", ");
-                if(rec.getCol_type().contains("String")){
+                if (rec.getCol_type().contains("String")) {
                     String stringWithAvgLength = String.format("String%s", rec.getAvg_length());
                     queryMap.put(colNo, stringWithAvgLength);
-                }
-                else{
+                } else {
                     queryMap.put(colNo, rec.getCol_type());
                 }
                 colNo++;
@@ -1537,7 +1536,7 @@ public class ObjectRepository implements AutoCloseable {
             colNo++;
             queryMap.put(colNo, "nameLower");
 
-            String query = String.format(INSERT_CSV_INDEX_RECORD, table_name, colNames , String.join(",", Collections.nCopies(list.size() + 2, "?")));
+            String query = String.format(INSERT_CSV_INDEX_RECORD, table_name, colNames, String.join(",", Collections.nCopies(list.size() + 2, "?")));
             QueryData queryData = new QueryData(query, (HashMap<Integer, String>) queryMap);
             insertQueryDetailsMap.put(table_name, queryData);
         }
@@ -1545,16 +1544,16 @@ public class ObjectRepository implements AutoCloseable {
     }
 
 
-    public void createIndexTable(HashMap<String, List<Record>> map){
+    public void createIndexTable(HashMap<String, List<Record>> map) {
         try (Connection connection = rwConnectionProvider.getConnection();) {
-            for(Map.Entry<String, List<Record>> entry : map.entrySet()){
+            for (Map.Entry<String, List<Record>> entry : map.entrySet()) {
 
                 String table_name = entry.getKey();
                 List<Record> list = entry.getValue();
 
                 String query = String.format("create table %s (", table_name);
 
-                for(Record rec : list){
+                for (Record rec : list) {
                     query = String.format("%s %s %s %s", query, rec.getCol_name(), rec.getCol_type_val(), "NOT NULL, ");
                 }
                 query = String.format("%s %s", query, "name varchar(32) NOT NULL, nameLower varchar(32) NOT NULL, PRIMARY KEY(name) )");
@@ -1566,9 +1565,9 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public void createIndexOnName(HashMap<String, List<Record>> map){
+    public void createIndexOnName(HashMap<String, List<Record>> map) {
         try (Connection connection = rwConnectionProvider.getConnection();) {
-            for(Map.Entry<String, List<Record>> entry : map.entrySet()) {
+            for (Map.Entry<String, List<Record>> entry : map.entrySet()) {
                 String table_name = entry.getKey();
                 String indexName = "index_on_" + table_name;
                 connection.prepareStatement(String.format(CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME, indexName, table_name)).executeUpdate();
@@ -1579,24 +1578,24 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public HashMap<String, List<Record>> mapifyCSV (List<String[]> allData){
+    public HashMap<String, List<Record>> mapifyCSV(List<String[]> allData) {
         HashMap<String, List<Record>> map = new HashMap<>();
-        for(String[] row: allData){
+        for (String[] row : allData) {
             String table_name = row[0];
             int col_id = Integer.parseInt(row[1]);
             String col_name = row[2];
             String col_type = row[3];
-            String col_type_val = (row[3].contains("String")) ? "varchar": "float";
+            String col_type_val = (row[3].contains("String")) ? "varchar" : "float";
             int col_size = Integer.parseInt(row[4]);
             int noOfObjects = Integer.parseInt(row[5]);
             double avgLength = (!row[6].isEmpty()) ? Double.parseDouble(row[6]) : 0;
 
             Record rec = new Record(col_id, col_name, col_type, col_type_val, col_size, noOfObjects, avgLength);
 
-            if(map.containsKey(table_name)){
+            if (map.containsKey(table_name)) {
                 List<Record> list = map.get(table_name);
                 list.add(rec);
-            }else{
+            } else {
                 List<Record> list = new ArrayList<>();
                 list.add(rec);
                 map.put(table_name, list);
@@ -1614,7 +1613,7 @@ public class ObjectRepository implements AutoCloseable {
         public IndexInsertionTask(HashMap<Integer, String> tablemap, List<Record> recordList, String query) {
             this.tablemap = tablemap;
             this.recordList = recordList;
-            this.query  = query;
+            this.query = query;
 
         }
 
@@ -1632,21 +1631,21 @@ public class ObjectRepository implements AutoCloseable {
 
                 for (int i = 0; i < recordList.get(0).getNumberOfObjects() && rs.next(); i++) {
                     long millis = System.currentTimeMillis();
-                    for(int j: tablemap.keySet()){
-                        if(tablemap.get(j).contains("String")){
-                            insertRec.setString(j, str.substring(0, (int)Math.ceil(Double.parseDouble(tablemap.get(j).substring(6)))));
-                        }else if(tablemap.get(j).contains("Double")){
+                    for (int j : tablemap.keySet()) {
+                        if (tablemap.get(j).contains("String")) {
+                            insertRec.setString(j, str.substring(0, (int) Math.ceil(Double.parseDouble(tablemap.get(j).substring(6)))));
+                        } else if (tablemap.get(j).contains("Double")) {
                             insertRec.setDouble(j, random.nextDouble());
-                        }else if(tablemap.get(j).contains("Date") || tablemap.get(j).contains("Time")){
+                        } else if (tablemap.get(j).contains("Date") || tablemap.get(j).contains("Time")) {
                             insertRec.setDouble(j, millis);
-                        }else if(tablemap.get(j).contains("lower")) {
+                        } else if (tablemap.get(j).contains("lower")) {
                             insertRec.setString(j, rs.getString("name").toLowerCase());
-                        } else{
+                        } else {
                             insertRec.setString(j, rs.getString("name"));
                         }
                     }
                     insertRec.addBatch();
-                    if(recsAdded++ > 20000){
+                    if (recsAdded++ > 20000) {
                         insertRec.executeBatch();
                         connection.commit();
                         System.out.println("Records added in " + query.substring(12, 23) + "--->" + i);
@@ -1654,7 +1653,7 @@ public class ObjectRepository implements AutoCloseable {
                     }
                     prev++;
                     if (prev == 10000) {
-                        offset+= 10000;
+                        offset += 10000;
                         rs.close();
                         rs = connection.prepareStatement(String.format("select name from objects limit 10000 offset %s", offset)).executeQuery();
                         prev = 0;
@@ -1674,14 +1673,14 @@ public class ObjectRepository implements AutoCloseable {
         }
     }
 
-    public CmdMsgIndexGetByNameResponse getIndexObjectsFromCSV (final String tableName, String securityName){
+    public CmdMsgIndexGetByNameResponse getIndexObjectsFromCSV(final String tableName, String securityName) {
         CmdMsgIndexGetByNameResponse response = null;
 
-        try(Connection connection = rwConnectionProvider.getConnection();){
-            String stmtQuery = String.format(GET_FULL_INDEX_RECORD , "*", tableName, securityName);
+        try (Connection connection = rwConnectionProvider.getConnection();) {
+            String stmtQuery = String.format(GET_FULL_INDEX_RECORD, "*", tableName, securityName);
             ResultSet rs = connection.prepareStatement(stmtQuery).executeQuery();
 
-            if(rs.next()) {
+            if (rs.next()) {
                 CmdMsgIndexGetByNameResponse.MsgOnSuccess.Builder msgOnSuccess = CmdMsgIndexGetByNameResponse.MsgOnSuccess.newBuilder().setSecurityName(securityName);
                 int countOfCols = rs.getMetaData().getColumnCount();
 
@@ -1691,18 +1690,17 @@ public class ObjectRepository implements AutoCloseable {
 
                     if (colType.contains("VARCHAR") || colType.contains("varchar")) {
                         msgOnSuccess.putStringVal(colName, rs.getString(i));
-                    }else {
+                    } else {
                         msgOnSuccess.putDoubleVal(colName, rs.getDouble(i));
                     }
                 }
                 response = CmdMsgIndexGetByNameResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
-            }
-            else{
+            } else {
                 LOGGER.error("Object Doesn't exist");
                 response = CmdMsgIndexGetByNameResponse.newBuilder().setErrorCode(1).build();
             }
             rs.close();
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("ERROR");
         }
 
@@ -1743,6 +1741,7 @@ public class ObjectRepository implements AutoCloseable {
         }
         return responseMessages;
     }
+
     public List<CmdMsgIndexGetByNameByLimitResponse> indexRecordsInBatch(int offsetStartFromHere, int limitBatchSize, String tableName) {
         List<CmdMsgIndexGetByNameByLimitResponse> responseMessages = new ArrayList<>();
         CmdMsgIndexGetByNameByLimitResponse response;
@@ -1779,7 +1778,7 @@ public class ObjectRepository implements AutoCloseable {
     }
 
     public CmdMsgIndexGetByNameWithClientResponse getIndexRecordMany(String recordName, String tableName) {
-        CmdMsgIndexGetByNameWithClientResponse response  = null;
+        CmdMsgIndexGetByNameWithClientResponse response = null;
 
 
         try (Connection connection = roConnectionProvider.getConnection();
