@@ -101,73 +101,57 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 		i := 1
 		var key string
 		//for i < 400 {
-			for _, key = range keys {
-				resp, err := scl.GetObjectExt(key)
-				if err != nil {
-					log.Println(err)
-					return randDigit(3) // retry to create a new connection
-				}
-				_ = resp
-				i += 1
+		for _, key = range keys {
+			resp, err := scl.GetObjectExt(key)
+			if err != nil {
+				log.Println(err)
+				return randDigit(3) // retry to create a new connection
 			}
+			_ = resp
+			i += 1
+		}
 		//}
 		return key
 	}
 	return randDigit(3)
 }
 
-//func pairityWithSaral(scl model.SSClient, pattern string) string {
-//	var n int32 = 100 // send a huge number for lookup
-//	res, err := scl.LookupByName("testSec-"+randDigit(5), model.GET_GREATER, n)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	for k := range res {
-//		//fmt.Println("Lookup: ", k)
-//		resp, err := scl.GetObject(k)
-//		if err != nil {
-//			log.Fatal(err)
-//		}
-//		fmt.Print("Get Object Mem By Name Response: ", resp)
-//		fmt.Println("================")
-//
-//		respCh, err := scl.GetIndexMsgByName(k, "test_table")
-//		fmt.Print("Get Index Object By Name : ", respCh)
-//		fmt.Println("================")
-//	}
-//
-//}
-
 func pairityWithSaralVersion2(scl model.SSClient, pattern string) string {
+	tableNames := []string{"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
+		"Table_TT", "Table_EBBI", "Table_MIMID"}
 
-	res, err := scl.GetIndexRecordMany(pattern, "test")
+	res, err := scl.GetIndexRecordMany(pattern, tableNames[rand.Intn(len(tableNames))])
 	if err != nil {
 		log.Println(err)
 	} else {
-		var keys []string
-		for _, rec := range res {
-			keys = append(keys, rec.SecurityName)
-		}
-		keysLen := len(keys)
-		if keysLen < 100 {
-			log.Printf("got less than 100 recs in index lookup. Got %d, Pattern %s", keysLen, pattern)
-			return ""
-		}
-
-		i := 1
-		var key string
-		for i < 400 {
-			for _, key = range keys {
-				resp, err := scl.GetObjectExt(key)
+		for {
+			var keys []string
+			for _, rec := range res {
+				keys = append(keys, rec.SecurityName)
+			}
+			keysLen := len(keys)
+			if keysLen < 100 {
+				log.Printf("got less than 100 recs in index lookup. Got %d, Pattern %s", keysLen, pattern)
+				res, err = scl.GetIndexRecordMany(pattern, tableNames[rand.Intn(len(tableNames))])
 				if err != nil {
 					log.Println(err)
-					return "" // retry to create a new connection
 				}
-				_ = resp
-				i += 1
+			}
+
+			i := 1
+			var key string
+			for i < 400 {
+				for _, key = range keys {
+					resp, err := scl.GetObjectExt(key)
+					if err != nil {
+						log.Println(err)
+						return "" // retry to create a new connection
+					}
+					_ = resp
+					i += 1
+				}
 			}
 		}
-		return key
 	}
 	return ""
 }
