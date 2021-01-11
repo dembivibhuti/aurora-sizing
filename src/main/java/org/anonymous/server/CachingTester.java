@@ -56,6 +56,8 @@ public class CachingTester {
                     cacheService.execute(() -> {
                         if (!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY).get().name)) {
                             System.out.println("error from cache");
+                        } else {
+                            System.out.println("---");
                         }
                     });
                     counter++;
