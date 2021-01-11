@@ -48,12 +48,12 @@ public class CachingTester {
         boolean useCache = "true".equalsIgnoreCase(System.getProperty("testCache"));
         if (useCache) {
             System.out.println("start test with cache");
-            cacheService = Executors.newFixedThreadPool(500);
+            cacheService = Executors.newFixedThreadPool(32);
             int jobCount = 1;
             int counter = 0;
             while (true) {
                 while (counter < jobCount) {
-                    cacheService.submit(() -> {
+                    cacheService.execute(() -> {
                         if (!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY).get().name)) {
                             System.out.println("error from cache");
                         }
@@ -66,7 +66,7 @@ public class CachingTester {
             }
         } else {
             System.out.println("start test with db");
-            dbService = Executors.newFixedThreadPool(500);
+            dbService = Executors.newFixedThreadPool(32);
             int jobCount = 1;
             int counter = 0;
             while (true) {
