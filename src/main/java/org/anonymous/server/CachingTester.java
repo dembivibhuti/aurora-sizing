@@ -60,8 +60,8 @@ public class CachingTester {
                     });
                     counter++;
                 }
-                Thread.sleep(10000);
-                jobCount += 1000;
+                Thread.sleep(1000);
+                jobCount *= 2;
                 counter = 0;
             }
         } else {
@@ -78,8 +78,8 @@ public class CachingTester {
                     });
                     counter++;
                 }
-                Thread.sleep(10000);
-                jobCount += 1000;
+                Thread.sleep(1000);
+                jobCount *= 2;
                 counter = 0;
             }
         }
