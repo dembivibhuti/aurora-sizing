@@ -90,7 +90,7 @@ public class GrpcServer {
         }
     }
 
-    private static void startMetricsServer() {
+    public static void startMetricsServer() {
         new Thread(() -> {
 
             try {
