@@ -24,6 +24,7 @@ public class ObjServiceImpl extends ObjServiceImplBase {
     private static CachedObjectRepository cachedObjectRepository;
 
     private static final boolean NO_DB = ("true".equals(System.getProperty("stubbed")));
+    private static final boolean CACHED = ("true".equals(System.getProperty("usecache")));
 
     ObjServiceImpl(ObjectRepository objectRepositiory, CachedObjectRepository cachedObjectRepository) {
         ObjServiceImpl.objectRepository = objectRepositiory;
@@ -326,7 +327,12 @@ public class ObjServiceImpl extends ObjServiceImplBase {
         if(NO_DB) {
             msgOnSuccess = objectRepository.getFullObjectStubbed(request.getSecurityName());
         } else {
-            msgOnSuccess = cachedObjectRepository.getFullObject(request.getSecurityName());
+            if(CACHED) {
+                msgOnSuccess = cachedObjectRepository.getFullObject(request.getSecurityName());
+            } else {
+                msgOnSuccess = Optional.ofNullable(objectRepository.getFullObject(request.getSecurityName()).get().toCmdGetByNameExtResponseMsgOnSuccess());
+            }
+
         }
 
         if (msgOnSuccess.isPresent()) {
