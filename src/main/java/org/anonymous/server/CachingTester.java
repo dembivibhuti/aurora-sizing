@@ -60,7 +60,7 @@ public class CachingTester {
                     });
                     counter++;
                 }
-                Thread.sleep(1000);
+                Thread.sleep(10000);
                 jobCount *= 2;
                 counter = 0;
             }
@@ -78,7 +78,7 @@ public class CachingTester {
                     });
                     counter++;
                 }
-                Thread.sleep(1000);
+                Thread.sleep(10000);
                 jobCount *= 2;
                 counter = 0;
             }
