@@ -27,6 +27,7 @@ public class CachedObjectRepository implements AutoCloseable {
 
         JedisPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(10000);
+        poolConfig.setMaxWaitMillis(Integer.MAX_VALUE);
         this.primaryPool = new JedisPool(poolConfig, System.getProperty("redis.pri"));
         this.replicaPool = new JedisPool(poolConfig, System.getProperty("redis.rep"));
     }
