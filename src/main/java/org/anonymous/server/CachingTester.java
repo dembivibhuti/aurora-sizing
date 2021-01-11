@@ -53,7 +53,7 @@ public class CachingTester {
             int counter = 0;
             while (true) {
                 while (counter < jobCount) {
-                    cacheService.execute(() -> {
+                    cacheService.submit(() -> {
                         if (!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY).get().name)) {
                             System.out.println("error from cache");
                         } else {
