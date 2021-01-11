@@ -64,9 +64,9 @@ public class CachingTester {
                 counter = 0;
             }
         } else {
-            System.out.println("start test with cache");
-            dbService = Executors.newFixedThreadPool(Integer.MAX_VALUE);
-            int jobCount = 0;
+            System.out.println("start test with db");
+            dbService = Executors.newFixedThreadPool(8000);
+            int jobCount = 1;
             int counter = 0;
             while (true) {
                 while (counter < jobCount) {
