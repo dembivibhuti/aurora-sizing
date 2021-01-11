@@ -45,7 +45,7 @@ public class CachingTester {
         boolean useCache = "true".equalsIgnoreCase(System.getProperty("testCache"));
         if (useCache) {
             System.out.println("start test with cache");
-            cacheService = Executors.newFixedThreadPool(Integer.MAX_VALUE);
+            cacheService = Executors.newFixedThreadPool(8000);
             int jobCount = 0;
             int counter = 0;
             while (true) {
