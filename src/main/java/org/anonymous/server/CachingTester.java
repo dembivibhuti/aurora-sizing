@@ -25,13 +25,13 @@ public class CachingTester {
         Runtime.getRuntime().addShutdownHook(shutdownHook);
         GrpcServer.startMetricsServer();
         CachingTester cachingTester = new CachingTester();
-        Executors.newSingleThreadExecutor().execute(() -> {
+        Executors.newFixedThreadPool(500).execute(() -> {
             while (true) {
                 cachingTester.fromDB(SEC_KEY);
             }
         });
 
-        Executors.newSingleThreadExecutor().execute(() -> {
+        Executors.newFixedThreadPool(500).execute(() -> {
             while (true) {
                 cachingTester.fromCache(SEC_KEY);
             }
