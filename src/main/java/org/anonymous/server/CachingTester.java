@@ -52,17 +52,17 @@ public class CachingTester {
             int jobCount = 1;
             int counter = 0;
             while (true) {
-                while (counter < jobCount) {
-                    cacheService.execute(() -> {
+                //while (counter < jobCount) {
+                    //cacheService.execute(() -> {
                         if (!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY).get().name)) {
                             System.out.println("error from cache");
                         }
-                    });
-                    counter++;
-                }
-                Thread.sleep(10000);
-                jobCount *= 2;
-                counter = 0;
+                    //});
+                  //  counter++;
+                //}
+                //Thread.sleep(10000);
+                //jobCount *= 2;
+                //counter = 0;
             }
         } else {
             System.out.println("start test with db");
@@ -70,7 +70,10 @@ public class CachingTester {
             int jobCount = 1;
             int counter = 0;
             while (true) {
-                while (counter < jobCount) {
+
+                if (!SEC_KEY.equals(cachingTester.fromDB(SEC_KEY).get().name)) {
+                }
+                /*while (counter < jobCount) {
                     dbService.execute(() -> {
                         if (!SEC_KEY.equals(cachingTester.fromDB(SEC_KEY).get().name)) {
                             System.out.println("error from db");
@@ -81,7 +84,7 @@ public class CachingTester {
                 Thread.sleep(10000);
                 jobCount *= 2;
                 counter = 0;
-            }
+*/            }
         }
     }
 
