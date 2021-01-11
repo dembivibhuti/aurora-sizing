@@ -1,5 +1,6 @@
 package org.anonymous.server;
 
+import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import org.anonymous.connection.ConnectionProviderHolder;
 import org.anonymous.connection.HikariCPConnectionProvider;
@@ -29,6 +30,8 @@ public class CachingTester {
     private static final ObjectRepository objectRepository = new ObjectRepository(connectionProviderHolder.roConnectionProvider, connectionProviderHolder.rwConnectionProvider);
     private static final Gauge getObjFromCacheGaugeTimer = Gauge.build().name("get_object_cache").help("Get Object on Middleware from cache").labelNames("redis").register();
     private static final Gauge getObjFromDBGaugeTimer = Gauge.build().name("get_object_db").help("Get Object on Middleware from db").labelNames("db").register();
+    private static final Counter cacheOps = Counter.build().name("get_object_cache_count").help("Count of GetObject from Cache").labelNames("cache").register();
+    private static final Counter dbOps = Counter.build().name("get_object_db_count").help("Count of GetObject from DB").labelNames("db").register();
     public static final String SEC_KEY = "232574-46439-1-1326302";
 
 
@@ -46,7 +49,7 @@ public class CachingTester {
         if (useCache) {
             System.out.println("start test with cache");
             cacheService = Executors.newFixedThreadPool(8000);
-            int jobCount = 0;
+            int jobCount = 1;
             int counter = 0;
             while (true) {
                 while (counter < jobCount) {
@@ -74,6 +77,7 @@ public class CachingTester {
                     });
                     counter++;
                 }
+                Thread.sleep(jobCount);
                 jobCount += 100;
                 counter = 0;
             }
@@ -84,6 +88,7 @@ public class CachingTester {
         Gauge.Timer timer = getObjFromCacheGaugeTimer.labels("get_object_cache").startTimer();
         Jedis jed = jedisPool.getResource();
         byte[] fromCache = jed.get(key.getBytes());
+        cacheOps.inc();
         Optional<ObjectDTO> result = Optional.empty();
         if (null != fromCache) {
             try {
@@ -105,6 +110,7 @@ public class CachingTester {
     private Optional<ObjectDTO> fromDB(String key) {
         Gauge.Timer timer = getObjFromDBGaugeTimer.labels("get_object_db").startTimer();
         Optional<ObjectDTO> fromDB = objectRepository.getFullObject(key);
+        dbOps.inc();
         timer.setDuration();
         return fromDB;
     }
