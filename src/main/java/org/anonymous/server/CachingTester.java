@@ -18,6 +18,7 @@ public class CachingTester {
     private static final ConnectionProviderHolder connectionProviderHolder = HikariCPConnectionProvider.create();
     public static final String AURORA_SIZING_UGA7QD_NG_0001_USE1_CACHE_AMAZONAWS_COM = "aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com";
     private static final Jedis jedis = new Jedis(AURORA_SIZING_UGA7QD_NG_0001_USE1_CACHE_AMAZONAWS_COM);
+    public static final int N_THREADS = 200;
     private static JedisPool jedisPool = null;
     private static final Thread shutdownHook = new Thread(() -> {
         connectionProviderHolder.close();
@@ -36,7 +37,7 @@ public class CachingTester {
         JedisPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(500);
         jedisPool = new JedisPool(poolConfig, AURORA_SIZING_UGA7QD_NG_0001_USE1_CACHE_AMAZONAWS_COM);
-        Executors.newFixedThreadPool(1).execute(() -> {
+        Executors.newFixedThreadPool(N_THREADS).execute(() -> {
             while (true) {
                 if (!SEC_KEY.equals(cachingTester.fromDB(SEC_KEY).get().name)) {
                     System.out.println("error from db");
