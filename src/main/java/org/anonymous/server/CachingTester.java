@@ -30,7 +30,7 @@ public class CachingTester {
     private static final ObjectRepository objectRepository = new ObjectRepository(connectionProviderHolder.roConnectionProvider, connectionProviderHolder.rwConnectionProvider);
     private static final Gauge getObjFromCacheGaugeTimer = Gauge.build().name("get_object_cache").help("Get Object on Middleware from cache").labelNames("redis").register();
     private static final Gauge getObjFromDBGaugeTimer = Gauge.build().name("get_object_db").help("Get Object on Middleware from db").labelNames("db").register();
-    private static final Counter cacheOps = Counter.build().name("get_object_cache_count").help("Count of GetObject from Cache").labelNames("cache").register();
+    private static final Counter cacheOps = Counter.build().name("get_object_cache_count").help("Count of GetObject from Cache").labelNames("redis").register();
     private static final Counter dbOps = Counter.build().name("get_object_db_count").help("Count of GetObject from DB").labelNames("db").register();
     public static final String SEC_KEY = "232574-46439-1-1326302";
 
@@ -88,7 +88,7 @@ public class CachingTester {
         Gauge.Timer timer = getObjFromCacheGaugeTimer.labels("get_object_cache").startTimer();
         Jedis jed = jedisPool.getResource();
         byte[] fromCache = jed.get(key.getBytes());
-        cacheOps.inc();
+        cacheOps.labels("get_object_cache").inc();
         Optional<ObjectDTO> result = Optional.empty();
         if (null != fromCache) {
             try {
@@ -110,7 +110,7 @@ public class CachingTester {
     private Optional<ObjectDTO> fromDB(String key) {
         Gauge.Timer timer = getObjFromDBGaugeTimer.labels("get_object_db").startTimer();
         Optional<ObjectDTO> fromDB = objectRepository.getFullObject(key);
-        dbOps.inc();
+        dbOps.labels("get_object_db").inc();
         timer.setDuration();
         return fromDB;
     }
