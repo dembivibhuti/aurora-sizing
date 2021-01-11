@@ -27,13 +27,17 @@ public class CachingTester {
         CachingTester cachingTester = new CachingTester();
         Executors.newFixedThreadPool(500).execute(() -> {
             while (true) {
-                cachingTester.fromDB(SEC_KEY);
+                if(!SEC_KEY.equals(cachingTester.fromDB(SEC_KEY).get().name)){
+                    System.out.println("error from db");
+                }
             }
         });
 
         Executors.newFixedThreadPool(500).execute(() -> {
             while (true) {
-                cachingTester.fromCache(SEC_KEY);
+                if(!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY).get().name)){
+                    System.out.println("error from cache");
+                }
             }
         });
 
@@ -45,21 +49,21 @@ public class CachingTester {
     private Optional<ObjectDTO> fromCache(String key) {
         Gauge.Timer timer = getObjFromCacheGaugeTimer.labels("get_object_cache").startTimer();
         byte[] fromCache = jedis.get(key.getBytes());
+        Optional<ObjectDTO> result = Optional.empty();
         if (null != fromCache) {
             try {
-                return Optional.of(ObjectDTO.fromBytes(fromCache));
+                result = Optional.of(ObjectDTO.fromBytes(fromCache));
+                timer.setDuration();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
-            Optional<ObjectDTO> fromDB = fromDB(key);
-            if ( fromDB.isPresent()) {
-                jedis.set(key.getBytes(), fromDB.get().toBytes());
-                return fromDB;
+            result = fromDB(key);
+            if (result.isPresent()) {
+                jedis.set(key.getBytes(), result.get().toBytes());
             }
         }
-        timer.setDuration();
-        return Optional.empty();
+        return result;
     }
 
     private Optional<ObjectDTO> fromDB(String key) {
