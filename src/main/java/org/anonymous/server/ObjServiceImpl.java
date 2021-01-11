@@ -332,7 +332,6 @@ public class ObjServiceImpl extends ObjServiceImplBase {
             } else {
                 msgOnSuccess = Optional.ofNullable(objectRepository.getFullObject(request.getSecurityName()).get().toCmdGetByNameExtResponseMsgOnSuccess());
             }
-
         }
 
         if (msgOnSuccess.isPresent()) {
