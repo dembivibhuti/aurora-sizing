@@ -99,7 +99,7 @@ public class CachingTester {
                 jed.set(key.getBytes(), result.get().toBytes());
             }
         }
-        jed.close();
+        //jed.close();
         return result;
     }
 
