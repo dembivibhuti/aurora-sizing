@@ -34,6 +34,7 @@ public class CachingTester {
     private static final Counter cacheOps = Counter.build().name("get_object_cache_count").help("Count of GetObject from Cache").labelNames("redis").register();
     private static final Counter dbOps = Counter.build().name("get_object_db_count").help("Count of GetObject from DB").labelNames("db").register();
     public static final String SEC_KEY = "232574-46439-1-1326302";
+    private static final ThreadLocal<Jedis> jedisConnection = ThreadLocal.withInitial(() -> jedisPool.getResource());
 
 
     public static ExecutorService cacheService = null;
@@ -82,9 +83,7 @@ public class CachingTester {
     }
 
     private Optional<ObjectDTO> fromCache(String key ) {
-        try(Jedis jed = jedisPool.getResource()) {
-            return fromCache(key, jed);
-        }
+        return fromCache(key, jedisConnection.get());
     }
 
     private Optional<ObjectDTO> fromCache(String key, Jedis jed) {
