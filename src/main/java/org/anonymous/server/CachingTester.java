@@ -44,7 +44,7 @@ public class CachingTester {
         GrpcServer.startMetricsServer();
         CachingTester cachingTester = new CachingTester();
         JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(72);
+        poolConfig.setMaxTotal(36);
         jedisPool = new JedisPool(poolConfig, AURORA_SIZING_UGA7QD_NG_0001_USE1_CACHE_AMAZONAWS_COM);
         boolean useCache = "true".equalsIgnoreCase(System.getProperty("testCache"));
         if (useCache) {
@@ -54,9 +54,9 @@ public class CachingTester {
             int counter = 0;
             while (counter < jobCount) {
                 cacheService.execute(() -> {
-                    Jedis jedis = jedisPool.getResource();
+                    //Jedis jedis = jedisPool.getResource();
                     while (true) {
-                        if (!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY, jedis).get().name)) {
+                        if (!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY).get().name)) {
                             System.out.println("error from cache");
                         }
                     }
@@ -78,6 +78,12 @@ public class CachingTester {
                 });
                 counter++;
             }
+        }
+    }
+
+    private Optional<ObjectDTO> fromCache(String key ) {
+        try(Jedis jed = jedisPool.getResource()) {
+            return fromCache(key, jed);
         }
     }
 
