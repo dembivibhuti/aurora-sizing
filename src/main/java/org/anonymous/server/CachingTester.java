@@ -65,7 +65,7 @@ public class CachingTester {
             }
         } else {
             System.out.println("start test with db");
-            dbService = Executors.newFixedThreadPool(32);
+            dbService = Executors.newFixedThreadPool(72);
             int jobCount = 72;
             int counter = 0;
             while (counter < jobCount) {
@@ -84,12 +84,12 @@ public class CachingTester {
     private Optional<ObjectDTO> fromCache(String key, Jedis jed) {
         Gauge.Timer timer = getObjFromCacheGaugeTimer.labels("get_object_cache").startTimer();
         byte[] fromCache = jed.get(key.getBytes());
-        cacheOps.labels("get_object_cache").inc();
         Optional<ObjectDTO> result = Optional.empty();
         if (null != fromCache) {
             try {
                 result = Optional.of(ObjectDTO.fromBytes(fromCache));
                 timer.setDuration();
+                cacheOps.labels("get_object_cache").inc();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -106,8 +106,8 @@ public class CachingTester {
     private Optional<ObjectDTO> fromDB(String key) {
         Gauge.Timer timer = getObjFromDBGaugeTimer.labels("get_object_db").startTimer();
         Optional<ObjectDTO> fromDB = objectRepository.getFullObject(key);
-        dbOps.labels("get_object_db").inc();
         timer.setDuration();
+        dbOps.labels("get_object_db").inc();
         return fromDB;
     }
 }
