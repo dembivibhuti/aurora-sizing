@@ -26,10 +26,10 @@ public class CachedObjectRepository implements AutoCloseable {
     public static final int MAX_TOTAL = 5000;
 
     private final ObjectRepository delegate;
-    //    private final JedisPool replicaPool;
+    private final JedisPool replicaPool;
     private final JedisPool primaryPool;
-    private final ThreadLocal<Jedis> jedisConnection;
-
+    private final ThreadLocal<Jedis> jedisROConnection;
+    private final ThreadLocal<Jedis> jedisRWConnection;
 
     public CachedObjectRepository(ObjectRepository objectRepository) {
         this.delegate = objectRepository;
@@ -40,8 +40,12 @@ public class CachedObjectRepository implements AutoCloseable {
         poolConfig.setMaxTotal(MAX_TOTAL);
         poolConfig.setMaxWaitMillis(Integer.MAX_VALUE);
         this.primaryPool = new JedisPool(poolConfig, System.getProperty("redis.pri"));
-        //this.replicaPool = new JedisPool(poolConfig, System.getProperty("redis.rep"));
-        jedisConnection = ThreadLocal.withInitial(() -> {
+        this.replicaPool = new JedisPool(poolConfig, System.getProperty("redis.rep"));
+        jedisROConnection = ThreadLocal.withInitial(() -> {
+            jedisConns.labels("conn count").inc();
+            return replicaPool.getResource();
+        });
+        jedisRWConnection = ThreadLocal.withInitial(() -> {
             jedisConns.labels("conn count").inc();
             return primaryPool.getResource();
         });
@@ -50,7 +54,7 @@ public class CachedObjectRepository implements AutoCloseable {
     @Override
     public void close() throws Exception {
         primaryPool.close();
-        //replicaPool.close();
+        replicaPool.close();
     }
 
     public List<String> lookup(String prefix, int typeid, int limit) {
@@ -60,7 +64,7 @@ public class CachedObjectRepository implements AutoCloseable {
     public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(String key) {
         Optional<ObjectDTO> objectDTO = null;
         Gauge.Timer cacheTimer = getObjFromCacheGaugeTimer.labels("get_object_cache").startTimer();
-        byte[] fromCache = jedisConnection.get().get(key.getBytes());
+        byte[] fromCache = getFromRedis(key);
         if (null != fromCache) {
             try {
                 objectDTO = Optional.of(ObjectDTO.fromBytes(fromCache));
@@ -75,12 +79,30 @@ public class CachedObjectRepository implements AutoCloseable {
             objectDTO = delegate.getFullObject(key);
             if (objectDTO.isPresent()) {
                 dbTimer.setDuration();
-                jedisConnection.get().set(key.getBytes(), objectDTO.get().toBytes());
+                setToRedis(key, objectDTO);
                 dbOps.labels("get_object_db").inc();
             } else {
                 dbTimer.close();
             }
         }
         return Optional.ofNullable(objectDTO.get().toCmdGetByNameExtResponseMsgOnSuccess());
+    }
+
+    private void setToRedis(String key, Optional<ObjectDTO> objectDTO) {
+        try {
+            jedisRWConnection.get().set(key.getBytes(), objectDTO.get().toBytes());
+        } catch (Throwable th) {
+            LOGGER.error("unexpected err in Redis get ", th);
+        }
+    }
+
+    private byte[] getFromRedis(String key) {
+        byte[] ans = null;
+        try {
+            ans = jedisROConnection.get().get(key.getBytes());
+        } catch (Throwable th) {
+            LOGGER.error("unexpected err in Redis get ", th);
+        }
+        return ans;
     }
 }
