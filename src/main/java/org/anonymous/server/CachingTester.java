@@ -43,48 +43,39 @@ public class CachingTester {
         GrpcServer.startMetricsServer();
         CachingTester cachingTester = new CachingTester();
         JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(500);
+        poolConfig.setMaxTotal(72);
         jedisPool = new JedisPool(poolConfig, AURORA_SIZING_UGA7QD_NG_0001_USE1_CACHE_AMAZONAWS_COM);
         boolean useCache = "true".equalsIgnoreCase(System.getProperty("testCache"));
         if (useCache) {
             System.out.println("start test with cache");
-            cacheService = Executors.newFixedThreadPool(32);
-            int jobCount = 1;
+            cacheService = Executors.newFixedThreadPool(72);
+            int jobCount = 72;
             int counter = 0;
-            while (true) {
-                //while (counter < jobCount) {
-                    //cacheService.execute(() -> {
+            while (counter < jobCount) {
+                cacheService.execute(() -> {
+                    while (true) {
                         if (!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY).get().name)) {
                             System.out.println("error from cache");
                         }
-                    //});
-                  //  counter++;
-                //}
-                //Thread.sleep(10000);
-                //jobCount *= 2;
-                //counter = 0;
+                    }
+                });
+                counter++;
             }
         } else {
             System.out.println("start test with db");
             dbService = Executors.newFixedThreadPool(32);
-            int jobCount = 1;
+            int jobCount = 72;
             int counter = 0;
-            while (true) {
-
-                if (!SEC_KEY.equals(cachingTester.fromDB(SEC_KEY).get().name)) {
-                }
-                /*while (counter < jobCount) {
-                    dbService.execute(() -> {
+            while (counter < jobCount) {
+                dbService.execute(() -> {
+                    while (true) {
                         if (!SEC_KEY.equals(cachingTester.fromDB(SEC_KEY).get().name)) {
                             System.out.println("error from db");
                         }
-                    });
-                    counter++;
-                }
-                Thread.sleep(10000);
-                jobCount *= 2;
-                counter = 0;
-*/            }
+                    }
+                });
+                counter++;
+            }
         }
     }
 
