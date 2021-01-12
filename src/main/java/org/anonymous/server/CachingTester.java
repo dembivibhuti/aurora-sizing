@@ -22,6 +22,7 @@ public class CachingTester {
     private static final ConnectionProviderHolder connectionProviderHolder = HikariCPConnectionProvider.create();
     public static final String AURORA_SIZING_UGA7QD_NG_0001_USE1_CACHE_AMAZONAWS_COM = "aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com";
     private static final Jedis jedis = new Jedis(AURORA_SIZING_UGA7QD_NG_0001_USE1_CACHE_AMAZONAWS_COM);
+    public static final int MAX_TOTAL = 72;
     private static JedisPool jedisPool = null;
     private static final Thread shutdownHook = new Thread(() -> {
         connectionProviderHolder.close();
@@ -45,13 +46,13 @@ public class CachingTester {
         GrpcServer.startMetricsServer();
         CachingTester cachingTester = new CachingTester();
         JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(36);
+        poolConfig.setMaxTotal(MAX_TOTAL);
         jedisPool = new JedisPool(poolConfig, AURORA_SIZING_UGA7QD_NG_0001_USE1_CACHE_AMAZONAWS_COM);
         boolean useCache = "true".equalsIgnoreCase(System.getProperty("testCache"));
         if (useCache) {
             System.out.println("start test with cache");
-            cacheService = Executors.newFixedThreadPool(72);
-            int jobCount = 72;
+            cacheService = Executors.newFixedThreadPool(MAX_TOTAL);
+            int jobCount = MAX_TOTAL;
             int counter = 0;
             while (counter < jobCount) {
                 cacheService.execute(() -> {
@@ -66,8 +67,8 @@ public class CachingTester {
             }
         } else {
             System.out.println("start test with db");
-            dbService = Executors.newFixedThreadPool(72);
-            int jobCount = 72;
+            dbService = Executors.newFixedThreadPool(MAX_TOTAL);
+            int jobCount = MAX_TOTAL;
             int counter = 0;
             while (counter < jobCount) {
                 dbService.execute(() -> {
