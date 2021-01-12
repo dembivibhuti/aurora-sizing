@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CachingTester {
@@ -53,8 +54,9 @@ public class CachingTester {
             int counter = 0;
             while (counter < jobCount) {
                 cacheService.execute(() -> {
+                    Jedis jedis = jedisPool.getResource();
                     while (true) {
-                        if (!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY).get().name)) {
+                        if (!SEC_KEY.equals(cachingTester.fromCache(SEC_KEY, jedis).get().name)) {
                             System.out.println("error from cache");
                         }
                     }
@@ -79,9 +81,8 @@ public class CachingTester {
         }
     }
 
-    private Optional<ObjectDTO> fromCache(String key) {
+    private Optional<ObjectDTO> fromCache(String key, Jedis jed) {
         Gauge.Timer timer = getObjFromCacheGaugeTimer.labels("get_object_cache").startTimer();
-        Jedis jed = jedisPool.getResource();
         byte[] fromCache = jed.get(key.getBytes());
         cacheOps.labels("get_object_cache").inc();
         Optional<ObjectDTO> result = Optional.empty();
