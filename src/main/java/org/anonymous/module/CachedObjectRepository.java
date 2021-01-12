@@ -23,7 +23,7 @@ public class CachedObjectRepository implements AutoCloseable {
     private static final Counter cacheOps = Counter.build().name("get_object_cache_count").help("Count of GetObject from Cache").labelNames("redis").register();
     private static final Counter dbOps = Counter.build().name("get_object_db_count").help("Count of GetObject from DB").labelNames("db").register();
     private static final Counter jedisConns = Counter.build().name("redis_connection_count").help("Count of Redis Connections").labelNames("redis").register();
-    public static final int MAX_TOTAL = 72;
+    public static final int MAX_TOTAL = 550;
 
     private final ObjectRepository delegate;
     //    private final JedisPool replicaPool;
