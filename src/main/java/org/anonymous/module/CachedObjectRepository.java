@@ -4,13 +4,15 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import org.anonymous.domain.ObjectDTO;
 import org.anonymous.grpc.CmdGetByNameExtResponse;
+import org.redisson.Redisson;
+import org.redisson.api.LocalCachedMapOptions;
+import org.redisson.api.RLocalCachedMap;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
+import org.redisson.config.TransportMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,17 +28,20 @@ public class CachedObjectRepository implements AutoCloseable {
     public static final int MAX_TOTAL = 5000;
 
     private final ObjectRepository delegate;
-    private final JedisPool replicaPool;
+    /*private final JedisPool replicaPool;
     private final JedisPool primaryPool;
     private final ThreadLocal<Jedis> jedisROConnection;
-    private final ThreadLocal<Jedis> jedisRWConnection;
+    private final ThreadLocal<Jedis> jedisRWConnection;*/
+
+    private static RedissonClient redisson;
+    private static RLocalCachedMap<String, ObjectDTO> objMap;
 
     public CachedObjectRepository(ObjectRepository objectRepository) {
         this.delegate = objectRepository;
         // max pool size and end point externalize
         // src/redis-cli -c -h aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com -p 6379
 
-        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        /*JedisPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(MAX_TOTAL);
         poolConfig.setMaxWaitMillis(Integer.MAX_VALUE);
         this.primaryPool = new JedisPool(poolConfig, System.getProperty("redis.pri"));
@@ -48,13 +53,25 @@ public class CachedObjectRepository implements AutoCloseable {
         jedisRWConnection = ThreadLocal.withInitial(() -> {
             jedisConns.labels("conn count").inc();
             return primaryPool.getResource();
-        });
+        });*/
+
+        Config config = new Config();
+        config.setTransportMode(TransportMode.NIO).setNettyThreads(0);
+        config.useReplicatedServers()
+                .addNodeAddress("redis://aurora-sizing-001.uga7qd.0001.use1.cache.amazonaws.com:6379")
+                .addNodeAddress("redis://rep-1.uga7qd.0001.use1.cache.amazonaws.com:6379")
+                .addNodeAddress("redis://rep-2.uga7qd.0001.use1.cache.amazonaws.com:6379")
+                .addNodeAddress("redis://rep-3.uga7qd.0001.use1.cache.amazonaws.com:6379")
+                .addNodeAddress("redis://rep-4.uga7qd.0001.use1.cache.amazonaws.com:6379");
+
+        redisson = Redisson.create(config);
+        objMap = redisson.getLocalCachedMap("objMap", LocalCachedMapOptions.defaults());
+
     }
 
     @Override
     public void close() throws Exception {
-        primaryPool.close();
-        replicaPool.close();
+        redisson.shutdown();
     }
 
     public List<String> lookup(String prefix, int typeid, int limit) {
@@ -64,15 +81,11 @@ public class CachedObjectRepository implements AutoCloseable {
     public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(String key) {
         Optional<ObjectDTO> objectDTO = null;
         Gauge.Timer cacheTimer = getObjFromCacheGaugeTimer.labels("get_object_cache").startTimer();
-        byte[] fromCache = getFromRedis(key);
+        ObjectDTO fromCache = getFromRedis(key);
         if (null != fromCache) {
-            try {
-                objectDTO = Optional.of(ObjectDTO.fromBytes(fromCache));
-                cacheTimer.setDuration();
-                cacheOps.labels("get_object_cache").inc();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            objectDTO = Optional.of(fromCache);
+            cacheTimer.setDuration();
+            cacheOps.labels("get_object_cache").inc();
         } else {
             cacheTimer.close();
             Gauge.Timer dbTimer = getObjFromDBGaugeTimer.labels("get_object_db").startTimer();
@@ -90,19 +103,19 @@ public class CachedObjectRepository implements AutoCloseable {
 
     private void setToRedis(String key, Optional<ObjectDTO> objectDTO) {
         try {
-            jedisRWConnection.get().set(key.getBytes(), objectDTO.get().toBytes());
+            objMap.fastPut(key, objectDTO.get());
         } catch (Throwable th) {
-            LOGGER.error("unexpected err in Redis get ", th);
+            LOGGER.error("unexpected err in Redis set ", th);
         }
     }
 
-    private byte[] getFromRedis(String key) {
-        byte[] ans = null;
+    private ObjectDTO getFromRedis(String key) {
+        ObjectDTO objectDTO = null;
         try {
-            ans = jedisROConnection.get().get(key.getBytes());
+            objectDTO = objMap.get(key);
         } catch (Throwable th) {
             LOGGER.error("unexpected err in Redis get ", th);
         }
-        return ans;
+        return objectDTO;
     }
 }
