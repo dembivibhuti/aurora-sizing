@@ -5,11 +5,12 @@ import org.anonymous.grpc.CmdGetByNameExtResponse;
 import org.anonymous.grpc.Metadata;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class ObjectDTO {
+public class ObjectDTO implements Serializable {
 
     public String name;
     public int typeId;

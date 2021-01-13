@@ -13,7 +13,6 @@ import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.redisson.config.TransportMode;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,7 +47,7 @@ public class RCachingTester {
         RCachingTester cachingTester = new RCachingTester();
 
         Config config = new Config();
-        config.setTransportMode(TransportMode.EPOLL).setNettyThreads(0);
+        config.setTransportMode(TransportMode.NIO).setNettyThreads(0);
         config.useReplicatedServers()
                 .addNodeAddress("redis://aurora-sizing-001.uga7qd.0001.use1.cache.amazonaws.com:6379")
                 .addNodeAddress("redis://rep-1.uga7qd.0001.use1.cache.amazonaws.com:6379")
@@ -98,10 +97,11 @@ public class RCachingTester {
     private Optional<ObjectDTO> fromCache(String key) {
         Gauge.Timer timer = getObjFromCacheGaugeTimer.labels("get_object_cache").startTimer();
         ObjectDTO res = objMap.get(key);
-        Optional<ObjectDTO> result = Optional.empty();
+        Optional<ObjectDTO> result = null;
         if (null != res) {
             timer.setDuration();
             cacheOps.labels("get_object_cache").inc();
+            result = Optional.of(res);
         } else {
             result = fromDB(key);
             if (result.isPresent()) {
