@@ -57,7 +57,7 @@ public class CachedObjectRepository implements AutoCloseable {
         });*/
 
         Config config = new Config();
-        config.setTransportMode(TransportMode.EPOLL).setNettyThreads(0);
+        config.setTransportMode(TransportMode.EPOLL).setNettyThreads(500);
         config.useReplicatedServers()
                 .addNodeAddress("redis://aurora-sizing-001.uga7qd.0001.use1.cache.amazonaws.com:6379")
                 .addNodeAddress("redis://rep-1.uga7qd.0001.use1.cache.amazonaws.com:6379")
