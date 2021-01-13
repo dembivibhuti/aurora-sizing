@@ -22,6 +22,7 @@ public class CachedObjectRepository implements AutoCloseable {
 
     private static final Gauge getObjFromCacheGaugeTimer = Gauge.build().name("get_object_cache").help("Get Object on Middleware from cache").labelNames("redis").register();
     private static final Gauge getObjFromDBGaugeTimer = Gauge.build().name("get_object_db").help("Get Object on Middleware from db").labelNames("db").register();
+    private static final Gauge setObjToCacheGaugeTimer = Gauge.build().name("set_object_cache").help("Set Object to cache").labelNames("cache").register();
     private static final Counter cacheOps = Counter.build().name("get_object_cache_count").help("Count of GetObject from Cache").labelNames("redis").register();
     private static final Counter dbOps = Counter.build().name("get_object_db_count").help("Count of GetObject from DB").labelNames("db").register();
     private static final Counter jedisConns = Counter.build().name("redis_connection_count").help("Count of Redis Connections").labelNames("redis").register();
@@ -104,11 +105,13 @@ public class CachedObjectRepository implements AutoCloseable {
     }
 
     private void setToRedis(String key, Optional<ObjectDTO> objectDTO) {
+        Gauge.Timer setCacheTimer = setObjToCacheGaugeTimer.labels("set_object_cache").startTimer();
         try {
             objMap.fastPut(key, objectDTO.get());
         } catch (Throwable th) {
             LOGGER.error("unexpected err in Redis set ", th);
         }
+        setCacheTimer.setDuration();
     }
 
     private ObjectDTO getFromRedis(String key) {
