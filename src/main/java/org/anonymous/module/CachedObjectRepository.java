@@ -56,13 +56,15 @@ public class CachedObjectRepository implements AutoCloseable {
         });*/
 
         Config config = new Config();
-        config.setTransportMode(TransportMode.NIO).setNettyThreads(0);
+        config.setTransportMode(TransportMode.EPOLL).setNettyThreads(0);
         config.useReplicatedServers()
                 .addNodeAddress("redis://aurora-sizing-001.uga7qd.0001.use1.cache.amazonaws.com:6379")
                 .addNodeAddress("redis://rep-1.uga7qd.0001.use1.cache.amazonaws.com:6379")
                 .addNodeAddress("redis://rep-2.uga7qd.0001.use1.cache.amazonaws.com:6379")
                 .addNodeAddress("redis://rep-3.uga7qd.0001.use1.cache.amazonaws.com:6379")
-                .addNodeAddress("redis://rep-4.uga7qd.0001.use1.cache.amazonaws.com:6379");
+                .addNodeAddress("redis://rep-4.uga7qd.0001.use1.cache.amazonaws.com:6379")
+                .setSlaveConnectionPoolSize(1000)
+                .setMasterConnectionPoolSize(1000);
 
         redisson = Redisson.create(config);
         objMap = redisson.getLocalCachedMap("objMap", LocalCachedMapOptions.defaults());
@@ -83,9 +85,9 @@ public class CachedObjectRepository implements AutoCloseable {
         Gauge.Timer cacheTimer = getObjFromCacheGaugeTimer.labels("get_object_cache").startTimer();
         ObjectDTO fromCache = getFromRedis(key);
         if (null != fromCache) {
-            objectDTO = Optional.of(fromCache);
             cacheTimer.setDuration();
             cacheOps.labels("get_object_cache").inc();
+            objectDTO = Optional.of(fromCache);
         } else {
             cacheTimer.close();
             Gauge.Timer dbTimer = getObjFromDBGaugeTimer.labels("get_object_db").startTimer();
