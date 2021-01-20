@@ -114,6 +114,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
             ObjectDTO fromCache = getFromRedis(key);
             if (null != fromCache) {
                 objectDTO = Optional.of(fromCache);
+                setToNearCache(key, fromCache);
             } else {
                 Gauge.Timer dbTimer = getObjFromDBGaugeTimer.labels("get_object_db").startTimer();
                 objectDTO = delegate.getFullObject(key);
