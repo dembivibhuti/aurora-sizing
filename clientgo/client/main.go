@@ -30,7 +30,11 @@ func main() {
 	metrics.Register(prometheus.DefaultRegisterer)
 	var wg sync.WaitGroup
 
+	tableNames := []string{"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
+    		"Table_TT", "Table_EBBI", "Table_MIMID"}
+
 	var pattern string
+	var indexName string
 	if *mode == "1" {
 		pattern = randDigit(3)
 	} else {
@@ -45,7 +49,8 @@ func main() {
 				if *mode == "1" {
 					pattern = startTest(metrics, pattern)
 				} else {
-					pattern = startTest2(metrics, pattern)
+				    indexName = tableNames[rand.Intn(len(tableNames))]
+					pattern = startTest2(metrics, pattern, indexName)
 				}
 			}
 		}()
@@ -63,11 +68,11 @@ func startTest(metrics *model.Metrics, pattern string) string {
 	return pairityWithSaral(sscl, pattern)
 }
 
-func startTest2(metrics *model.Metrics, pattern string) string {
+func startTest2(metrics *model.Metrics, pattern string, indexName string) string {
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC, metrics)
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
-	return pairityWithSaralVersion2(sscl, pattern)
+	return pairityWithSaralVersion2(sscl, pattern, indexName)
 }
 
 func pairityWithSaral(scl model.SSClient, pattern string) string {
@@ -116,42 +121,35 @@ func pairityWithSaral(scl model.SSClient, pattern string) string {
 	return randDigit(3)
 }
 
-func pairityWithSaralVersion2(scl model.SSClient, pattern string) string {
-	tableNames := []string{"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
-		"Table_TT", "Table_EBBI", "Table_MIMID"}
-
-	res, err := scl.GetIndexRecordMany(pattern, tableNames[rand.Intn(len(tableNames))])
+func pairityWithSaralVersion2(scl model.SSClient, pattern string, indexName string ) string {
+	res, err := scl.GetIndexRecordMany(pattern, indexName)
 	if err != nil {
 		log.Println(err)
 	} else {
-		for {
-			var keys []string
-			for _, rec := range res {
-				keys = append(keys, rec.SecurityName)
-			}
-			keysLen := len(keys)
-			if keysLen < 100 {
-				log.Printf("got less than 100 recs in index lookup. Got %d, Pattern %s", keysLen, pattern)
-				res, err = scl.GetIndexRecordMany(pattern, tableNames[rand.Intn(len(tableNames))])
-				if err != nil {
-					log.Println(err)
-				}
-			}
+        var keys []string
+        for _, rec := range res {
+            keys = append(keys, rec.SecurityName)
+        }
+        keysLen := len(keys)
+        if keysLen < 100 {
+            log.Printf("got less than 100 recs in index lookup. Got %d, Pattern %s", keysLen, pattern)
+            return ""
+        }
 
-			i := 1
-			var key string
-			for i < 400 {
-				for _, key = range keys {
-					resp, err := scl.GetObjectExt(key)
-					if err != nil {
-						log.Println(err)
-						return "" // retry to create a new connection
-					}
-					_ = resp
-					i += 1
-				}
-			}
-		}
+        i := 1
+        var key string
+        for i < 400 {
+            for _, key = range keys {
+                resp, err := scl.GetObjectExt(key)
+                if err != nil {
+                    log.Println(err)
+                    return "" // retry to create a new connection
+                }
+                _ = resp
+                i += 1
+            }
+        }
+        return key
 	}
 	return ""
 }
