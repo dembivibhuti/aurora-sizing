@@ -212,6 +212,12 @@
       <version>4.1.56.Final</version>
       <classifier>linux-x86_64</classifier>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.ehcache/ehcache -->
+    <dependency>
+      <groupId>org.ehcache</groupId>
+      <artifactId>ehcache</artifactId>
+      <version>3.4.0</version>
+    </dependency>
   </dependencies>
 
 

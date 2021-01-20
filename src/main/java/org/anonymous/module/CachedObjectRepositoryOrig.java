@@ -4,12 +4,6 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import org.anonymous.domain.ObjectDTO;
 import org.anonymous.grpc.CmdGetByNameExtResponse;
-import org.redisson.Redisson;
-import org.redisson.api.LocalCachedMapOptions;
-import org.redisson.api.RLocalCachedMap;
-import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
-import org.redisson.config.TransportMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -19,9 +13,9 @@ import redis.clients.jedis.JedisPoolConfig;
 import java.util.List;
 import java.util.Optional;
 
-public class CachedObjectRepository implements AutoCloseable {
+public class CachedObjectRepositoryOrig implements AutoCloseable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CachedObjectRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CachedObjectRepositoryOrig.class);
 
     private static final Gauge getObjFromCacheGaugeTimer = Gauge.build().name("get_object_cache").help("Get Object on Middleware from cache").labelNames("redis").register();
     private static final Gauge getObjFromDBGaugeTimer = Gauge.build().name("get_object_db").help("Get Object on Middleware from db").labelNames("db").register();
@@ -41,7 +35,7 @@ public class CachedObjectRepository implements AutoCloseable {
     /*private static RedissonClient redisson;
     private static RLocalCachedMap<String, ObjectDTO> objMap;*/
 
-    public CachedObjectRepository(ObjectRepository objectRepository) {
+    public CachedObjectRepositoryOrig(ObjectRepository objectRepository) {
         this.delegate = objectRepository;
         // max pool size and end point externalize
         // src/redis-cli -c -h aurora-sizing.uga7qd.ng.0001.use1.cache.amazonaws.com -p 6379

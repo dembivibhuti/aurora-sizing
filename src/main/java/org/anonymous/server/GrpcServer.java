@@ -7,7 +7,8 @@ import io.grpc.ServerInterceptors;
 import me.dinowernli.grpc.prometheus.Configuration;
 import me.dinowernli.grpc.prometheus.MonitoringServerInterceptor;
 import org.anonymous.connection.*;
-import org.anonymous.module.CachedObjectRepository;
+import org.anonymous.module.CachedObjectRepositoryOrig;
+import org.anonymous.module.NearCachedObjectRepository;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.stats.MetricsServlet;
 import org.anonymous.util.TimeKeeper;
@@ -49,7 +50,7 @@ public class GrpcServer {
 
         try {
             ObjectRepository  objectRepository = new ObjectRepository(connectionProviderHolder.roConnectionProvider, connectionProviderHolder.rwConnectionProvider);
-            CachedObjectRepository cachedObjectRepository = new CachedObjectRepository(objectRepository);
+            NearCachedObjectRepository nearCachedObjectRepository = new NearCachedObjectRepository(objectRepository);
 
             if (isInMemDB()) {
                 LOGGER.info("Starting in-Mem DB Mode");
@@ -67,7 +68,7 @@ public class GrpcServer {
                     MonitoringServerInterceptor.create(Configuration.allMetrics());
 
             Server server = ServerBuilder.forPort(port)
-                    .addService(ServerInterceptors.intercept(new ObjServiceImpl(objectRepository, cachedObjectRepository), monitoringInterceptor))
+                    .addService(ServerInterceptors.intercept(new ObjServiceImpl(objectRepository, nearCachedObjectRepository), monitoringInterceptor))
                     .addService(ServerInterceptors.intercept(new TransactionServiceImpl(objectRepository), monitoringInterceptor))
                     .build();
 
@@ -82,7 +83,7 @@ public class GrpcServer {
 
             server.start();
             server.awaitTermination();
-            cachedObjectRepository.close();
+            nearCachedObjectRepository.close();
         } catch (Exception e) {
             LOGGER.error("unexpected error", e);
         } finally {
