@@ -184,7 +184,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
                         e.printStackTrace();
                     }
                 }
-                if ( (count.get() % 10000 ) == 0) {
+                if ( (count.get() % 100 ) == 0) {
                     LOGGER.info("Near Cache Entries = {}", count.get());
                 }
             });
