@@ -100,7 +100,7 @@ public class CachedObjectRepository implements AutoCloseable {
             objectDTO = delegate.getFullObject(key);
             if (objectDTO.isPresent()) {
                 dbTimer.setDuration();
-                setToRedis(key, objectDTO);
+                setToRedis(key, objectDTO.get());
                 dbOps.labels("get_object_db").inc();
             } else {
                 dbTimer.close();
@@ -109,10 +109,10 @@ public class CachedObjectRepository implements AutoCloseable {
         return Optional.ofNullable(objectDTO.get().toCmdGetByNameExtResponseMsgOnSuccess());
     }
 
-    private void setToRedis(String key, Optional<ObjectDTO> objectDTO) {
+    private void setToRedis(String key, ObjectDTO objectDTO) {
         Gauge.Timer setCacheTimer = setObjToCacheGaugeTimer.labels("set_object_cache").startTimer();
         try {
-            jedisRWConnection.get().hset(OBJ_MAP.getBytes(), key.getBytes(), objectDTO.get().toBytes());
+            jedisRWConnection.get().hset(OBJ_MAP.getBytes(), key.getBytes(), objectDTO.toBytes());
         } catch (Throwable th) {
             LOGGER.error("unexpected err in Redis set ", th);
         }
@@ -122,7 +122,10 @@ public class CachedObjectRepository implements AutoCloseable {
     private ObjectDTO getFromRedis(String key) {
         ObjectDTO objectDTO = null;
         try {
-            objectDTO = ObjectDTO.fromBytes(jedisROConnection.get().hget(OBJ_MAP.getBytes(), key.getBytes()));
+            byte[] bytes = jedisROConnection.get().hget(OBJ_MAP.getBytes(), key.getBytes());
+            if ( null != bytes ) {
+                objectDTO = ObjectDTO.fromBytes(bytes);
+            }
         } catch (Throwable th) {
             LOGGER.error("unexpected err in Redis get ", th);
         }
