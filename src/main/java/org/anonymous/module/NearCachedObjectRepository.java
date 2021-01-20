@@ -165,7 +165,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     }
 
     private void setToNearCache(String key, ObjectDTO objectDTO) {
-        Gauge.Timer setCacheTimer = setObjToCacheGaugeTimer.labels("set_object_near_cache").startTimer();
+        Gauge.Timer setCacheTimer = setObjToNearCacheGaugeTimer.labels("set_object_near_cache").startTimer();
         objMapCache.put(key, objectDTO);
         setCacheTimer.setDuration();
     }
