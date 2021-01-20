@@ -106,4 +106,37 @@ public class Store {
             ")";
 
     public static final String INSERT_TRANS_PARTS = "INSERT INTO tdms_trans_part_primary VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    public static final String CREATE_TABLE_RECORD_INDEX_BY_LOWER_NAME= "create unique index %s on %s(nameLower)";
+
+    public static final String COUNT_RECORDS_FOR_ANY_TABLE = "select count(name) from %s";
+
+    public static final String CREATE_INDEX_TABLE = "CREATE TABLE index_records (\n" +
+            "   name varchar NOT NULL,\n" +
+            "   timeUpdated double NOT NULL,\n" +
+            "   creator_name varchar(32) NOT NULL,\n" +
+            " PRIMARY KEY (name)\n" + ")";
+
+    public static final String GET_INDEX_RECORDS = "select creator_name, timeUpdated from index_records where name = ?";
+
+    public static final String INSERT_INDEX_RECORDS = "insert into index_records values (?, ?, ?)";
+
+    public static final String GET_MANY_INDEX_RECORDS = "select * from %s where nameLower in (%s)";
+
+    public static final String GET_FULL_INDEX_RECORD = "Select %s from %s where name = '%s'";
+
+    public static final String TEST_INDEX_TABLE = "CREATE TABLE test_table (\n" +
+            "   double_val double(8) NOT NULL,\n" +
+            "   string_val varchar(32) NOT NULL,\n" +
+            "   name varchar NOT NULL,\n" +
+            "   nameLower varchar NOT NULL,\n" +
+            " PRIMARY KEY (name)\n" + ")";
+
+    public static final String INSERT_TEST_INDEX_RECORDS = "insert into test_table values (?, ?, ?, ?)";
+
+    public static final String INSERT_CSV_INDEX_RECORD = "insert into %s (%s) values (%s)";
+
+    public static final String GET_FROM_INDEX_TABLE_WITH_LIMIT = "select * from %s LIMIT %s OFFSET %s";
+
+    public static final String GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES = "select * from %s where nameLower >= ? order by nameLower asc LIMIT 100";
 }

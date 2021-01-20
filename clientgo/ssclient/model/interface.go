@@ -1,5 +1,9 @@
 package model
 
+import (
+	pb "github.com/somnath67643/aurora-sizing/clientgo/baseproto"
+)
+
 type SSClient interface {
 	Reader
 	BeginTxn() Transactor
@@ -16,6 +20,10 @@ type Reader interface {
 	GetObjectExt(sname string) (*ObjectExt, error)
 	GetObjectMany(snames []string) (<-chan *Object, error)
 	GetObjectManyExt(snames []string) (<-chan *ObjectExt, error)
+	GetIndexMsgByName(sname string, indexName string) (*Record2, error)
+	GetIndexManyByNameStream([]string, string) (<-chan *Record2, error)
+	GetIndexRecordInBatches(tableName string) (<-chan *Record2, error)
+	GetIndexRecordMany(sname string, tableName string) ([]*pb.IndexRecord, error)
 }
 
 type Transactor interface {

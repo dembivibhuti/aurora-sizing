@@ -67,6 +67,12 @@ type ObjectExt struct {
 	Mem      []byte
 }
 
+type Record2 struct {
+	SecName   string
+	StringVal map[string]string
+	DoubleVal map[string]float64
+}
+
 type TxnResp struct {
 	// TODO: (mfrw) leave it empty for now
 }

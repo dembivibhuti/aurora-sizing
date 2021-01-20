@@ -86,7 +86,7 @@ type UnsafeTransactionServiceServer interface {
 	mustEmbedUnimplementedTransactionServiceServer()
 }
 
-func RegisterTransactionServiceServer(s *grpc.Server, srv TransactionServiceServer) {
+func RegisterTransactionServiceServer(s grpc.ServiceRegistrar, srv TransactionServiceServer) {
 	s.RegisterService(&_TransactionService_serviceDesc, srv)
 }
 

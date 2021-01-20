@@ -7,6 +7,7 @@ import io.grpc.ServerInterceptors;
 import me.dinowernli.grpc.prometheus.Configuration;
 import me.dinowernli.grpc.prometheus.MonitoringServerInterceptor;
 import org.anonymous.connection.*;
+import org.anonymous.module.CachedObjectRepository;
 import org.anonymous.module.ObjectRepository;
 import org.anonymous.stats.MetricsServlet;
 import org.anonymous.util.TimeKeeper;
@@ -47,13 +48,14 @@ public class GrpcServer {
         }
 
         try {
-            ObjectRepository objectRepositiory = new ObjectRepository(connectionProviderHolder.roConnectionProvider, connectionProviderHolder.rwConnectionProvider);
+            ObjectRepository  objectRepository = new ObjectRepository(connectionProviderHolder.roConnectionProvider, connectionProviderHolder.rwConnectionProvider);
+            CachedObjectRepository cachedObjectRepository = new CachedObjectRepository(objectRepository);
 
             if (isInMemDB()) {
                 LOGGER.info("Starting in-Mem DB Mode");
-                objectRepositiory.runDDL(false);
+                objectRepository.runDDL(false);
                 TimeKeeper timekeeper = new TimeKeeper("load", false);
-                objectRepositiory.load(6, 6, 32000, timekeeper).join();
+                objectRepository.load(6, 6, 32000, timekeeper).join();
             } else {
                 LOGGER.info("Starting in Aurora Mode");
             }
@@ -65,8 +67,8 @@ public class GrpcServer {
                     MonitoringServerInterceptor.create(Configuration.allMetrics());
 
             Server server = ServerBuilder.forPort(port)
-                    .addService(ServerInterceptors.intercept(new ObjServiceImpl(objectRepositiory), monitoringInterceptor))
-                    .addService(ServerInterceptors.intercept(new TransactionServiceImpl(objectRepositiory), monitoringInterceptor))
+                    .addService(ServerInterceptors.intercept(new ObjServiceImpl(objectRepository, cachedObjectRepository), monitoringInterceptor))
+                    .addService(ServerInterceptors.intercept(new TransactionServiceImpl(objectRepository), monitoringInterceptor))
                     .build();
 
             /*Server server = ServerBuilder.forPort(port)
@@ -80,6 +82,7 @@ public class GrpcServer {
 
             server.start();
             server.awaitTermination();
+            cachedObjectRepository.close();
         } catch (Exception e) {
             LOGGER.error("unexpected error", e);
         } finally {
@@ -87,7 +90,7 @@ public class GrpcServer {
         }
     }
 
-    private static void startMetricsServer() {
+    public static void startMetricsServer() {
         new Thread(() -> {
 
             try {

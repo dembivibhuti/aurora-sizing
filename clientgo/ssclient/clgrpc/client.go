@@ -62,11 +62,11 @@ func (s *SSClient) Init() {
 }
 
 func (s *SSClient) registerMetrics() {
-    s.metrics.Register(prometheus.DefaultRegisterer)
+	s.metrics.Register(prometheus.DefaultRegisterer)
 }
 
 func (s *SSClient) EnableMetrics(addr string) {
-    s.registerMetrics()
+	s.registerMetrics()
 	http.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{
@@ -271,6 +271,123 @@ func (s *SSClient) BeginTxn() model.Transactor {
 		transClient: pb.NewTransactionServiceClient(s.conn),
 		buffer:      make([]*pb.CmdTransactionRequest, 0),
 	}
+}
+
+func (s *SSClient) GetIndexMsgByName(sname string, indexName string) (*model.Record2, error) {
+	ctx := context.Background()
+	resp, err := s.client.GetIndexMsgByName(ctx, &pb.CmdMsgIndexGetByName{IndexId: indexName, SecurityName: sname})
+	if err != nil {
+		return nil, err
+	}
+
+	v := resp.GetMsgOnSuccess()
+
+	if v == nil {
+		fmt.Errorf("Could not get Object")
+	}
+
+	obj := &model.Record2{
+		SecName:   v.GetSecurityName(),
+		StringVal: v.GetStringVal(),
+		DoubleVal: v.GetDoubleVal(),
+	}
+	return obj, nil
+}
+func (s *SSClient) GetIndexRecordInBatches(tablename string) (<-chan *model.Record2, error) {
+	ctx := context.Background()
+	strmCl, err := s.client.GetIndexRecordInBatches(ctx, &pb.CmdMsgIndexGetByNameByLimit{
+		TableName: tablename,
+	})
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	ch := make(chan *model.Record2)
+
+	go func() {
+		for {
+			resp, err := strmCl.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			v := resp.GetMsgOnSuccess()
+
+			if v == nil {
+				continue
+			}
+
+			obj := &model.Record2{
+				SecName:   v.GetSecurityName(),
+				StringVal: v.GetStringVal(),
+				DoubleVal: v.GetDoubleVal(),
+			}
+
+			ch <- obj
+		}
+
+		close(ch)
+	}()
+	return ch, nil
+}
+
+func (s *SSClient) GetIndexManyByNameStream(snames []string, tableName string) (<-chan *model.Record2, error) {
+	ctx := context.Background()
+	strmCl, err := s.client.GetIndexMsgManyByNameExtStream(ctx, &pb.CmdMsgIndexGetManyByNameExt{
+		IndexId:      tableName,
+		SecurityName: snames,
+	})
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	ch := make(chan *model.Record2)
+
+	go func() {
+		for {
+			resp, err := strmCl.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			v := resp.GetMsgOnSuccess()
+
+			if v == nil {
+				continue
+			}
+
+			obj := &model.Record2{
+				SecName:   v.GetSecurityName(),
+				StringVal: v.GetStringVal(),
+				DoubleVal: v.GetDoubleVal(),
+			}
+
+			ch <- obj
+		}
+
+		close(ch)
+	}()
+	return ch, nil
+}
+
+func (s *SSClient) GetIndexRecordMany(sname string, tableName string) ([]*pb.IndexRecord, error) {
+	ctx := context.Background()
+	strmCl, err := s.client.GetIndexRecordMany(ctx, &pb.CmdMsgIndexGetByNameWithClient{RecordName: sname, TableName: tableName})
+
+	if err != nil {
+		return nil, err
+	}
+	return strmCl.GetMsgOnSuccess().GetIndexRecords(), nil
 }
 
 /*

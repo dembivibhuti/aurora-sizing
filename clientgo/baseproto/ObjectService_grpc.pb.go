@@ -61,7 +61,7 @@ type UnsafeObjectServiceServer interface {
 	mustEmbedUnimplementedObjectServiceServer()
 }
 
-func RegisterObjectServiceServer(s *grpc.Server, srv ObjectServiceServer) {
+func RegisterObjectServiceServer(s grpc.ServiceRegistrar, srv ObjectServiceServer) {
 	s.RegisterService(&_ObjectService_serviceDesc, srv)
 }
 
@@ -75,7 +75,7 @@ func _ObjectService_Exists_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.anonymous.grpc.ObjectService/Exists",
+		FullMethod: "/org.anonymous.grpc.ObjectService/exists",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjectServiceServer).Exists(ctx, req.(*ObjectRequest))
