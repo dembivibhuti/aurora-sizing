@@ -37,7 +37,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     private static final Counter jedisConns = Counter.build().name("redis_connection_count").help("Count of Redis Connections").labelNames("redis").register();
     public static final int MAX_TOTAL = 5000;
     public static final String OBJ_MAP = "objMap";
-    public static final String IDX_MAP = "objMap";
+    public static final String IDX_MAP = "idxMap";
 
     private final ObjectRepository delegate;
     private final JedisPool replicaPool;
