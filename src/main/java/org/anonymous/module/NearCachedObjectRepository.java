@@ -173,10 +173,23 @@ public class NearCachedObjectRepository implements AutoCloseable {
     private void warmupNearCache() {
         String[] indexes = {"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
                 "Table_TT", "Table_EBBI", "Table_MIMID"};
-        LOGGER.info("Populating Index Data ..... ");
-        Arrays.asList(indexes).parallelStream().forEach(index -> delegate.getIndexRecordMany("", index).parallelStream().forEach(indexRecDTO ->
-                jedisRWConnection.get().hsetnx(index.getBytes(), indexRecDTO.objKey.getBytes(), indexRecDTO.toBytes())));
-        LOGGER.info("Done Populating Index Data");
+        LOGGER.info("Populating Index Data to Far Cache");
+        int batchSize = 1000;
+
+        Arrays.asList(indexes).parallelStream().forEach(index -> {
+            int offset = 0;
+            while(true) {
+                List<IndexRecDTO> recs = delegate.getIndexRecordMany("", index, batchSize, offset);
+                recs.parallelStream().forEach(indexRecDTO ->
+                        jedisRWConnection.get().hsetnx(index.getBytes(), indexRecDTO.objKey.getBytes(), indexRecDTO.toBytes()));
+                if (recs.size() < batchSize ) {
+                    break;
+                }
+                System.out.print(" Inserted " + batchSize + " Index Records for " + index + " to Far Cache \r");
+            }
+            LOGGER.info(" Completed Index Data for " + index + " to Far Cache \r");
+        });
+        LOGGER.info("All Index Data Populated to Far Cache");
 
         new Thread(() -> {
             long start = System.currentTimeMillis();
