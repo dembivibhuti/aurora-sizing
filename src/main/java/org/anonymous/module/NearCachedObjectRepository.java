@@ -172,8 +172,8 @@ public class NearCachedObjectRepository implements AutoCloseable {
     }
 
     private void warmupNearCache() {
-        int chunkSize = 10000;
-        ExecutorService warmupService = Executors.newFixedThreadPool(10);
+        int chunkSize = 20000;
+        ExecutorService warmupService = Executors.newFixedThreadPool(32);
 
         long recCnt = delegate.countRecs();
         AtomicLong remainingRecCCnt = new AtomicLong(recCnt);
@@ -185,7 +185,8 @@ public class NearCachedObjectRepository implements AutoCloseable {
                 keys.stream().forEach(key -> getFullObject(key));
             });
             remainingRecCCnt.getAndAdd(keys.size() * -1 );
-            System.out.print("Cache Warm Up | Remaining Keys " + remainingRecCCnt.get() + " \r");
+            long remainingCount = remainingRecCCnt.get();
+            System.out.print("Cache Warm Up | Remaining Keys " +  "(" + (recCnt - remainingCount) / 100 + "%)" + " \r");
         }
     }
 }
