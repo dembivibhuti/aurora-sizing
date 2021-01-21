@@ -178,7 +178,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
 
     private void warmupNearCache() {
 
-        String[] indexes = {"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
+        /*String[] indexes = {"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
                 "Table_TT", "Table_EBBI", "Table_MIMID"};
         LOGGER.info("Populating Index Data to Far Cache");
         int batchSize = 1000000;
@@ -197,7 +197,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
             }
             LOGGER.info(" Completed Index Data for " + index + " to Far Cache");
         });
-        LOGGER.info("All Index Data Populated to Far Cache");
+        LOGGER.info("All Index Data Populated to Far Cache");*/
 
         new Thread(() -> {
             long start = System.currentTimeMillis();
