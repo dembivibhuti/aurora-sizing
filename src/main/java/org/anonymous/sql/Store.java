@@ -36,7 +36,7 @@ public class Store {
 
     public static final String OBJ_EXISTS = "Select count(1) from objects where nameLower = ?";
 
-    public static final String OBJ_KEYS = "Select nameLower from objects";
+    public static final String OBJ_KEYS = "Select name from objects LIMIT ? OFFSET ?";
 
     public static final String GET_RECORDS = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo from objects where nameLower = ?";
 
@@ -44,7 +44,7 @@ public class Store {
 
     public static final String GET_MEM = "select mem from objects where nameLower = ?";
 
-    public static final String COUNT_RECORDS = "select count(name) from objects";
+    public static final String COUNT_RECORDS = "select count(1) from objects";
 
     public static final String GET_MANY_SDB_RECORDS = "select sdbDiskMem from objects where nameLower in (%s)";
 

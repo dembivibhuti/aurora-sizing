@@ -14,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.util.*;
 import java.util.Date;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -1813,5 +1813,43 @@ public class ObjectRepository implements AutoCloseable {
             throwables.printStackTrace();
         }
         return response;
+    }
+
+    public long countRecs() {
+        long x = -1;
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement lookupStmt = connection.prepareStatement(COUNT_RECORDS)) {
+            ResultSet rs = lookupStmt.executeQuery();
+
+            while (rs.next()) {
+                x = rs.getLong(1);
+            }
+            rs.close();
+
+        } catch (Exception ex) {
+            LOGGER.error("error in counting records in db", ex);
+
+        }
+        return x;
+    }
+
+    public List<String> getObjKeys(int limit, int offset) {
+        List<String> keys = new ArrayList<>();
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement objKeysStmt = connection.prepareStatement(OBJ_KEYS)) {
+            objKeysStmt.setInt(1, limit);
+            objKeysStmt.setInt(2, offset);
+            ResultSet rs = objKeysStmt.executeQuery();
+
+            while (rs.next()) {
+                keys.add(rs.getString(1));
+            }
+            rs.close();
+
+        } catch (Exception ex) {
+            LOGGER.error("error in fteching obj keys ", ex);
+
+        }
+        return keys;
     }
 }

@@ -91,7 +91,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
                 .build();
         cacheManager.init();
         objMapCache = cacheManager.getCache(OBJ_MAP, String.class, ObjectDTO.class);
-        //warmupNearCache();
+        warmupNearCache();
     }
 
     @Override
@@ -172,23 +172,20 @@ public class NearCachedObjectRepository implements AutoCloseable {
     }
 
     private void warmupNearCache() {
-        ExecutorService warmupService = Executors.newFixedThreadPool(1);
-        warmupService.execute(() -> {
-            AtomicLong count = new AtomicLong();
-            Jedis jedis = jedisROConnection.get();
-            jedis.hkeys(OBJ_MAP).stream().forEach(key -> {
-                if (!objMapCache.containsKey(key)) {
-                    try {
-                        objMapCache.putIfAbsent(key, ObjectDTO.fromBytes(jedis.hget(OBJ_MAP.getBytes(), key.getBytes())));
-                        count.incrementAndGet();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if ( (count.get() % 100 ) == 0) {
-                    LOGGER.info("Near Cache Entries = {}", count.get());
-                }
+        int chunkSize = 10000;
+        ExecutorService warmupService = Executors.newFixedThreadPool(10);
+
+        long recCnt = delegate.countRecs();
+        AtomicLong remainingRecCCnt = new AtomicLong(recCnt);
+        LOGGER.info("Cache Warm Up | Target Record Count = {}", recCnt);
+        long chunkCount = ( recCnt / chunkSize ) + 1;
+        for(int i = 1; i <= chunkCount ; i++) {
+            List<String> keys = delegate.getObjKeys(chunkSize, i * chunkSize);
+            warmupService.execute(() -> {
+                keys.stream().forEach(key -> getFullObject(key));
             });
-        });
+            remainingRecCCnt.getAndAdd(keys.size() * -1 );
+            System.out.println("Cache Warm Up | Remaining Keys " + remainingRecCCnt.get() + " \r");
+        }
     }
 }
