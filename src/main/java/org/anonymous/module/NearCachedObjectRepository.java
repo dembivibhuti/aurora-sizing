@@ -37,6 +37,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     private static final Counter jedisConns = Counter.build().name("redis_connection_count").help("Count of Redis Connections").labelNames("redis").register();
     public static final int MAX_TOTAL = 5000;
     public static final String OBJ_MAP = "objMap";
+    public static final String IDX_MAP = "objMap";
 
     private final ObjectRepository delegate;
     private final JedisPool replicaPool;
@@ -44,6 +45,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     private final ThreadLocal<Jedis> jedisROConnection;
     private final ThreadLocal<Jedis> jedisRWConnection;
     private final Cache<String, ObjectDTO> objMapCache;
+    private final Cache<String, Map> indexMapCache;
 
     /*private static RedissonClient redisson;
     private static RLocalCachedMap<String, ObjectDTO> objMap;*/
@@ -87,9 +89,13 @@ public class NearCachedObjectRepository implements AutoCloseable {
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, ObjectDTO.class, ResourcePoolsBuilder.newResourcePoolsBuilder()
                                 .heap(10, MemoryUnit.GB)
                                 .offheap(30, MemoryUnit.GB)))
+                .withCache(IDX_MAP, CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, ObjectDTO.class, ResourcePoolsBuilder.newResourcePoolsBuilder()
+                        .heap(10, MemoryUnit.GB)
+                        .offheap(30, MemoryUnit.GB)))
                 .build();
         cacheManager.init();
         objMapCache = cacheManager.getCache(OBJ_MAP, String.class, ObjectDTO.class);
+        indexMapCache = cacheManager.getCache(IDX_MAP, String.class, Map.class);
         warmupNearCache();
     }
 
@@ -171,6 +177,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     }
 
     private void warmupNearCache() {
+
         String[] indexes = {"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
                 "Table_TT", "Table_EBBI", "Table_MIMID"};
         LOGGER.info("Populating Index Data to Far Cache");
