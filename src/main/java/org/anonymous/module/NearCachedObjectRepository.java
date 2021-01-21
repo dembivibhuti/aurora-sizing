@@ -45,7 +45,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     private final ThreadLocal<Jedis> jedisROConnection;
     private final ThreadLocal<Jedis> jedisRWConnection;
     private final Cache<String, ObjectDTO> objMapCache;
-    private final Cache<String, Map> indexMapCache;
+    /*private final Cache<String, Map> indexMapCache;*/
 
     /*private static RedissonClient redisson;
     private static RLocalCachedMap<String, ObjectDTO> objMap;*/
@@ -89,13 +89,13 @@ public class NearCachedObjectRepository implements AutoCloseable {
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, ObjectDTO.class, ResourcePoolsBuilder.newResourcePoolsBuilder()
                                 .heap(10, MemoryUnit.GB)
                                 .offheap(30, MemoryUnit.GB)))
-                .withCache(IDX_MAP, CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, ObjectDTO.class, ResourcePoolsBuilder.newResourcePoolsBuilder()
+                /*.withCache(IDX_MAP, CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, ObjectDTO.class, ResourcePoolsBuilder.newResourcePoolsBuilder()
                         .heap(10, MemoryUnit.GB)
-                        .offheap(30, MemoryUnit.GB)))
+                        .offheap(30, MemoryUnit.GB)))*/
                 .build();
         cacheManager.init();
         objMapCache = cacheManager.getCache(OBJ_MAP, String.class, ObjectDTO.class);
-        indexMapCache = cacheManager.getCache(IDX_MAP, String.class, Map.class);
+        /*indexMapCache = cacheManager.getCache(IDX_MAP, String.class, Map.class);*/
         warmupNearCache();
     }
 
