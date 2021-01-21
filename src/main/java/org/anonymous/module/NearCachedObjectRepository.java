@@ -172,7 +172,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     }
 
     private void warmupNearCache() {
-        int chunkSize = 40000;
+        int chunkSize = 100000;
         ExecutorService warmupService = Executors.newFixedThreadPool(32);
 
         long recCnt = delegate.countRecs();
