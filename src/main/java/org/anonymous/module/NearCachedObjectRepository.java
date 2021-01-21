@@ -13,17 +13,14 @@ import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.config.units.MemoryUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.*;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static redis.clients.jedis.ScanParams.SCAN_POINTER_START;
 
 public class NearCachedObjectRepository implements AutoCloseable {
 
@@ -191,10 +188,30 @@ public class NearCachedObjectRepository implements AutoCloseable {
                     System.out.print("Cache Warm Up | Remaining Keys " + remainingCount +  "(" + (((double)recCnt - (double)remainingCount) / (double)recCnt ) * 100 + "%)" + " Time = " + (System.currentTimeMillis() - start ) / (1000 * 60 )+ " mins \r");
                 });
             }
+
+            String[] indexes = {"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
+                    "Table_TT", "Table_EBBI", "Table_MIMID"};
+            LOGGER.info("Populating Index Data ..... ");
+            Arrays.asList(indexes).stream().forEach(index -> delegate.getIndexRecordMany("", index, 0).stream().forEach(indexRecDTO ->
+                    jedisRWConnection.get().hsetnx(index.getBytes(), indexRecDTO.objKey.getBytes(), indexRecDTO.toBytes())));
+            LOGGER.info("Done Populating Index Data");
         }).start();
     }
 
     public List<IndexRecDTO> getIndexRecordMany(String recordName, String tableName) {
-        return null;
+        List<IndexRecDTO> ans = new ArrayList<>();
+        ScanParams scanParams = new ScanParams().count(10).match(recordName + "*");
+        String cur = SCAN_POINTER_START;
+        do {
+            ScanResult<Map.Entry<String, String>> scanResult = jedisROConnection.get().hscan(tableName, cur, scanParams);
+
+            scanResult.getResult().stream().forEach(stringStringEntry -> {
+                IndexRecDTO indexRecDTO = IndexRecDTO.fromBytes(stringStringEntry.getValue().getBytes());
+                ans.add(indexRecDTO);
+            });
+            cur = scanResult.getCursor();
+        } while (!cur.equals(SCAN_POINTER_START) && ans.size() < 100);
+
+        return ans;
     }
 }

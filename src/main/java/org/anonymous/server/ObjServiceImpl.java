@@ -3,6 +3,7 @@ package org.anonymous.server;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import io.prometheus.client.Gauge;
+import org.anonymous.domain.IndexRecDTO;
 import org.anonymous.grpc.*;
 import org.anonymous.grpc.ObjServiceGrpc.ObjServiceImplBase;
 import org.anonymous.module.NearCachedObjectRepository;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ObjServiceImpl extends ObjServiceImplBase {
 
@@ -315,8 +317,16 @@ public class ObjServiceImpl extends ObjServiceImplBase {
 
     @Override
     public void getIndexRecordMany(CmdMsgIndexGetByNameWithClient request, StreamObserver<CmdMsgIndexGetByNameWithClientResponse> responseObserver) {
-        CmdMsgIndexGetByNameWithClientResponse response = objectRepository.getIndexRecordMany(request.getRecordName(), request.getTableName());
-        responseObserver.onNext(response);
+        CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess.Builder msgOnSuccess =
+                CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess
+                        .newBuilder();
+
+        nearCachedObjectRepository.getIndexRecordMany(request.getRecordName(), request.getTableName())
+                .stream()
+                .map(IndexRecDTO::toCmdMsgIndexGetByNameWithClientResponse)
+                .forEach(msgOnSuccess::addIndexRecords);
+
+        responseObserver.onNext(CmdMsgIndexGetByNameWithClientResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build());
         responseObserver.onCompleted();
     }
 

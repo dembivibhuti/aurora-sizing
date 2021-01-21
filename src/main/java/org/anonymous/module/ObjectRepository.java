@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
 import io.prometheus.client.Gauge;
 import org.anonymous.connection.ConnectionProvider;
+import org.anonymous.domain.IndexRecDTO;
 import org.anonymous.domain.ObjectDTO;
 import org.anonymous.grpc.*;
 import org.anonymous.stats.Statistics;
@@ -1777,22 +1778,18 @@ public class ObjectRepository implements AutoCloseable {
         return responseMessages;
     }
 
-    public CmdMsgIndexGetByNameWithClientResponse getIndexRecordMany(String recordName, String tableName) {
-        CmdMsgIndexGetByNameWithClientResponse response = null;
-
-
+    public List<IndexRecDTO> getIndexRecordMany(String recordName, String tableName, int fetchSize) {
+        List<IndexRecDTO> ans = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getIndexRecords = connection.prepareStatement(String.format(GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES, tableName))) {
             getIndexRecords.setString(1, recordName);
+            getIndexRecords.setInt(2, fetchSize);
             ResultSet rs = getIndexRecords.executeQuery();
 
-            CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess.Builder msgOnSuccess =
-                    CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess
-                            .newBuilder();
-
             while (rs.next()) {
+                IndexRecDTO indexRecDTO = new IndexRecDTO();
+                indexRecDTO.objKey = rs.getString("name");
 
-                IndexRecord.Builder idxRecBuilder = IndexRecord.newBuilder().setSecurityName(rs.getString("name"));
                 int countOfCols = rs.getMetaData().getColumnCount();
 
                 for (int i = 1; i <= countOfCols - 2; i++) {
@@ -1800,19 +1797,18 @@ public class ObjectRepository implements AutoCloseable {
                     String colType = rs.getMetaData().getColumnTypeName(i);
 
                     if (colType.contains("VARCHAR") || colType.contains("varchar")) {
-                        idxRecBuilder.putStringVal(colName, rs.getString(i));
+                        indexRecDTO.stringMap.put(colName, rs.getString(i));
                     } else {
-                        idxRecBuilder.putDoubleVal(colName, rs.getDouble(i));
+                        indexRecDTO.doubleMap.put(colName, rs.getDouble(i));
                     }
                 }
-                msgOnSuccess.addIndexRecords(idxRecBuilder.build());
+                ans.add(indexRecDTO);
             }
             rs.close();
-            response = CmdMsgIndexGetByNameWithClientResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        return response;
+        return ans;
     }
 
     public long countRecs() {
