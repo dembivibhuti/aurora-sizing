@@ -132,7 +132,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     private void setToRedis(String key, ObjectDTO objectDTO) {
         Gauge.Timer setCacheTimer = setObjToCacheGaugeTimer.labels("set_object_cache").startTimer();
         try {
-            jedisRWConnection.get().hset(OBJ_MAP.getBytes(), key.getBytes(), objectDTO.toBytes());
+            jedisRWConnection.get().hsetnx(OBJ_MAP.getBytes(), key.getBytes(), objectDTO.toBytes());
         } catch (Throwable th) {
             LOGGER.error("unexpected err in Redis set ", th);
         }
