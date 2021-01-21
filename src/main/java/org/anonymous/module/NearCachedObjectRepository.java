@@ -174,22 +174,24 @@ public class NearCachedObjectRepository implements AutoCloseable {
     }
 
     private void warmupNearCache() {
-        long start = System.currentTimeMillis();
-        int chunkSize = 100000;
-        ExecutorService warmupService = Executors.newFixedThreadPool(32);
+        new Thread(() -> {
+            long start = System.currentTimeMillis();
+            int chunkSize = 100000;
+            ExecutorService warmupService = Executors.newFixedThreadPool(32);
 
-        long recCnt = delegate.countRecs();
-        AtomicLong remainingRecCCnt = new AtomicLong(recCnt);
-        LOGGER.info("Cache Warm Up | Target Record Count = {}", recCnt);
-        long chunkCount = ( recCnt / chunkSize ) + 1;
-        for(int i = 1; i <= chunkCount ; i++) {
-            List<String> keys = delegate.getObjKeys(chunkSize, i * chunkSize);
-            warmupService.submit(() -> {
-                keys.stream().forEach(key -> getFullObject(key));
-                long remainingCount = remainingRecCCnt.addAndGet(keys.size() * -1 );
-                System.out.print("Cache Warm Up | Remaining Keys " + remainingCount +  "(" + (((double)recCnt - (double)remainingCount) / (double)recCnt ) * 100 + "%)" + " Time = " + (System.currentTimeMillis() - start ) / (1000 * 60 )+ " mins \r");
-            });
-        }
+            long recCnt = delegate.countRecs();
+            AtomicLong remainingRecCCnt = new AtomicLong(recCnt);
+            LOGGER.info("Cache Warm Up | Target Record Count = {}", recCnt);
+            long chunkCount = ( recCnt / chunkSize ) + 1;
+            for(int i = 1; i <= chunkCount ; i++) {
+                List<String> keys = delegate.getObjKeys(chunkSize, i * chunkSize);
+                warmupService.execute(() -> {
+                    keys.stream().forEach(key -> getFullObject(key));
+                    long remainingCount = remainingRecCCnt.addAndGet(keys.size() * -1 );
+                    System.out.print("Cache Warm Up | Remaining Keys " + remainingCount +  "(" + (((double)recCnt - (double)remainingCount) / (double)recCnt ) * 100 + "%)" + " Time = " + (System.currentTimeMillis() - start ) / (1000 * 60 )+ " mins \r");
+                });
+            }
+        }).start();
     }
 
     public List<IndexRecDTO> getIndexRecordMany(String recordName, String tableName) {
