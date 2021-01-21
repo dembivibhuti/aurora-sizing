@@ -192,7 +192,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
             String[] indexes = {"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
                     "Table_TT", "Table_EBBI", "Table_MIMID"};
             LOGGER.info("Populating Index Data ..... ");
-            Arrays.asList(indexes).stream().forEach(index -> delegate.getIndexRecordMany("", index, 0).stream().forEach(indexRecDTO ->
+            Arrays.asList(indexes).parallelStream().forEach(index -> delegate.getIndexRecordMany("", index, 0).parallelStream().forEach(indexRecDTO ->
                     jedisRWConnection.get().hsetnx(index.getBytes(), indexRecDTO.objKey.getBytes(), indexRecDTO.toBytes())));
             LOGGER.info("Done Populating Index Data");
         }).start();
