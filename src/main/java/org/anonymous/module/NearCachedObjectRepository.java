@@ -188,10 +188,11 @@ public class NearCachedObjectRepository implements AutoCloseable {
             while(true) {
                 List<IndexRecDTO> recs = delegate.getIndexRecordMany("", index, batchSize, offset);
                 recs.parallelStream().forEach(indexRecDTO ->
-                        jedisRWConnection.get().hsetnx(index.getBytes(), indexRecDTO.objKey.getBytes(), indexRecDTO.toBytes()));
+                        jedisRWConnection.get().hset(index.getBytes(), indexRecDTO.objKey.getBytes(), indexRecDTO.toBytes()));
                 if (recs.size() < batchSize ) {
                     break;
                 }
+                offset += batchSize;
                 System.out.print(" Inserted " + batchSize + " Index Records for " + index + " to Far Cache \r");
             }
             LOGGER.info(" Completed Index Data for " + index + " to Far Cache");
