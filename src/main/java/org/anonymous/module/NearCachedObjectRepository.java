@@ -2,6 +2,7 @@ package org.anonymous.module;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
+import org.anonymous.domain.IndexRecDTO;
 import org.anonymous.domain.ObjectDTO;
 import org.anonymous.grpc.CmdGetByNameExtResponse;
 import org.ehcache.Cache;
@@ -17,6 +18,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -174,7 +176,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     private void warmupNearCache() {
         long start = System.currentTimeMillis();
         int chunkSize = 100000;
-        ExecutorService warmupService = Executors.newFixedThreadPool(64);
+        ExecutorService warmupService = Executors.newFixedThreadPool(32);
 
         long recCnt = delegate.countRecs();
         AtomicLong remainingRecCCnt = new AtomicLong(recCnt);
@@ -188,5 +190,9 @@ public class NearCachedObjectRepository implements AutoCloseable {
                 System.out.print("Cache Warm Up | Remaining Keys " + remainingCount +  "(" + (((double)recCnt - (double)remainingCount) / (double)recCnt ) * 100 + "%)" + " Time = " + (System.currentTimeMillis() - start ) / (1000 * 60 )+ " mins \r");
             });
         }
+    }
+
+    public List<IndexRecDTO> getIndexRecordMany(String recordName, String tableName) {
+        return null;
     }
 }
