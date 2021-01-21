@@ -1778,12 +1778,11 @@ public class ObjectRepository implements AutoCloseable {
         return responseMessages;
     }
 
-    public List<IndexRecDTO> getIndexRecordMany(String recordName, String tableName, int fetchSize) {
+    public List<IndexRecDTO> getIndexRecordMany(String recordName, String tableName) {
         List<IndexRecDTO> ans = new ArrayList<>();
         try (Connection connection = roConnectionProvider.getConnection();
              PreparedStatement getIndexRecords = connection.prepareStatement(String.format(GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES, tableName))) {
             getIndexRecords.setString(1, recordName);
-            getIndexRecords.setString(2, fetchSize == -1 ? "ALL" : Integer.toString(fetchSize));
             ResultSet rs = getIndexRecords.executeQuery();
 
             while (rs.next()) {
