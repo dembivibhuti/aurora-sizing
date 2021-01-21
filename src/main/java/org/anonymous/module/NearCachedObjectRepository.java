@@ -181,7 +181,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
         String[] indexes = {"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
                 "Table_TT", "Table_EBBI", "Table_MIMID"};
         LOGGER.info("Populating Index Data to Far Cache");
-        int batchSize = 100000;
+        int batchSize = 1000000;
 
         Arrays.asList(indexes).parallelStream().forEach(index -> {
             int offset = 0;
