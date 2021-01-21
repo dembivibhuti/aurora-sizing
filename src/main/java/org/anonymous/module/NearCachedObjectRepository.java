@@ -184,7 +184,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
         long chunkCount = ( recCnt / chunkSize ) + 1;
         for(int i = 1; i <= chunkCount ; i++) {
             List<String> keys = delegate.getObjKeys(chunkSize, i * chunkSize);
-            warmupService.execute(() -> {
+            warmupService.submit(() -> {
                 keys.stream().forEach(key -> getFullObject(key));
                 long remainingCount = remainingRecCCnt.addAndGet(keys.size() * -1 );
                 System.out.print("Cache Warm Up | Remaining Keys " + remainingCount +  "(" + (((double)recCnt - (double)remainingCount) / (double)recCnt ) * 100 + "%)" + " Time = " + (System.currentTimeMillis() - start ) / (1000 * 60 )+ " mins \r");
