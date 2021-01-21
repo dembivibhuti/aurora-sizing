@@ -187,7 +187,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
                 }
                 System.out.print(" Inserted " + batchSize + " Index Records for " + index + " to Far Cache \r");
             }
-            LOGGER.info(" Completed Index Data for " + index + " to Far Cache \r");
+            LOGGER.info(" Completed Index Data for " + index + " to Far Cache");
         });
         LOGGER.info("All Index Data Populated to Far Cache");
 
