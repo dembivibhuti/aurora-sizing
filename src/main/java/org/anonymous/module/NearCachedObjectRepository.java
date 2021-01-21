@@ -186,7 +186,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
             });
             remainingRecCCnt.getAndAdd(keys.size() * -1 );
             long remainingCount = remainingRecCCnt.get();
-            System.out.print("Cache Warm Up | Remaining Keys " +  "(" + (recCnt - remainingCount) / 100 + "%)" + " \r");
+            System.out.print("Cache Warm Up | Remaining Keys " + remainingCount +  "(" + (recCnt - remainingCount) / 100 + "%)" + " \r");
         }
     }
 }
