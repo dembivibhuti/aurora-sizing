@@ -179,6 +179,7 @@ func pairityWithSaralVersion3(scl model.SSClient, pattern string, indexName stri
                     log.Println(err)
                     return "" // retry to create a new connection
                 }
+                _ = res
                 resp, err := scl.GetObjectExt(key)
                 if err != nil {
                     log.Println(err)
