@@ -1835,7 +1835,7 @@ public class ObjectRepository implements AutoCloseable {
     public Optional<IndexRecDTO> getIndexRecord(String objKey, String tableName) {
         IndexRecDTO indexRecDTO = null;
         try (Connection connection = roConnectionProvider.getConnection();
-             PreparedStatement getIndexRecords = connection.prepareStatement(String.format(GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES, tableName))) {
+             PreparedStatement getIndexRecords = connection.prepareStatement(String.format(GET_INDEX_RECORD, tableName))) {
             getIndexRecords.setString(1, objKey);
 
             ResultSet rs = getIndexRecords.executeQuery();
