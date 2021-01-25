@@ -49,7 +49,8 @@ func main() {
 				if *mode == "1" {
 					pattern = startTest(metrics, pattern)
 				} else {
-				    indexName = tableNames[rand.Intn(len(tableNames))]
+				    //indexName = tableNames[rand.Intn(len(tableNames))]
+				    indexName = "Table_PNT"
 					pattern = startTest2(metrics, pattern, indexName)
 				}
 			}
@@ -72,7 +73,7 @@ func startTest2(metrics *model.Metrics, pattern string, indexName string) string
 	sscl := ssclient.NewSSClient(*serverAddr, ssclient.GRPC, metrics)
 	defer sscl.Close()
 	//sscl.EnableMetrics(":9090")
-	return pairityWithSaralVersion2(sscl, pattern, indexName)
+	return pairityWithSaralVersion3(sscl, pattern, indexName)
 }
 
 func pairityWithSaral(scl model.SSClient, pattern string) string {
@@ -140,6 +141,44 @@ func pairityWithSaralVersion2(scl model.SSClient, pattern string, indexName stri
         var key string
         for i < 400 {
             for _, key = range keys {
+                resp, err := scl.GetObjectExt(key)
+                if err != nil {
+                    log.Println(err)
+                    return "" // retry to create a new connection
+                }
+                _ = resp
+                i += 1
+            }
+        }
+        return key
+	}
+	return ""
+}
+
+func pairityWithSaralVersion3(scl model.SSClient, pattern string, indexName string ) string {
+	res, err := scl.LookupByName(pattern, model.GET_GREATER, 100)
+	if err != nil {
+		log.Println(err)
+	} else {
+        var keys []string
+        for key := range res {
+            keys = append(keys, key)
+        }
+        keysLen := len(keys)
+        if keysLen < 100 {
+            log.Printf("got less than 100 recs in index lookup. Got %d, Pattern %s", keysLen, pattern)
+            return ""
+        }
+
+        i := 1
+        var key string
+        for i < 400 {
+            for _, key = range keys {
+                res, err := scl.GetIndexRecordMany(key, indexName)
+                if (err != nil ) {
+                    log.Println(err)
+                    return "" // retry to create a new connection
+                }
                 resp, err := scl.GetObjectExt(key)
                 if err != nil {
                     log.Println(err)

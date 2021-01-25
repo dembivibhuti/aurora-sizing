@@ -1,11 +1,11 @@
 package org.anonymous.domain;
 
-import org.anonymous.grpc.CmdMsgIndexGetByNameWithClientResponse;
 import org.anonymous.grpc.IndexRecord;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class IndexRecDTO implements Serializable {
 
@@ -50,4 +50,32 @@ public class IndexRecDTO implements Serializable {
         return idxRecBuilder.build();
     }
 
+    public static void main(String[] args) {
+        IndexRecDTO indexRecDTO = new IndexRecDTO();
+        indexRecDTO.objKey = "x";
+        indexRecDTO.doubleMap.put("x", 1d);
+        indexRecDTO.doubleMap.put("x", 2d);
+        indexRecDTO.doubleMap.put("x", 3d);
+
+        indexRecDTO.stringMap.put("x", "y");
+        indexRecDTO.stringMap.put("y", "y");
+        indexRecDTO.stringMap.put("z", "y");
+
+        System.out.println(indexRecDTO.equals(IndexRecDTO.fromBytes(indexRecDTO.toBytes())));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        IndexRecDTO that = (IndexRecDTO) o;
+        return Objects.equals(objKey, that.objKey) &&
+                Objects.equals(doubleMap, that.doubleMap) &&
+                Objects.equals(stringMap, that.stringMap);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(objKey, doubleMap, stringMap);
+    }
 }

@@ -30,6 +30,7 @@ public class Store {
                     "WHERE name = ? AND updateCount = ? AND dbIdUpdated = ?";
 
     public static final String LOOKUP_OBJECTS = "select name from objects where nameLower %s ? order by nameLower %s LIMIT ?";
+    public static final String LOOKUP_OBJECTS_FROM_INDEX = "select name from %s where nameLower %s ? order by nameLower %s LIMIT ?";
     //public static final String LOOKUP_OBJECTS = "select name from objects where nameLower %s ? LIMIT ?";
 
     public static final String LOOKUP_OBJECTS_BY_TYPEID = "select name from objects where nameLower %s ? and typeId = ? order by nameLower %s LIMIT ?";
@@ -139,4 +140,6 @@ public class Store {
     public static final String GET_FROM_INDEX_TABLE_WITH_LIMIT = "select * from %s LIMIT %s OFFSET %s";
 
     public static final String GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES = "select * from %s where nameLower >= ? order by nameLower asc LIMIT ? OFFSET ?";
+
+    public static final String GET_INDEX_RECORD = "select * from %s where nameLower = ?";
 }

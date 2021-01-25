@@ -106,7 +106,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
     }
 
     public List<String> lookup(String prefix, int typeid, int limit) {
-        return delegate.lookup(prefix, typeid, limit);
+        return delegate.lookupFromIndex(prefix, typeid, limit);
     }
 
     public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(String key) {
@@ -219,7 +219,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
         }).start();
     }
 
-    public List<IndexRecDTO> getIndexRecordMany(String recordName, String tableName) {
+    public List<IndexRecDTO> getIndexRecordManyFromRedis(String recordName, String tableName) {
         List<IndexRecDTO> ans = new ArrayList<>();
         ScanParams scanParams = new ScanParams().count(10).match(recordName + "*");
         String cur = SCAN_POINTER_START;
@@ -234,5 +234,9 @@ public class NearCachedObjectRepository implements AutoCloseable {
         } while (!cur.equals(SCAN_POINTER_START) && ans.size() < 100);
 
         return ans;
+    }
+
+    public Optional<IndexRecDTO> getIndexRecord(String objKey, String tableName) {
+        return delegate.getIndexRecord(objKey, tableName);
     }
 }

@@ -321,11 +321,12 @@ public class ObjServiceImpl extends ObjServiceImplBase {
                 CmdMsgIndexGetByNameWithClientResponse.MsgOnSuccess
                         .newBuilder();
 
-        nearCachedObjectRepository.getIndexRecordMany(request.getRecordName(), request.getTableName())
+        /*nearCachedObjectRepository.getIndexRecordManyFromRedis(request.getRecordName(), request.getTableName())
                 .stream()
                 .map(IndexRecDTO::toCmdMsgIndexGetByNameWithClientResponse)
-                .forEach(msgOnSuccess::addIndexRecords);
+                .forEach(msgOnSuccess::addIndexRecords);*/
 
+        msgOnSuccess.addIndexRecords(nearCachedObjectRepository.getIndexRecord(request.getRecordName(), request.getTableName()).get().toCmdMsgIndexGetByNameWithClientResponse());
         responseObserver.onNext(CmdMsgIndexGetByNameWithClientResponse.newBuilder().setMsgOnSuccess(msgOnSuccess.build()).build());
         responseObserver.onCompleted();
     }

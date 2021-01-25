@@ -813,6 +813,26 @@ public class ObjectRepository implements AutoCloseable {
         return secKeys;
     }
 
+    public List<String> lookupFromIndex(String name, int typeId, int limit) {
+        Pair<String, String> exp = expression(typeId);
+        List<String> secKeys = new ArrayList<>();
+        try (Connection connection = roConnectionProvider.getConnection(); PreparedStatement lookupStmt = connection
+                .prepareStatement(String.format(LOOKUP_OBJECTS_FROM_INDEX, "Table_PNT", exp.first, exp.second))) {
+            lookupStmt.setString(1, name.toLowerCase());
+            lookupStmt.setInt(2, limit);
+
+            ResultSet rs = lookupStmt.executeQuery();
+            while (rs.next()) {
+                secKeys.add(rs.getString(1));
+            }
+            rs.close();
+            // connection.commit(); //Making the Read-Only Connection Pool Auto-commit
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return secKeys;
+    }
+
     public List<String> lookupById(String name, int typeId, int limit, int objectType) {
         Pair<String, String> exp = expression(typeId);
         List<String> secKeys = new ArrayList<>();
@@ -1810,6 +1830,37 @@ public class ObjectRepository implements AutoCloseable {
             throwables.printStackTrace();
         }
         return ans;
+    }
+
+    public Optional<IndexRecDTO> getIndexRecord(String objKey, String tableName) {
+        IndexRecDTO indexRecDTO = null;
+        try (Connection connection = roConnectionProvider.getConnection();
+             PreparedStatement getIndexRecords = connection.prepareStatement(String.format(GET_INDEX_RECORDS_WITH_CLIENT_IN_BATCHES, tableName))) {
+            getIndexRecords.setString(1, objKey);
+
+            ResultSet rs = getIndexRecords.executeQuery();
+            while (rs.next()) {
+                indexRecDTO = new IndexRecDTO();
+                indexRecDTO.objKey = rs.getString("name");
+
+                int countOfCols = rs.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= countOfCols - 2; i++) {
+                    String colName = rs.getMetaData().getColumnName(i);
+                    String colType = rs.getMetaData().getColumnTypeName(i);
+
+                    if (colType.contains("VARCHAR") || colType.contains("varchar")) {
+                        indexRecDTO.stringMap.put(colName, rs.getString(i));
+                    } else {
+                        indexRecDTO.doubleMap.put(colName, rs.getDouble(i));
+                    }
+                }
+            }
+            rs.close();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return Optional.ofNullable(indexRecDTO);
     }
 
     public long countRecs() {
