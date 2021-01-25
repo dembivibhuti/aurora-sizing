@@ -30,8 +30,8 @@ func main() {
 	metrics.Register(prometheus.DefaultRegisterer)
 	var wg sync.WaitGroup
 
-	tableNames := []string{"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
-    		"Table_TT", "Table_EBBI", "Table_MIMID"}
+	//tableNames := []string{"Table_BBI", "Table_BG", "Table_PB", "Table_PNT", "Table_TETID", "Table_TMID", "Table_TST",
+    //		"Table_TT", "Table_EBBI", "Table_MIMID"}
 
 	var pattern string
 	var indexName string
