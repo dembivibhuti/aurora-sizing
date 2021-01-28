@@ -113,8 +113,8 @@ public class NearCachedObjectRepository implements AutoCloseable {
     public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(String key) {
         Optional<ObjectDTO> objectDTO = null;
 
-        ObjectDTO fromNearCache = getFromNearCache(key);
-        /*ObjectDTO fromNearCache = null;*/
+        //ObjectDTO fromNearCache = getFromNearCache(key);
+        ObjectDTO fromNearCache = null;
         if( null != fromNearCache ) {
             objectDTO = Optional.of(fromNearCache);
         } else {
