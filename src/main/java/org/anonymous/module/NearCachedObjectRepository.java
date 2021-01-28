@@ -106,7 +106,8 @@ public class NearCachedObjectRepository implements AutoCloseable {
     }
 
     public List<String> lookup(String prefix, int typeid, int limit) {
-        return delegate.lookupFromIndex(prefix, typeid, limit);
+        //return delegate.lookupFromIndex(prefix, typeid, limit);
+        return delegate.lookup(prefix, typeid, limit);
     }
 
     public Optional<CmdGetByNameExtResponse.MsgOnSuccess> getFullObject(String key) {
