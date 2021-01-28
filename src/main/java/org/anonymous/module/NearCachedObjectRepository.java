@@ -96,7 +96,7 @@ public class NearCachedObjectRepository implements AutoCloseable {
         cacheManager.init();
         objMapCache = cacheManager.getCache(OBJ_MAP, String.class, ObjectDTO.class);
         /*indexMapCache = cacheManager.getCache(IDX_MAP, String.class, Map.class);*/
-        warmupNearCache();
+        //warmupNearCache();
     }
 
     @Override
