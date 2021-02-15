@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.17)
+project(middleware)
+set(CMAKE_CXX_STANDARD 17)
+#set(CMAKE_BUILD_TYPE Release)
+SET(Boost_USE_STATIC_LIBS OFF)
+SET(Boost_USE_MULTITHREAD ON)
+FIND_PACKAGE(Boost 1.71.0 REQUIRED COMPONENTS system thread regex)
+find_package(PostgreSQL REQUIRED)
+INCLUDE_DIRECTORIES(${PostgreSQL_INCLUDE_DIRS})
+Link_directories(${PostgreSQL_LIBRARY_DIRS})
+IF (Boost_FOUND)
+    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+    LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+ENDIF (Boost_FOUND)
+
+# Locate GTest
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+include_directories(includes)
+
+find_library(TAO_PQ taopq lib)
+
+SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY} ${GTEST_LIBRARIES} pthread ${TAO_PQ} ${PostgreSQL_LIBRARIES})
+
+ADD_EXECUTABLE(saral main.cpp server/protocol/messages/attach.h server/protocol/messages/attach_test.cpp server/secserv.h server/io_context_pool.h server/connection.h server/protocol/messages/message.h server/protocol/messages/request.h server/protocol/msg_processor.h server/protocol/messages/getbyname.h server/protocol/messages/security.h server/db/repository.h server/protocol/messages/namelookup.h)
+TARGET_LINK_LIBRARIES(saral ${USED_LIBS})
