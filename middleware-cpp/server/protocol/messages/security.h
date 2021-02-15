@@ -16,7 +16,7 @@ struct Security {
   short dateCreated;
   short dbIDUpdated;
   short versionInfo;
-  int blobSize;
+  int blobSize = 0;
   const char* blob;
 
     ~Security() {

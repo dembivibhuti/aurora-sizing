@@ -20,6 +20,7 @@ public:
     Security *get_security(std::string &name) {
         const auto conn = pool->connection();
         const auto rs = conn->execute(SELECT_OBJ + name + END_QUOTE);
+        //const auto rs = pool->execute(SELECT_OBJ + name + END_QUOTE);
         auto row = rs.at(0);
         Security *security = new Security;
         security->name = row[0].as<std::string>();
@@ -39,6 +40,7 @@ public:
         std::vector<std::string> *objects = new std::vector<std::string>();
         const auto conn = pool->connection();
         auto query = "select name from objects where nameLower >= '" + prefix +"' order by nameLower LIMIT " + std::to_string(count);
+        //const auto rs = pool->execute(query);
         const auto rs = conn->execute(query);
         for( const auto& row : rs ) {
             objects->emplace_back(row[0].as< std::string >());
@@ -51,7 +53,8 @@ public:
 private:
 
     Repository() {
-        pool = tao::pq::connection_pool::create("dbname=rahul");
+        pool = tao::pq::connection_pool::create("postgresql://postgres:postgres@database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com:5432/postgres");
+        //pool = tao::pq::connection_pool::create("dbname=rahul");
         const auto conn = pool->connection();
         conn->prepare("get_sec",
                       "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, length(mem), mem from objects where nameLower = $1");

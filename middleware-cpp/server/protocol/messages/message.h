@@ -16,7 +16,7 @@ class Message {
 public:
     virtual void decode(char *data) = 0;
 
-    virtual void encode(std::vector<boost::asio::const_buffer> &buffer, char *data_) = 0;
+    virtual size_t encode(char *data_) = 0;
 
     virtual void process() = 0;
 

@@ -21,9 +21,9 @@ public:
         size = sizeof(short) + sizeof(short) + sizeof(int);
     }
 
-    AttachResponse() {}
+    AttachResponse() = default;
 
-    ~AttachResponse() {}
+    ~AttachResponse() = default;
 
     short size;
     short version_revision = 269;
@@ -32,9 +32,9 @@ public:
 
 class AttachRequest {
 public:
-    AttachRequest() {}
+    AttachRequest() = default;
 
-    ~AttachRequest() {}
+    ~AttachRequest() = default;
 
     std::string user_name;
     std::string app_name;
@@ -131,14 +131,14 @@ public:
         response = new AttachResponse(269, server_features);
     }
 
-    void encode(std::vector<boost::asio::const_buffer> &buffer, char *data_) {
+    size_t encode(char *data_) {
         int index = 0;
         memcpy(data_, &response->size, sizeof(short));
         index += sizeof(short);
         memcpy(data_ + index, &response->version_revision, sizeof(response->version_revision));
         index += sizeof(response->version_revision);
         memcpy(data_ + index, &(response->server_features), sizeof(response->server_features));
-        buffer.push_back(boost::asio::buffer(data_, response->size));
+        return response->size;
     }
 
 private:

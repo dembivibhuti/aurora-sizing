@@ -16,11 +16,9 @@ typedef boost::shared_ptr<Connection> ConnectionPTR;
 
 class Server {
 public:
-    Server(int contextPoolSize, int threadPerContext, boost::asio::io_context &ioContext,
-           boost::asio::io_context &dataContext, int port) : ioContext(ioContext),
-                                                             //dataContext(dataContext),
-                                                             contextPool(contextPoolSize, threadPerContext),
-                                                             repoContextPool(contextPoolSize, threadPerContext),
+    Server(int ioContextPoolSize, int ioThreadPerContext,int dbContextPoolSize, int dbThreadPerContext, int port) : ioContext(ioContext),
+                                                             contextPool(ioContextPoolSize, ioThreadPerContext),
+                                                             repoContextPool(dbContextPoolSize, dbThreadPerContext),
                                                              acceptor(contextPool.getIOContext()) {
         boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
         acceptor.open(endpoint.protocol());
@@ -31,13 +29,14 @@ public:
     }
 
     void eventLoop() {
-        ConnectionPTR connection = Connection::create(contextPool.getIOContext(),repoContextPool);
-        acceptor.async_accept(connection->socket(), [this, connection](const boost::system::error_code &ec) {
+        boost::asio::io_context &context = contextPool.getIOContext();
+        ConnectionPTR connection = Connection::create(context, repoContextPool);
+        acceptor.async_accept(connection->socket(), [this, connection, &context](const boost::system::error_code &ec) {
             if (ec) {
                 std::cerr << "Failed to accept connection: " << ec.message() << std::endl;
             } else {
                 //connection->socket().set_option(boost::asio::ip::tcp::no_delay(true));
-                connection->read(this->ioContext);
+                connection->read(context);
                 eventLoop();
             }
         });

@@ -11,7 +11,8 @@
 
 class IOContextPool {
 public:
-    explicit IOContextPool(size_t poolSize, size_t threadsPerContext) : threadsPerContext(threadsPerContext), nextIOContext(0) {
+    explicit IOContextPool(size_t poolSize, size_t threadsPerContext) : threadsPerContext(threadsPerContext),
+                                                                        nextIOContext(0) {
         if (poolSize == 0)
             throw std::runtime_error("IO Context Pool size is 0");
         for (std::size_t i = 0; i < poolSize; ++i) {

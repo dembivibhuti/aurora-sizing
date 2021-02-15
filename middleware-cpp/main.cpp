@@ -6,22 +6,42 @@
 
 
 int main(int argc, char *argv[]) {
-    int numOfIOContexts = 16, threadsPerContext = 16;
-    if (argc == 3) {
-        numOfIOContexts = atoi(argv[1]);
-        threadsPerContext = atoi(argv[2]);
+    int numOfIOContexts = 4, numOfIOThreads = 1, numOfDBThreads = 2, numOfDBContexts = 20;
+    unsigned short port = 4008;
+    if (argc == 5) {
+        port = atoi(argv[1]);
+        numOfIOContexts = atoi(argv[2]);
+        numOfIOThreads = atoi(argv[3]);
+        numOfDBContexts = atoi(argv[4]);
+        numOfDBThreads = atoi(argv[5]);
     }
 
     std::cout << "I/O contexts          : " << numOfIOContexts << std::endl;
-    std::cout << "Threads per context   : " << threadsPerContext << std::endl;
-    std::vector<std::future<void>> futures;
+    std::cout << "IO Threads per context   : " << numOfIOThreads << std::endl;
+    std::cout << "DB contexts          : " << numOfDBContexts << std::endl;
+    std::cout << "DB Threads per context   : " << numOfDBThreads << std::endl;
 
-    const unsigned short port = 4008;
-    std::shared_ptr<boost::asio::io_context> context(new boost::asio::io_context());
-    std::shared_ptr<boost::asio::io_context> repo_context(new boost::asio::io_context());
-    boost::asio::executor_work_guard<decltype(repo_context->get_executor())> workGuard{repo_context->get_executor()};
-    Server server(numOfIOContexts, threadsPerContext, *context, *repo_context, port);
+    Server server(numOfIOContexts, numOfIOThreads, numOfDBContexts, numOfDBThreads, port);
     server.run();
+
+    /*std::vector<std::future<void>> futures;
+
+    auto fut = std::async([numOfIOContexts, numOfIOThreads, port, repo_context, context] {
+        Server server(numOfIOContexts, numOfIOThreads, *context, *repo_context, port);
+        server.run();
+    });
+    futures.push_back(std::move(fut));
+
+
+    for (int i = 0; i < threadsForRepository; i++) {
+        auto fut = std::async([repo_context] {
+            repo_context->run();
+        });
+        futures.push_back(std::move(fut));
+    }
+    std::for_each(futures.begin(), futures.end(), [](std::future<void> &fut) {
+        fut.wait();
+    });*/
 
     return 0;
 }

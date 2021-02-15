@@ -15,6 +15,9 @@ class MsgProcessor {
 public:
     MsgProcessor() {
         type = MessageType::SRV_MSG_UNDEFINED;
+        attachMsg = new SrvAttach();
+        getByNameMsg = new SrvMsgGetByName();
+        lookupMsg = new SRVMsgNameLookup();
     }
 
     Message *get_msg() const {
@@ -30,15 +33,15 @@ public:
         std::memcpy(&type, data, sizeof(short));
         switch (type) {
             case MessageType::SRV_MSG_ATTACH: {
-                msg = new SrvAttach();
+                msg = attachMsg;
                 break;
             }
             case MessageType::SRV_MSG_GET_BY_NAME: {
-                msg = new SrvMsgGetByName();
+                msg = getByNameMsg;
                 break;
             }
             case MessageType::SRV_MSG_NAME_LOOKUP: {
-                msg = new SRVMsgNameLookup();
+                msg = lookupMsg;
                 break;
             }
         }
@@ -48,26 +51,27 @@ public:
 
     }
 
-    template<typename Functor>
-    void process(boost::asio::io_context &nw_context, Functor callback) {
+    void process() {
         msg->process();
-        //std::cout << "Done with async work" << std::endl;
-        callback();
-        //nw_context.post(callback);
     }
 
-    void encode(std::vector<boost::asio::const_buffer> &buffer, char *data_) {
-        msg->encode(buffer, data_);
+    size_t encode(char *data_) {
+        return msg->encode(data_);
     }
 
     virtual ~MsgProcessor() {
-        delete msg;
+        delete attachMsg;
+        delete lookupMsg;
+        delete getByNameMsg;
     }
 
 private:
     size_t size;
     MessageType type;
     Message *msg;
+    Message *attachMsg = nullptr;
+    Message *lookupMsg = nullptr;
+    Message *getByNameMsg = nullptr;
 };
 
 #endif //MIDDLEWARE_MSG_PROCESSOR_H

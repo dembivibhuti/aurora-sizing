@@ -58,10 +58,13 @@ public:
     void process() {
         static Repository *pRepository = Repository::getInstance();
         Security *security = pRepository->get_security(request->security_name);
+        if(response) {
+            delete response;
+        }
         response = new GetByNameResponse(GetByNameResponse::SUCCESS, 0, security);
     }
 
-    void encode(std::vector<boost::asio::const_buffer> &buffer, char *data_) {
+    size_t encode(char *data_) {
         char *start = data_;
         Security *sec = response->sec;
         size_t s = response->size_ + sec->blobSize;
@@ -104,13 +107,14 @@ public:
             sec->blob = new char[sec->blobSize];
             memcpy(data_, sec->blob, sec->blobSize);
         }
-        buffer.push_back(boost::asio::buffer(start, response->size_ + sec->blobSize));
+        size_t size =  response->size_ + sec->blobSize;
         delete sec;
+        return size;
     }
 
 private:
-    GetByNameRequest *request;
-    GetByNameResponse *response;
+    GetByNameRequest *request = nullptr;
+    GetByNameResponse *response = nullptr;
 };
 
 #endif //MIDDLEWARE_GETBYNAME_H

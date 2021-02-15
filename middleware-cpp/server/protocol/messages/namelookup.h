@@ -34,11 +34,15 @@ public:
 class NameLookupResponse {
 public:
     NameLookupResponse(short count, std::vector<std::string> *securityNames) : count(count),
-                                                                                     security_names(securityNames) {
+                                                                               security_names(securityNames) {
         size_ = sizeof(int) + sizeof(short);
         for (auto &security : *security_names) {
             size_ += security.size() + 1;
         }
+    }
+
+    virtual ~NameLookupResponse() {
+        delete security_names;
     }
 
     std::size_t size_;
@@ -73,10 +77,13 @@ public:
     void process() {
         static Repository *pRepository = Repository::getInstance();
         std::vector<std::string> *names = pRepository->lookup(request->prefix, request->count);
+        if(response) {
+            delete response;
+        }
         response = new NameLookupResponse(names->size(), names);
     }
 
-    void encode(std::vector<boost::asio::const_buffer> &buffer, char *data_) {
+    size_t encode(char *data_) {
         int index = 0;
         size_t s = response->size_;
 
@@ -90,13 +97,13 @@ public:
             memcpy(data_ + index, security.c_str(), security.size() + 1);
             index += security.size() + 1;
         }
-        buffer.push_back(boost::asio::buffer(data_, s));
+        return s;
     }
 
 
 private:
     NameLookupRequest *request;
-    NameLookupResponse *response;
+    NameLookupResponse *response = nullptr;
 };
 
 #endif //MIDDLEWARE_NAMELOOKUP_H

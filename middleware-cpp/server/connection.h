@@ -21,11 +21,11 @@ public:
         return Pointer(new Connection(ioContext, repoContextPool));
     }
 
-    void read(boost::asio::io_context &context) {
+    void read(boost::asio::io_context &ioContext) {
 
         auto thisPtr = shared_from_this();
         socket_.async_read_some(boost::asio::buffer(buf + index, BUFFER_SIZE - index),
-                                [thisPtr, &context](const boost::system::error_code &ec, size_t sz) {
+                                [thisPtr, &ioContext](const boost::system::error_code &ec, size_t sz) {
                                     if (!ec || ec == boost::asio::error::eof) {
                                         thisPtr->index += sz;
 
@@ -33,26 +33,28 @@ public:
                                             memcpy(&thisPtr->msg_size, thisPtr->buf, thisPtr->header_size);
 
                                         if (thisPtr->index < thisPtr->msg_size) {
-                                            thisPtr->read(context);
+                                            thisPtr->read(ioContext);
                                             return;
                                         } else
                                             thisPtr->index = 0;
 
-                                        thisPtr->msgProcessor = new MsgProcessor();
                                         thisPtr->msgProcessor->decode(thisPtr->buf + thisPtr->header_size);
 
                                         if (!thisPtr->msgProcessor->get_msg()) {
                                             //std::cerr << "Message not implemented" << std::endl;
                                             thisPtr->socket_.close();
-                                            delete thisPtr->msgProcessor;
                                             return;
                                         }
 
                                         if (thisPtr->msgProcessor->get_type() == MessageType::SRV_MSG_ATTACH)
                                             thisPtr->header_size = 4;
 
-                                        thisPtr->repoContextPool.getIOContext().post([thisPtr, &context]() {
-                                            thisPtr->msgProcessor->process(context, [thisPtr,&context]{thisPtr->write(context);});
+                                        auto &dbContext = thisPtr->repoContextPool.getIOContext();
+                                        dbContext.post([thisPtr, &ioContext]() {
+                                            thisPtr->msgProcessor->process();
+                                            ioContext.post([thisPtr, &ioContext]() {
+                                                thisPtr->write(ioContext);
+                                            });
                                         });
                                     } else {
                                         std::cerr << "Error receiving data from client " << ec.message() << std::endl;
@@ -60,21 +62,21 @@ public:
                                 });
     }
 
-    void write(boost::asio::io_context &context) {
+
+    void write(boost::asio::io_context &ioContext) {
         auto thisPtr = shared_from_this();
-        std::vector<boost::asio::const_buffer> buffer;
-        msgProcessor->encode(buffer, buf);
-        boost::asio::async_write(socket_, buffer, [thisPtr, &context](const boost::system::error_code &ec, size_t sz) {
-            if (ec) {
-                if (ec == boost::asio::error::eof) {
-                    thisPtr->socket_.close();
-                }
-                std::cerr << "Failed to send response to client: " << ec.message() << std::endl;
-            } else {
-                delete thisPtr->msgProcessor;
-                thisPtr->read(context);
-            }
-        });
+        boost::asio::async_write(socket_, boost::asio::buffer(buf, msgProcessor->encode(buf)),
+                                 [thisPtr, &ioContext](const boost::system::error_code &ec, size_t sz) {
+                                     if (ec) {
+                                         if (ec == boost::asio::error::eof) {
+                                             thisPtr->socket_.close();
+                                         }
+                                         std::cerr << "Failed to send response to client: " << ec.message()
+                                                   << std::endl;
+                                     } else {
+                                         thisPtr->read(ioContext);
+                                     }
+                                 });
     }
 
     boost::asio::ip::tcp::socket &socket() {
@@ -83,12 +85,22 @@ public:
 
 private:
     Connection(boost::asio::io_context &ioContext, IOContextPool &_repoContextPool) : socket_(ioContext),
-                                                                                            repoContextPool(_repoContextPool) {
+                                                                                      repoContextPool(
+                                                                                              _repoContextPool) {
         header_size = 2;
         index = 0;
         msg_size = 0;
-        buf = new char[BUFFER_SIZE];
+        buf = new char[BUFFER_SIZE]();
+        msgProcessor = new MsgProcessor();
     }
+
+public:
+    virtual ~Connection() {
+        delete msgProcessor;
+        delete[]buf;
+    }
+
+private:
 
     int index;
     size_t msg_size;
