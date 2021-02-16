@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
     int numOfIOContexts = 4, numOfIOThreads = 1, numOfDBThreads = 2, numOfDBContexts = 20;
     unsigned short port = 4008;
-    if (argc == 5) {
+    if (argc == 6) {
         port = atoi(argv[1]);
         numOfIOContexts = atoi(argv[2]);
         numOfIOThreads = atoi(argv[3]);
