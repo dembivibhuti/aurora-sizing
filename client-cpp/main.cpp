@@ -88,8 +88,8 @@ int main(int argc, char *argv[]) {
     std::string port = argv[2];
     int instances = std::stoi(argv[3]);
     // create an http server running on port 8080
-    //prometheus::Exposer exposer{boost::asio::ip::host_name() + ":8080"};
-    prometheus::Exposer exposer{"127.0.0.1:8080"};
+    prometheus::Exposer exposer{boost::asio::ip::host_name() + ":8080"};
+    //prometheus::Exposer exposer{"127.0.0.1:8080"};
     // create a metrics registry
     // @note it's the users responsibility to keep the object alive
     auto registry = std::make_shared<prometheus::Registry>();
