@@ -61,13 +61,21 @@ public:
         if(response) {
             delete response;
         }
-        response = new GetByNameResponse(GetByNameResponse::SUCCESS, 0, security);
+        if(security) {
+            response = new GetByNameResponse(GetByNameResponse::SUCCESS, 0, security);
+        } else {
+            response = new GetByNameResponse(GetByNameResponse::ERROR, 0, security);
+        }
+
     }
 
     size_t encode(char *data_) {
         char *start = data_;
         Security *sec = response->sec;
-        size_t s = response->size_ + sec->blobSize;
+        size_t s = response->size_;
+        if(sec) {
+            s += sec->blobSize;
+        }
         memcpy(data_, &s, sizeof(int)); //4
         data_ += sizeof(int);
         memcpy(data_, &(response->status_), sizeof(response->status_)); //4 + 2
@@ -104,11 +112,11 @@ public:
             memcpy(data_, &(sec->blobSize), sizeof(int));
             data_ += sizeof(int);
 
+            //sec->blob = new char[sec->blobSize];
             memcpy(data_, sec->blob, sec->blobSize);
         }
-        size_t size =  response->size_ + sec->blobSize;
         delete sec;
-        return size;
+        return s;
     }
 
 private:

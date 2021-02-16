@@ -20,20 +20,22 @@ public:
     Security *get_security(std::string &name) {
         const auto conn = pool->connection();
         const auto rs = conn->execute(SELECT_OBJ + name + END_QUOTE);
-        //const auto rs = pool->execute(SELECT_OBJ + name + END_QUOTE);
-        auto row = rs.at(0);
-        Security *security = new Security;
-        security->name = row[0].as<std::string>();
-        security->type = row[1].as<int>();
-        security->lastTransactionId = row[2].as<int>();
-        security->timeUpdated = 10001;
-        security->updateCount = row[4].as<int>();
-        security->dateCreated = row[5].as<short>();
-        security->dbIDUpdated = row[6].as<short>();
-        security->versionInfo = row[7].as<short>();
-        security->blobSize = row[8].as<int>();
-        security->blob = row.get(9);
-        return security;
+        if(rs.size() > 0) {
+            auto row = rs.at(0);
+            Security *security = new Security;
+            security->name = row[0].as<std::string>();
+            security->type = row[1].as<int>();
+            security->lastTransactionId = row[2].as<int>();
+            security->timeUpdated = 10001;
+            security->updateCount = row[4].as<int>();
+            security->dateCreated = row[5].as<short>();
+            security->dbIDUpdated = row[6].as<short>();
+            security->versionInfo = row[7].as<short>();
+            security->blobSize = row[8].as<int>();
+            security->blob = row.get(9);
+            return security;
+        }
+        return nullptr;
     }
 
     std::vector<std::string>* lookup(std::string &prefix, short &count) {
