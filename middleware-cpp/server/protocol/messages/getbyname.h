@@ -104,7 +104,6 @@ public:
             memcpy(data_, &(sec->blobSize), sizeof(int));
             data_ += sizeof(int);
 
-            sec->blob = new char[sec->blobSize];
             memcpy(data_, sec->blob, sec->blobSize);
         }
         size_t size =  response->size_ + sec->blobSize;
