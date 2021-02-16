@@ -11,9 +11,61 @@
 
 typedef std::shared_ptr<tao::pq::basic_connection_pool<tao::pq::parameter_text_traits>> ConnectionPool;
 
-static const char *const SELECT_OBJ = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, length(mem), mem from objects where nameLower = '";
+static const char *const SELECT_OBJ = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = '";
 
 static const char *const END_QUOTE = "'";
+
+namespace tao::pq
+{
+    class bytea  // NOLINT
+    {
+    private:
+        std::size_t m_size;
+        unsigned char* m_data;
+
+    public:
+        explicit bytea( const char* value )
+                : m_size( 0 ), m_data( PQunescapeBytea( (unsigned char*)value, &m_size ) )  //NOLINT
+        {
+            if( m_data == nullptr ) {
+                throw std::bad_alloc();  // LCOV_EXCL_LINE
+            }
+        }
+
+        ~bytea()
+        {
+            PQfreemem( m_data );
+        }
+
+        bytea( const bytea& ) = delete;
+        auto operator=( const bytea& ) -> bytea& = delete;
+
+        [[nodiscard]] auto size() const noexcept
+        {
+            return m_size;
+        }
+
+        [[nodiscard]] auto data() const noexcept -> const unsigned char*
+        {
+            return m_data;
+        }
+
+        [[nodiscard]] auto operator[]( const std::size_t idx ) const noexcept -> unsigned char
+        {
+            return m_data[ idx ];
+        }
+    };
+
+    template<>
+    struct result_traits< bytea >
+    {
+        [[nodiscard]] static auto from( const char* value )
+        {
+            return bytea( value );
+        }
+    };
+
+}  // namespace tao::pq
 
 class Repository {
 public:
@@ -31,8 +83,9 @@ public:
             security->dateCreated = row[5].as<short>();
             security->dbIDUpdated = row[6].as<short>();
             security->versionInfo = row[7].as<short>();
-            security->blobSize = row[8].as<int>();
-            security->blob = row.get(9);
+            auto blob = row[8].as<tao::pq::bytea>();
+            security->blobSize = blob.size();
+            security->blob = blob.data();
             return security;
         }
         return nullptr;
@@ -55,8 +108,8 @@ public:
 private:
 
     Repository() {
-        pool = tao::pq::connection_pool::create("postgresql://postgres:postgres@database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com:5432/postgres");
-        //pool = tao::pq::connection_pool::create("dbname=rahul");
+        //pool = tao::pq::connection_pool::create("postgresql://postgres:postgres@database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com:5432/postgres");
+        pool = tao::pq::connection_pool::create("dbname=rahul");
         const auto conn = pool->connection();
         conn->prepare("get_sec",
                       "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, length(mem), mem from objects where nameLower = $1");
