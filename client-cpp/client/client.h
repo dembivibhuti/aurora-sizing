@@ -1,29 +1,28 @@
 //
-// Created by rahul on 01/02/21.
+// Created by rahul on 04/02/21.
 //
 
-#ifndef CLIENT_CLIENT_H
-#define CLIENT_CLIENT_H
+#ifndef PERFCLIENT_CLIENT_H
+#define PERFCLIENT_CLIENT_H
 
 #include "messages/attach.h"
 #include "messages/getbyname.h"
+#include "messages/lookup.h"
+#include "messages/security.h"
 #include <boost/asio.hpp>
-#include "messages/message.h"
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <thread>
-#include <chrono>
+
+#include <vector>
+#include <prometheus/counter.h>
+#include <prometheus/exposer.h>
+#include <prometheus/registry.h>
+
 
 namespace asio = boost::asio;
-#define BUFFER_SIZE 32768
 
 class Client {
 public:
-    Client(const char *host, const char *port) {
-        host_ = host;
-        port_ = port;
-        asio::io_service service;
+    Client(const char *host, const char *port, asio::io_service &service) : host_(host), port_(port),
+                                                                            socket(service, asio::ip::tcp::v4()) {
         asio::ip::tcp::resolver resolver(service);
         try {
             asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), host_, port_);
@@ -33,66 +32,81 @@ public:
             asio::ip::tcp::endpoint server(iter->endpoint());
 
             std::cout << "Connecting to " << server << std::endl;
-            asio::ip::tcp::socket socket(service, asio::ip::tcp::v4());
 
             socket.connect(server);
-            attach(socket);
-
-            while (true) {
-                get_by_name(socket, "148716-48003-29-3516184");
-            }
 
         } catch (std::exception &e) {
             std::cerr << "Error reading response from server: " << e.what() << std::endl;
         }
     }
 
-
-    void attach(asio::ip::tcp::socket &socket_) {
+    AttachResponse *attach() {
         AttachRequest a("Rahul", "secdb", 1, 2);
         auto buffer = asio::buffer(a.encode(), a.size + sizeof(size_t));
-        auto sz1 = asio::write(socket_, buffer);
+        auto sz1 = asio::write(socket, buffer);
         memcpy(&sz1, buffer.data(), sizeof(sz1));
 
         boost::system::error_code ec;
         short response_size;
-        short sz = asio::read(socket_, asio::buffer(&response_size, sizeof(response_size)), ec);
+        short sz = asio::read(socket, asio::buffer(&response_size, sizeof(response_size)), ec);
         char res_buf[response_size - sizeof(response_size)];
-        sz = asio::read(socket_, asio::buffer(&res_buf, response_size - sizeof(response_size)), ec);
+        sz = asio::read(socket, asio::buffer(&res_buf, response_size - sizeof(response_size)), ec);
+        AttachResponse *res = new AttachResponse();
         if (!ec || ec == asio::error::eof) {
-            AttachResponse res;
-            res.decode(res_buf);
+            res->decode(res_buf);
         } else {
             std::cerr << "Error reading response from server: " << ec.message() << std::endl;
         }
+        return res;
     }
 
-    void get_by_name(asio::ip::tcp::socket &socket_, std::string sec_name) {
-        GetByNameRequest request(sec_name);
+    std::vector<std::string> *lookup(std::string prefix, short count) {
+        NameLookupRequest request(LookupType::SDB_GET_GE, count, prefix);
         auto buffer = asio::buffer(request.encode(), request.size + sizeof(size_t));
-        auto sz1 = asio::write(socket_, buffer);
+        auto sz1 = asio::write(socket, buffer);
         memcpy(&sz1, buffer.data(), sizeof(sz1));
 
         boost::system::error_code ec;
         int response_size;
-        short sz = asio::read(socket_, asio::buffer(&response_size, sizeof(response_size)), ec);
+        short sz = asio::read(socket, asio::buffer(&response_size, sizeof(response_size)), ec);
 
         char res_buf[response_size - sizeof(response_size)];
-        sz = asio::read(socket_, asio::buffer(&res_buf, response_size - sizeof(response_size)), ec);
+        sz = asio::read(socket, asio::buffer(&res_buf, response_size - sizeof(response_size)), ec);
+        NameLookupResponse res;
         if (!ec || ec == asio::error::eof) {
-            GetByNameResponse res;
             res.decode(res_buf);
         } else {
             std::cerr << "Error reading response from server: " << ec.message() << std::endl;
         }
+        return res.security_names;
     }
 
+    Security *getSecurity(const std::string &sec_name) {
+        GetByNameRequest request(sec_name);
+        auto buffer = asio::buffer(request.encode(), request.size + sizeof(size_t));
+        auto sz1 = asio::write(socket, buffer);
+        memcpy(&sz1, buffer.data(), sizeof(sz1));
+
+        boost::system::error_code ec;
+        int response_size;
+        short sz = asio::read(socket, asio::buffer(&response_size, sizeof(response_size)), ec);
+
+        char res_buf[response_size - sizeof(response_size)];
+        sz = asio::read(socket, asio::buffer(&res_buf, response_size - sizeof(response_size)), ec);
+        GetByNameResponse res;
+        if (!ec || ec == asio::error::eof) {
+            res.decode(res_buf);
+        } else {
+            std::cerr << "Error reading response from server: " << ec.message() << std::endl;
+        }
+        return res.sec;
+    }
 
 private:
     const char *host_;
     const char *port_;
-    int counter = 0;
+    asio::ip::tcp::socket socket;
+
 };
 
-
-#endif //CLIENT_CLIENT_H
+#endif //PERFCLIENT_CLIENT_H

@@ -32,13 +32,6 @@ public:
         //decode server features
         memcpy(&server_features, data + index, sizeof(server_features));
         index += sizeof(server_features);
-
-
-        std::cout << "**************************************" << std::endl;
-        std::cout << "Attached" << std::endl;
-        std::cout << "Server features " << server_features << std::endl;
-        std::cout << "Version revision " << version_revision << std::endl;
-        std::cout << "**************************************" << std::endl;
     }
 
     std::size_t size;

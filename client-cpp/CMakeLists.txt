@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
-project(client)
-
-set(CMAKE_CXX_STANDARD 14)
-
+project(PerfClient)
+#set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_STANDARD 17)
 SET(Boost_USE_STATIC_LIBS OFF)
 SET(Boost_USE_MULTITHREAD ON)
 FIND_PACKAGE(Boost 1.71.0 REQUIRED COMPONENTS system thread regex)
@@ -11,13 +10,13 @@ IF (Boost_FOUND)
     LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 ENDIF (Boost_FOUND)
 
+FIND_PACKAGE(prometheus-cpp REQUIRED)
+
 # Locate GTest
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
+#find_package(GTest REQUIRED)
+#include_directories(${GTEST_INCLUDE_DIRS})
 
-SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY} ${GTEST_LIBRARIES} pthread)
+SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY} pthread prometheus-cpp::core prometheus-cpp::pull )
 
-add_executable(client main.cpp client/client.h client/messages/attach.h client/messages/message.h client/messages/getbyname.h client/messages/security.h client/connection.h)
-TARGET_LINK_LIBRARIES(client ${USED_LIBS})
-
-
+add_executable(PerfClient main.cpp client/client.h client/messages/lookup.h metrics.h)
+TARGET_LINK_LIBRARIES(PerfClient ${USED_LIBS})

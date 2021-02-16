@@ -16,6 +16,11 @@ struct Security {
     short dbIDUpdated;
     short versionInfo;
     int blobSize;
-    char* blob;
+    char *blob;
+
+    ~Security() {
+        delete[] blob;
+    }
 };
+
 #endif //CLIENT_SECURITY_H

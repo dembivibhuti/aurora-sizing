@@ -33,7 +33,9 @@ public:
         return size;
     }
 
-    ~GetByNameRequest() {}
+    ~GetByNameRequest() {
+        delete[] data;
+    }
 
     std::string security_name;
     int size;
@@ -50,7 +52,6 @@ public:
     }
 
     void decode(char *data_) {
-        char *start = data_;
         sec = new Security;
         memcpy(&status, data_, sizeof(status));
         data_ += sizeof(status);
@@ -86,8 +87,8 @@ public:
 
             memcpy(&(sec->blobSize), data_, sizeof(int));
             data_ += sizeof(int);
-
-            memcpy(&(sec->blob), data_, sec->blobSize);
+            sec->blob = new char[sec->blobSize];
+            memcpy(sec->blob, data_, sec->blobSize);
         }
 
     }
