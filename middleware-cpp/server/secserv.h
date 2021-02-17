@@ -28,7 +28,7 @@ public:
               acceptor(contextPool.getIOContext()) {
 
         // create an http server running on port 8080
-        prometheus::Exposer exposer{boost::asio::ip::host_name() + ":8080"};
+        static prometheus::Exposer exposer{boost::asio::ip::host_name() + ":8080"};
         //static prometheus::Exposer exposer{"127.0.0.1:8181"};
         // create a metrics registry
         // @note it's the users responsibility to keep the object alive
