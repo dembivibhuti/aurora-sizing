@@ -64,7 +64,6 @@ namespace tao::pq {
 class Repository {
 public:
     Security *get_security(std::string &name, Gauge *gauge) {
-        thread_local bool connection_created = false;
         auto start = std::chrono::steady_clock::now();
 
         const auto conn = pool->connection();
@@ -73,16 +72,9 @@ public:
         gauge->dbConnection.Set(count);
 
         start = std::chrono::steady_clock::now();
-        try {
-            if (!connection_created) {
-                conn->prepare("get_sec",
-                              "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = $1");
-                connection_created = true;
-            }
-        }
-        catch (std::exception &ex) {
-            std::cerr << ex.what() << std::endl;
-        }
+
+        conn->prepare("get_sec",
+                      "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = $1");
 
         const auto rs = conn->execute("get_sec", name);
         if (rs.size() > 0) {
@@ -100,9 +92,11 @@ public:
             security->blobSize = blob.size();
             security->blob = blob.data();
 
+
             end = std::chrono::steady_clock::now();
             const long count1 = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
             gauge->queryExec.Set(count1);
+
             return security;
         }
 
@@ -110,23 +104,15 @@ public:
     }
 
     std::vector<std::string> *lookup(std::string &prefix, short &count) {
-        thread_local bool connection_created = false;
         std::vector<std::string> *objects = new std::vector<std::string>();
         const auto conn = pool->connection();
-        try {
-            if (!connection_created) {
-                conn->prepare("lookup",
-                              "select name from objects where nameLower >= $1 order by nameLower LIMIT $2");
-                connection_created = true;
-            }
-        }
-        catch (std::exception &ex) {
-            std::cerr << ex.what() << std::endl;
-        }
+        conn->prepare("lookup",
+                      "select name from objects where nameLower >= $1 order by nameLower LIMIT $2");
+
         /*auto query = "select name from objects where nameLower >= '" + prefix + "' order by nameLower LIMIT " +
                      std::to_string(count);*/
         //const auto rs = pool->execute(query);
-        const auto rs = conn->execute("lookup",prefix,count);
+        const auto rs = conn->execute("lookup", prefix, count);
         for (const auto &row : rs) {
             objects->emplace_back(row[0].as<std::string>());
         }
