@@ -42,59 +42,6 @@ public:
     short revision;
 };
 
-/*
-class AttachCodec {
-public:
-
-
-    char *encodeRequest(AttachRequest &request) {
-        char *data = new char[request.user_name.size() + 1 + request.app_name.size() + 1 + sizeof(request.version) +
-                              sizeof(request.revision)];
-        int index = 0;
-        memcpy(data, request.user_name.c_str(), request.user_name.size() + 1);
-        index += request.user_name.size() + 1;
-
-        memcpy(data + index, request.app_name.c_str(), request.app_name.size() + 1);
-        index += request.app_name.size() + 1;
-        std::cout << request.version;
-        memcpy(data + index, &request.version, sizeof(short));
-        index += sizeof(short);
-
-        memcpy(data + index, &request.revision, sizeof(short));
-        return data;
-    }
-
-    char *encodeResponse(Response *res) {
-        AttachResponse *response = static_cast<AttachResponse *>(res);
-        char *data = new char[response->size];
-
-        char *ptr = data;
-
-        memcpy(ptr, &response->size, sizeof(short));
-        ptr += sizeof(short);
-
-        memcpy(ptr, &response->version_revision, sizeof(response->version_revision));
-        ptr += sizeof(response->version_revision);
-
-        memcpy(ptr, &response->server_features, sizeof(response.server_features));
-
-        return data;
-    }
-
-    AttachResponse *decodeResponse(char *data) {
-        AttachResponse *response = new AttachResponse;
-
-        char *ptr = data;
-
-        memcpy(&response->version_revision, ptr, sizeof(response->version_revision));
-        ptr += sizeof(response->version_revision);
-
-        memcpy(&response->server_features, ptr, sizeof(response->server_features));
-        return response;
-    }
-};
- */
-
 class SrvAttach : public Message {
 public:
     SrvAttach() {
@@ -103,10 +50,12 @@ public:
 
     ~SrvAttach() {
         delete request;
-        delete response;
+        if (response) {
+            delete response;
+        }
     }
 
-    void decode(char *data) {
+    void decode(char *data, Gauge *gauge) {
         int str_length = (char *) memchr(data, 0, USER_NAME_SIZE) - data;
         request->user_name = std::string(data, data + str_length);
         data += str_length + 1;
@@ -121,7 +70,7 @@ public:
         memcpy(&(request->revision), data, sizeof(request->revision));
     }
 
-    void process() {
+    void process(Gauge *gauge) {
         int server_features = 1;
         server_features |= 0x00000008;
         server_features |= 0x00008000;
@@ -131,7 +80,7 @@ public:
         response = new AttachResponse(269, server_features);
     }
 
-    size_t encode(char *data_) {
+    size_t encode(char *data_,Gauge *gauge) {
         int index = 0;
         memcpy(data_, &response->size, sizeof(short));
         index += sizeof(short);
@@ -143,7 +92,7 @@ public:
 
 private:
     AttachRequest *request;
-    AttachResponse *response;
+    AttachResponse *response = nullptr;
 };
 
 #endif //MIDDLEWARE_ATTACH_H

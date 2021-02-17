@@ -1,9 +1,5 @@
 #include <iostream>
-#include <vector>
-#include <future>
-#include <boost/asio.hpp>
 #include "server/secserv.h"
-
 
 int main(int argc, char *argv[]) {
     int numOfIOContexts = 4, numOfIOThreads = 1, numOfDBThreads = 2, numOfDBContexts = 20;
@@ -16,9 +12,9 @@ int main(int argc, char *argv[]) {
         numOfDBThreads = atoi(argv[5]);
     }
 
-    std::cout << "I/O contexts          : " << numOfIOContexts << std::endl;
-    std::cout << "IO Threads per context   : " << numOfIOThreads << std::endl;
-    std::cout << "DB contexts          : " << numOfDBContexts << std::endl;
+    std::cout << "I/O contexts             : " << numOfIOContexts << std::endl;
+    std::cout << "I/O Threads per context  : " << numOfIOThreads << std::endl;
+    std::cout << "DB contexts              : " << numOfDBContexts << std::endl;
     std::cout << "DB Threads per context   : " << numOfDBThreads << std::endl;
 
     Server server(numOfIOContexts, numOfIOThreads, numOfDBContexts, numOfDBThreads, port);

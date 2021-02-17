@@ -69,8 +69,17 @@ namespace tao::pq
 
 class Repository {
 public:
-    Security *get_security(std::string &name) {
+    Security *get_security(std::string &name, Gauge *gauge) {
+        auto start = std::chrono::steady_clock::now();
+
         const auto conn = pool->connection();
+
+        auto end = std::chrono::steady_clock::now();
+        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        gauge->dbConnection.Set(count);
+
+        start = std::chrono::steady_clock::now();
+
         const auto rs = conn->execute(SELECT_OBJ + name + END_QUOTE);
         if(rs.size() > 0) {
             auto row = rs.at(0);
@@ -86,8 +95,15 @@ public:
             auto blob = row[8].as<tao::pq::bytea>();
             security->blobSize = blob.size();
             security->blob = blob.data();
+
+            end = std::chrono::steady_clock::now();
+            const long count1 = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+            gauge->queryExec.Set(count1);
+
             return security;
         }
+
+
         return nullptr;
     }
 
@@ -108,8 +124,8 @@ public:
 private:
 
     Repository() {
-        //pool = tao::pq::connection_pool::create("postgresql://postgres:postgres@database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com:5432/postgres");
-        pool = tao::pq::connection_pool::create("dbname=rahul");
+        pool = tao::pq::connection_pool::create("postgresql://postgres:postgres@database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com:5432/postgres");
+        //pool = tao::pq::connection_pool::create("dbname=rahul");
         const auto conn = pool->connection();
         conn->prepare("get_sec",
                       "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, length(mem), mem from objects where nameLower = $1");

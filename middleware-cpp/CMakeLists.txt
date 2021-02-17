@@ -23,7 +23,9 @@ include_directories(includes)
 
 find_library(TAO_PQ taopq lib)
 
-SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY} pthread ${TAO_PQ} ${PostgreSQL_LIBRARIES})
+FIND_PACKAGE(prometheus-cpp REQUIRED)
 
-ADD_EXECUTABLE(saral main.cpp server/protocol/messages/attach.h server/secserv.h server/io_context_pool.h server/connection.h server/protocol/messages/message.h server/protocol/messages/request.h server/protocol/msg_processor.h server/protocol/messages/getbyname.h server/protocol/messages/security.h server/db/repository.h server/protocol/messages/namelookup.h)
+SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY} pthread ${TAO_PQ} ${PostgreSQL_LIBRARIES} prometheus-cpp::core prometheus-cpp::pull )
+
+ADD_EXECUTABLE(saral main.cpp server/protocol/messages/attach.h server/secserv.h server/io_context_pool.h server/connection.h server/protocol/messages/message.h server/protocol/messages/request.h server/protocol/msg_processor.h server/protocol/messages/getbyname.h server/protocol/messages/security.h server/db/repository.h server/protocol/messages/namelookup.h server/metrics.h)
 TARGET_LINK_LIBRARIES(saral ${USED_LIBS})

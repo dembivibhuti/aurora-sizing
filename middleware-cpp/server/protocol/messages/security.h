@@ -20,7 +20,7 @@ struct Security {
   const unsigned char* blob;
 
     ~Security() {
-        // delete[] blob;
+        //delete[] blob;
     }
 };
 #endif //MIDDLEWARE_SECURITY_H

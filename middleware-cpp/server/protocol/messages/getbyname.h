@@ -49,31 +49,44 @@ public:
         delete response;
     }
 
-    void decode(char *data) {
+    void decode(char *data, Gauge *gauge) {
+        auto start = std::chrono::steady_clock::now();
+
         void *new_line_index = memchr(data, 0, SEC_NAME_SIZE);
         int str_length = (char *) new_line_index - data;
         request->security_name = std::string(data, data + str_length);
+
+        auto end = std::chrono::steady_clock::now();
+        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        gauge->getByNameDecode.Set(count);
     }
 
-    void process() {
+    void process(Gauge *gauge) {
+        auto start = std::chrono::steady_clock::now();
+
         static Repository *pRepository = Repository::getInstance();
-        Security *security = pRepository->get_security(request->security_name);
-        if(response) {
+        Security *security = pRepository->get_security(request->security_name,gauge);
+        if (response) {
             delete response;
         }
-        if(security) {
+        if (security) {
             response = new GetByNameResponse(GetByNameResponse::SUCCESS, 0, security);
         } else {
             response = new GetByNameResponse(GetByNameResponse::ERROR, 0, security);
         }
 
+        auto end = std::chrono::steady_clock::now();
+        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        gauge->getByNameProcess.Set(count);
     }
 
-    size_t encode(char *data_) {
+    size_t encode(char *data_, Gauge *gauge) {
+        auto startCounter = std::chrono::steady_clock::now();
+
         char *start = data_;
         Security *sec = response->sec;
         size_t s = response->size_;
-        if(sec) {
+        if (sec) {
             s += sec->blobSize;
         }
         memcpy(data_, &s, sizeof(int)); //4
@@ -116,6 +129,10 @@ public:
             memcpy(data_, sec->blob, sec->blobSize);
         }
         delete sec;
+
+        auto end = std::chrono::steady_clock::now();
+        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - startCounter).count();
+        gauge->getByNameEncode.Set(count);
         return s;
     }
 

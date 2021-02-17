@@ -11,6 +11,7 @@
 
 #include "message.h"
 #include "security.h"
+#include "../../metrics.h"
 
 enum LookupType {
     SDB_GET_FIRST = 1,
@@ -61,7 +62,9 @@ public:
         delete response;
     }
 
-    void decode(char *data) {
+    void decode(char *data, Gauge *gauge) {
+        auto start = std::chrono::steady_clock::now();
+
         int index = 0;
         memcpy(&(request->type), data, sizeof(short));
         index += sizeof(short);
@@ -72,18 +75,28 @@ public:
         void *new_line_index = memchr(data + index, 0, SEC_NAME_SIZE);
         int str_length = (char *) new_line_index - (data + index);
         request->prefix = std::string(data + index, data + index + str_length);
+
+        auto end = std::chrono::steady_clock::now();
+        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        gauge->lookupDecode.Set(count);
     }
 
-    void process() {
+    void process(Gauge *gauge) {
+        auto start = std::chrono::steady_clock::now();
         static Repository *pRepository = Repository::getInstance();
         std::vector<std::string> *names = pRepository->lookup(request->prefix, request->count);
-        if(response) {
+        if (response) {
             delete response;
         }
         response = new NameLookupResponse(names->size(), names);
+        auto end = std::chrono::steady_clock::now();
+        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        gauge->lookupProcess.Set(count);
     }
 
-    size_t encode(char *data_) {
+    size_t encode(char *data_, Gauge *gauge) {
+        auto start = std::chrono::steady_clock::now();
+
         int index = 0;
         size_t s = response->size_;
 
@@ -97,6 +110,9 @@ public:
             memcpy(data_ + index, security.c_str(), security.size() + 1);
             index += security.size() + 1;
         }
+        auto end = std::chrono::steady_clock::now();
+        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        gauge->lookupEncode.Set(count);
         return s;
     }
 

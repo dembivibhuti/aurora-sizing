@@ -9,6 +9,8 @@
 #include "messages/getbyname.h"
 #include "messages/namelookup.h"
 #include "messages/message.h"
+#include "../connection.h"
+#include "../metrics.h"
 
 
 class MsgProcessor {
@@ -28,7 +30,7 @@ public:
         return type;
     }
 
-    void decode(char *data) {
+    void decode(char *data, Gauge *gauge) {
         msg = nullptr;
         std::memcpy(&type, data, sizeof(short));
         switch (type) {
@@ -46,17 +48,17 @@ public:
             }
         }
         if (msg) {
-            msg->decode(data + 2);
+            msg->decode(data + 2, gauge);
         }
 
     }
 
-    void process() {
-        msg->process();
+    void process(Gauge *gauge) {
+        msg->process(gauge);
     }
 
-    size_t encode(char *data_) {
-        return msg->encode(data_);
+    size_t encode(char *data_, Gauge *gauge) {
+        return msg->encode(data_, gauge);
     }
 
     virtual ~MsgProcessor() {

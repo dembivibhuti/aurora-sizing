@@ -4,6 +4,7 @@
 
 #ifndef MIDDLEWARE_MESSAGE_H
 #define MIDDLEWARE_MESSAGE_H
+#include "../../metrics.h"
 
 enum MessageType {
     SRV_MSG_UNDEFINED = 0,
@@ -14,11 +15,11 @@ enum MessageType {
 
 class Message {
 public:
-    virtual void decode(char *data) = 0;
+    virtual void decode(char *data, Gauge *gauge) = 0;
 
-    virtual size_t encode(char *data_) = 0;
+    virtual size_t encode(char *data_, Gauge *gauge) = 0;
 
-    virtual void process() = 0;
+    virtual void process(Gauge *gauge) = 0;
 
     virtual ~Message() {
     }

@@ -10,6 +10,8 @@
 #include <boost/shared_ptr.hpp>
 #include "protocol/msg_processor.h"
 #include "protocol/messages/message.h"
+#include "metrics.h"
+#include <chrono>
 
 #define BUFFER_SIZE 32768
 
@@ -17,15 +19,15 @@ class Connection : public boost::enable_shared_from_this<Connection> {
 public:
     typedef boost::shared_ptr<Connection> Pointer;
 
-    static Pointer create(boost::asio::io_context &ioContext, IOContextPool &repoContextPool) {
-        return Pointer(new Connection(ioContext, repoContextPool));
+    static Pointer create(boost::asio::io_context &ioContext, IOContextPool &repoContextPool, Gauge *gauge) {
+        return Pointer(new Connection(ioContext, repoContextPool, gauge));
     }
 
     void read(boost::asio::io_context &ioContext) {
-
         auto thisPtr = shared_from_this();
         socket_.async_read_some(boost::asio::buffer(buf + index, BUFFER_SIZE - index),
                                 [thisPtr, &ioContext](const boost::system::error_code &ec, size_t sz) {
+                                    thisPtr->start = std::chrono::steady_clock::now();
                                     if (!ec || ec == boost::asio::error::eof) {
                                         thisPtr->index += sz;
 
@@ -38,7 +40,15 @@ public:
                                         } else
                                             thisPtr->index = 0;
 
-                                        thisPtr->msgProcessor->decode(thisPtr->buf + thisPtr->header_size);
+                                        auto end = std::chrono::steady_clock::now();
+                                        long count = std::chrono::duration_cast<std::chrono::microseconds>(end - thisPtr->start).count();
+                                        thisPtr->gauge->msgRead.Set(count);
+
+                                        thisPtr->msgProcessor->decode(thisPtr->buf + thisPtr->header_size, thisPtr->gauge);
+
+                                        end = std::chrono::steady_clock::now();
+                                        count = std::chrono::duration_cast<std::chrono::microseconds>(end - thisPtr->start).count();
+                                        thisPtr->gauge->msgDecoded.Set(count);
 
                                         if (!thisPtr->msgProcessor->get_msg()) {
                                             //std::cerr << "Message not implemented" << std::endl;
@@ -51,7 +61,10 @@ public:
 
                                         auto &dbContext = thisPtr->repoContextPool.getIOContext();
                                         dbContext.post([thisPtr, &ioContext]() {
-                                            thisPtr->msgProcessor->process();
+                                            thisPtr->msgProcessor->process(thisPtr->gauge);
+                                            auto end = std::chrono::steady_clock::now();
+                                            long count = std::chrono::duration_cast<std::chrono::microseconds>(end - thisPtr->start).count();
+                                            thisPtr->gauge->msgProcessed.Set(count);
                                             ioContext.post([thisPtr, &ioContext]() {
                                                 thisPtr->write(ioContext);
                                             });
@@ -65,7 +78,11 @@ public:
 
     void write(boost::asio::io_context &ioContext) {
         auto thisPtr = shared_from_this();
-        boost::asio::async_write(socket_, boost::asio::buffer(buf, msgProcessor->encode(buf)),
+        size_t bytes = msgProcessor->encode(buf, gauge);
+        auto end = std::chrono::steady_clock::now();
+        long count = std::chrono::duration_cast<std::chrono::microseconds>(end - thisPtr->start).count();
+        thisPtr->gauge->msgEncoded.Set(count);
+        boost::asio::async_write(socket_, boost::asio::buffer(buf, bytes),
                                  [thisPtr, &ioContext](const boost::system::error_code &ec, size_t sz) {
                                      if (ec) {
                                          if (ec == boost::asio::error::eof) {
@@ -74,6 +91,9 @@ public:
                                          std::cerr << "Failed to send response to client: " << ec.message()
                                                    << std::endl;
                                      } else {
+                                         auto end = std::chrono::steady_clock::now();
+                                         const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - thisPtr->start).count();
+                                         thisPtr->gauge->getByNameTotal.Set(count);
                                          thisPtr->read(ioContext);
                                      }
                                  });
@@ -84,9 +104,10 @@ public:
     }
 
 private:
-    Connection(boost::asio::io_context &ioContext, IOContextPool &_repoContextPool) : socket_(ioContext),
-                                                                                      repoContextPool(
-                                                                                              _repoContextPool) {
+    Connection(boost::asio::io_context &ioContext, IOContextPool &_repoContextPool, Gauge *gauge) :
+            socket_(ioContext),
+            repoContextPool(_repoContextPool),
+            gauge(gauge) {
         header_size = 2;
         index = 0;
         msg_size = 0;
@@ -109,6 +130,8 @@ private:
     size_t header_size;
     MsgProcessor *msgProcessor;
     IOContextPool repoContextPool;
+    Gauge *gauge;
+    std::chrono::steady_clock::time_point start;
 };
 
 #endif //MIDDLEWARE_CONNECTION_H
