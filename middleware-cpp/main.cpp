@@ -2,7 +2,7 @@
 #include "server/secserv.h"
 
 int main(int argc, char *argv[]) {
-    int numOfIOContexts = 4, numOfIOThreads = 1, numOfDBThreads = 2, numOfDBContexts = 20;
+    int numOfIOContexts = 12, numOfIOThreads = 2, numOfDBThreads = 2, numOfDBContexts = 12;
     unsigned short port = 4008;
     if (argc == 6) {
         port = atoi(argv[1]);

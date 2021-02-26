@@ -51,7 +51,7 @@ public:
     std::vector<std::string> *security_names;
 };
 
-class SRVMsgNameLookup : public Message {
+class SRVMsgNameLookup : public Message, public boost::enable_shared_from_this<SRVMsgNameLookup> {
 public:
     SRVMsgNameLookup() {
         request = new NameLookupRequest();
@@ -81,17 +81,18 @@ public:
         gauge->lookupDecode.Set(count);
     }
 
-    void process(Gauge *gauge) {
-        auto start = std::chrono::steady_clock::now();
+    void process(boost::asio::io_context &dbContext,
+                 boost::shared_ptr<Connection> connPtr) {
         static Repository *pRepository = Repository::getInstance();
-        std::vector<std::string> *names = pRepository->lookup(request->prefix, request->count);
-        if (response) {
-            delete response;
-        }
-        response = new NameLookupResponse(names->size(), names);
-        auto end = std::chrono::steady_clock::now();
-        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        gauge->lookupProcess.Set(count);
+
+        auto handler = [](void* ptr, boost::shared_ptr<Connection> connPtr, std::vector<std::string> *names) mutable {
+            reinterpret_cast<SRVMsgNameLookup*>(ptr)->response = new NameLookupResponse(names->size(), names);
+
+            connPtr->ioContext.post([connPtr] {
+                connPtr->write(connPtr->ioContext);
+            });
+        };
+        pRepository->lookup_async(dbContext, request->prefix, request->count, handler, connPtr, static_cast<void *>(this));
     }
 
     size_t encode(char *data_, Gauge *gauge) {

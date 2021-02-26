@@ -61,23 +61,25 @@ public:
         gauge->getByNameDecode.Set(count);
     }
 
-    void process(Gauge *gauge) {
-        auto start = std::chrono::steady_clock::now();
-
+    void process(boost::asio::io_context &dbContext,
+                 boost::shared_ptr<Connection> connPtr) {
         static Repository *pRepository = Repository::getInstance();
-        Security *security = pRepository->get_security(request->security_name,gauge);
-        if (response) {
-            delete response;
-        }
-        if (security) {
-            response = new GetByNameResponse(GetByNameResponse::SUCCESS, 0, security);
-        } else {
-            response = new GetByNameResponse(GetByNameResponse::ERROR, 0, security);
-        }
-
-        auto end = std::chrono::steady_clock::now();
-        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        gauge->getByNameProcess.Set(count);
+        pRepository->get_security_async(dbContext, request->security_name,
+                                        [](void* ptr, boost::shared_ptr<Connection> connPtr, Security *security) mutable {
+            auto self = reinterpret_cast<SrvMsgGetByName*>(ptr);
+                                            if (self->response) {
+                                                delete self->response;
+                                            }
+                                            if (security) {
+                                                self->response = new GetByNameResponse(GetByNameResponse::SUCCESS, 0,
+                                                                                 security);
+                                            } else {
+                                                self->response = new GetByNameResponse(GetByNameResponse::ERROR, 0, security);
+                                            }
+                                            connPtr->ioContext.post([connPtr] {
+                                                connPtr->write(connPtr->ioContext);
+                                            });
+                                        }, connPtr,static_cast<void *>(this));
     }
 
     size_t encode(char *data_, Gauge *gauge) {

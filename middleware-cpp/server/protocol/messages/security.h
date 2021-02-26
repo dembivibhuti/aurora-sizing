@@ -17,7 +17,7 @@ struct Security {
   short dbIDUpdated;
   short versionInfo;
   int blobSize = 0;
-  const unsigned char* blob;
+  const char* blob;
 
     ~Security() {
         //delete[] blob;

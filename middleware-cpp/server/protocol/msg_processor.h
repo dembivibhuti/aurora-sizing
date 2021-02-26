@@ -53,8 +53,9 @@ public:
 
     }
 
-    void process(Gauge *gauge) {
-        msg->process(gauge);
+    void process(boost::asio::io_context &dbContext,
+                  boost::shared_ptr<Connection> connPtr) {
+        msg->process(dbContext, connPtr);
     }
 
     size_t encode(char *data_, Gauge *gauge) {

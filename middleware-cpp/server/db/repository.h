@@ -5,118 +5,129 @@
 #ifndef MIDDLEWARE_REPOSITORY_H
 #define MIDDLEWARE_REPOSITORY_H
 
-#include <tao/pq.hpp>
-#include <tao/pq/connection_pool.hpp>
+/*#include <tao/pq.hpp>
+#include <tao/pq/connection_pool.hpp>*/
 #include <vector>
 
-typedef std::shared_ptr<tao::pq::basic_connection_pool<tao::pq::parameter_text_traits>> ConnectionPool;
+#include <ozo/request.h>
+#include <ozo/connection_info.h>
+#include <ozo/shortcuts.h>
+#include <boost/asio.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/spawn.hpp>
+#include <ozo/pg/types/bytea.h>
+#include <ozo/connection_pool.h>
+#include "repository.h"
 
-static const char *const SELECT_OBJ = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = '";
 
-static const char *const END_QUOTE = "'";
+//typedef std::shared_ptr<tao::pq::basic_connection_pool<tao::pq::parameter_text_traits>> ConnectionPool;
 
-namespace tao::pq {
-    class bytea  // NOLINT
-    {
-    private:
-        std::size_t m_size;
-        unsigned char *m_data;
+static const char *const GET_SEC = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = $1";
 
-    public:
-        explicit bytea(const char *value)
-                : m_size(0), m_data(PQunescapeBytea((unsigned char *) value, &m_size))  //NOLINT
-        {
-            if (m_data == nullptr) {
-                throw std::bad_alloc();  // LCOV_EXCL_LINE
-            }
-        }
+auto get_connection_pool() {
+    //const ozo::connection_info connection_info("dbname=rahul");
+    const ozo::connection_info connection_info("postgresql://postgres:postgres@database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com:5432/postgres");
+    ozo::connection_pool_config connection_pool_config;
+    connection_pool_config.capacity = 10000;
+    connection_pool_config.queue_capacity = 128;
+    connection_pool_config.idle_timeout = std::chrono::seconds(60);
+    connection_pool_config.lifespan = std::chrono::hours(24);
+    ozo::connection_pool pool(connection_info, connection_pool_config);
+    std::cout << "Pool" << std::endl;
+    return pool;
+}
 
-        ~bytea() {
-            PQfreemem(m_data);
-        }
+static ozo::connection_pool pool = get_connection_pool();
 
-        bytea(const bytea &) = delete;
-
-        auto operator=(const bytea &) -> bytea & = delete;
-
-        [[nodiscard]] auto size() const noexcept {
-            return m_size;
-        }
-
-        [[nodiscard]] auto data() const noexcept -> const unsigned char * {
-            return m_data;
-        }
-
-        [[nodiscard]] auto operator[](const std::size_t idx) const noexcept -> unsigned char {
-            return m_data[idx];
-        }
-    };
-
-    template<>
-    struct result_traits<bytea> {
-        [[nodiscard]] static auto from(const char *value) {
-            return bytea(value);
-        }
-    };
-
-}  // namespace tao::pq
+void printPoolStats() {
+    std::cout << "---------------------------------------" << std::endl;
+    std::cout << "Size " << pool.stats().size << std::endl;
+    std::cout << "Available " << pool.stats().available << std::endl;
+    std::cout << "Used " << pool.stats().used << std::endl;
+    std::cout << "Queue size " << pool.stats().queue_size << std::endl;
+    std::cout << "---------------------------------------" << std::endl;
+}
 
 class Repository {
 public:
-    Security *get_security(std::string &name, Gauge *gauge) {
-        auto start = std::chrono::steady_clock::now();
 
-        const auto conn = pool->connection();
-        auto end = std::chrono::steady_clock::now();
-        const long count = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        gauge->dbConnection.Set(count);
+    template<typename T>
+    void get_security_async(boost::asio::io_context &dbContext,
+                            std::string &name,
+                            T handler, boost::shared_ptr<Connection> connPtr, void *ptr) {
+        //printPoolStats();
+        using namespace ozo::literals;
+        //const auto query = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = '"_SQL + name + "'";
 
-        start = std::chrono::steady_clock::now();
+        const auto query =
+                "select name, typeId, lastTransaction, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = "_SQL
+                + name + ""_SQL;
 
-        conn->prepare("get_sec",
-                      "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = $1");
+        std::shared_ptr<ozo::rows_of<std::string, int, int64_t, int64_t, int, int, int, ozo::pg::bytea>> rows(
+                new ozo::rows_of<std::string, int, int64_t, int64_t, int, int, int, ozo::pg::bytea>);
+        ozo::request(pool[dbContext], query, ozo::into(*(rows.get())),
+                     [rows, &handler, connPtr, ptr](ozo::error_code ec, auto conn) {
+                         if (ec) {
+                             std::cerr << ec.message();
+                             std::cerr << " | " << ozo::error_message(conn);
+                             if (!ozo::is_null_recursive(conn)) {
+                                 std::cerr << " | " << ozo::get_error_context(conn);
+                             }
+                             return;
+                         };
 
-        const auto rs = conn->execute("get_sec", name);
-        if (rs.size() > 0) {
-            auto row = rs.at(0);
-            Security *security = new Security;
-            security->name = row[0].as<std::string>();
-            security->type = row[1].as<int>();
-            security->lastTransactionId = row[2].as<int>();
-            security->timeUpdated = 10001;
-            security->updateCount = row[4].as<int>();
-            security->dateCreated = row[5].as<short>();
-            security->dbIDUpdated = row[6].as<short>();
-            security->versionInfo = row[7].as<short>();
-            auto blob = row[8].as<tao::pq::bytea>();
-            security->blobSize = blob.size();
-            security->blob = blob.data();
+                         assert(ozo::connection_good(conn));
+                         if ((*rows.get()).size() > 0) {
+                             auto &row = (*rows.get()).front();
+                             Security *security = new Security;
+                             security->name = std::get<0>(row);
+                             security->type = std::get<1>(row);
+                             security->lastTransactionId = std::get<2>(row);
+                             security->timeUpdated = 10001;
+                             security->updateCount = std::get<3>(row);
+                             security->dateCreated = std::get<4>(row);
+                             security->dbIDUpdated = std::get<5>(row);
+                             security->versionInfo = (short) std::get<6>(row);
+                             std::vector<char> blob = std::get<7>(row);
+                             security->blobSize = blob.size();
+                             security->blob = blob.data();
+                             handler(ptr, connPtr, security);
+                         } else {
+                             handler(ptr, connPtr, nullptr);
+                         }
 
-
-            end = std::chrono::steady_clock::now();
-            const long count1 = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-            gauge->queryExec.Set(count1);
-
-            return security;
-        }
-
-        return nullptr;
+                     });
     }
 
-    std::vector<std::string> *lookup(std::string &prefix, short &count) {
-        std::vector<std::string> *objects = new std::vector<std::string>();
-        const auto conn = pool->connection();
-        conn->prepare("lookup",
-                      "select name from objects where nameLower >= $1 order by nameLower LIMIT $2");
+    template<typename T>
+    void lookup_async(boost::asio::io_context &dbContext,
+                      std::string &prefix, short &count,
+                      T handler, boost::shared_ptr<Connection> connPtr,
+                      void *ptr) {
 
-        /*auto query = "select name from objects where nameLower >= '" + prefix + "' order by nameLower LIMIT " +
-                     std::to_string(count);*/
-        //const auto rs = pool->execute(query);
-        const auto rs = conn->execute("lookup", prefix, count);
-        for (const auto &row : rs) {
-            objects->emplace_back(row[0].as<std::string>());
-        }
-        return objects;
+        using namespace ozo::literals;
+        //const auto query = "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = '"_SQL + name + "'";
+        const auto query = "select name from objects where nameLower >='"_SQL
+                           + prefix + "' LIMIT "_SQL + count;
+
+        std::shared_ptr<ozo::rows_of<std::string>> rows(new ozo::rows_of<std::string>);
+        ozo::request(pool[dbContext], query, ozo::into(*(rows.get())),
+                     [rows, &handler, connPtr, ptr](ozo::error_code ec, auto conn) {
+                         if (ec) {
+                             std::cerr << ec.message();
+                             std::cerr << " | " << ozo::error_message(conn);
+                             if (!ozo::is_null_recursive(conn)) {
+                                 std::cerr << " | " << ozo::get_error_context(conn);
+                             }
+                             return;
+                         };
+                         assert(ozo::connection_good(conn));
+                         std::vector<std::string> *objects = new std::vector<std::string>();
+                         for (auto &value: *rows.get()) {
+                             objects->emplace_back(std::get<0>(value));
+                         }
+                         handler(ptr, connPtr, objects);
+                     });
     }
 
     static Repository *getInstance();
@@ -124,17 +135,9 @@ public:
 private:
 
     Repository() {
-        pool = tao::pq::connection_pool::create(
-                "postgresql://postgres:postgres@database-1.cluster-cpw6mwbci5yo.us-east-1.rds.amazonaws.com:5432/postgres");
-        //pool = tao::pq::connection_pool::create("dbname=rahul");
-        /* const auto conn = pool->connection();
-         conn->prepare("get_sec",
-                       "select name, typeId, lastTransaction, timeUpdated, updateCount, dateCreated, dbIdUpdated, versionInfo, mem from objects where nameLower = $1");
- */
     }
-
-    ConnectionPool pool;
 };
+
 
 Repository *Repository::getInstance() {
     static Repository instance;

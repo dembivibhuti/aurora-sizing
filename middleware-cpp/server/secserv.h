@@ -110,6 +110,7 @@ public:
                                       eventLoop(gauges);
                                   }
                               });
+        //connections.push_back(connection);
     }
 
     void run() {
@@ -133,6 +134,7 @@ private:
     IOContextPool repoContextPool;
     boost::asio::ip::tcp::acceptor acceptor;
     boost::asio::io_context &ioContext;
+    std::vector<ConnectionPTR> connections;
 };
 
 #endif //MIDDLEWARE_SECSERV_H

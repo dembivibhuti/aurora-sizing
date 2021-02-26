@@ -70,7 +70,9 @@ public:
         memcpy(&(request->revision), data, sizeof(request->revision));
     }
 
-    void process(Gauge *gauge) {
+    void process(
+            boost::asio::io_context &dbContext,
+            boost::shared_ptr<Connection> connPtr) {
         int server_features = 1;
         server_features |= 0x00000008;
         server_features |= 0x00008000;
@@ -78,6 +80,9 @@ public:
         server_features |= 0x00010000;
 
         response = new AttachResponse(269, server_features);
+        connPtr->ioContext.post([connPtr] {
+            connPtr->write(connPtr->ioContext);
+        });
     }
 
     size_t encode(char *data_,Gauge *gauge) {
