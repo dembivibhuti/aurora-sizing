@@ -771,7 +771,7 @@ public class ObjectRepository implements AutoCloseable {
         return Stream.of(all);
     }
 
-    private Pair<String, String> expression(int number) {
+    public static Pair<String, String> expression(int number) {
         Pair<String, String> pair = new Pair(">=", "asc"); //default value
         if (number == 2) {
             pair.first = "=";
