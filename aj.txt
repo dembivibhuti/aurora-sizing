@@ -1,0 +1,64 @@
+Install AODT Pipeline
+https://github.com/aws-observability/aws-otel-collector/blob/main/docs/developers/linux-rpm-demo.md
+
+
+ADOT config
+
+extensions:
+  health_check:
+
+receivers:
+  prometheus:
+    config:
+      global:
+        scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+        evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+        # scrape_timeout is set to the global default (10s).
+
+        # A scrape configuration containing exactly one endpoint to scrape:
+  # Here it's Prometheus itself.
+      scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+        - job_name: 'sample_prom_app'
+  
+          static_configs:
+          - targets: ['172.31.95.84:4567']
+
+processors:
+  batch/traces:
+    timeout: 1s
+    send_batch_size: 50
+  batch/metrics:
+    timeout: 60s
+
+exporters:
+  awsprometheusremotewrite:
+    endpoint: "https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-9de2cabe-4190-42dc-b752-bd47d2db5cee/api/v1/remote_write"
+    aws_auth:
+      service: "aps"
+      region: "us-east-1"
+
+service:
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      processors: [batch/metrics]
+      exporters: [awsprometheusremotewrite]
+
+  extensions: [health_check]
+
+ sudo /opt/aws/aws-otel-collector/bin/aws-otel-collector-ctl -c ~/environment/aws-otel-collector/config_amp.yaml -a start
+ 
+ 
+ 
+ Install Grafana
+ wget https://dl.grafana.com/oss/release/grafana-7.5.4.linux-amd64.tar.gz
+tar -zxvf grafana-7.5.4.linux-amd64.tar.gz
+
+export AWS_SDK_LOAD_CONFIG=true
+export GF_AUTH_SIGV4_AUTH_ENABLED=true
+./grafana-server 
+
+Setup Grafana:
+https://aws.amazon.com/blogs/opensource/using-amazon-managed-service-for-prometheus-to-monitor-ec2-environments/
+
