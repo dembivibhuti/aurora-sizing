@@ -10,6 +10,47 @@ public class Store {
             + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL, \n"
             + "nameLower varchar NOT NULL )";
 
+    public static final String CREATE_TABLE_2 = "create table objects_2 ( \n" + "name varchar NOT NULL, \n"
+            + "typeId integer NOT NULL, \n" + "lastTransaction bigint NOT NULL, \n"
+            + "timeUpdated timestamp NOT NULL, \n" + "updateCount bigint NOT NULL, \n"
+            + "dateCreated integer NOT NULL, \n" + "dbIdUpdated integer NOT NULL, \n"
+            + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL, \n"
+            + "nameLower varchar NOT NULL,  \n" +
+              " CONSTRAINT fk_lastTransaction \n" +
+              " FOREIGN KEY( lastTransaction ) \n" +
+              " REFERENCES txn_id_map(txn_id) )";
+
+    public static final String TXN_ID_MAP = "create table txn_id_map ( " +
+            " txn_id BIGSERIAL, " +
+            " ext_txn_id BIGINT UNIQUE, " +
+            " created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, " +
+            " PRIMARY_KEY(txn_id)" +
+            ")";
+
+    public static final String POPULATE_EXT_TXN_ID_FUNC = "CREATE OR REPLACE FUNCTION &&%.generate_txn_id () RETURNS trigger AS \n" +
+            "$BODY\n" +
+            "   DECLARE\n" +
+            "       varLastTxnId txn_id_map.ext_txn_id%type;\n" +
+            "   BEGIN\n" +
+            "       FOR i IN 1..100 LOOP      \n" +
+            "           BEGIN                 \n" +
+            "               SELECT COALESCE(max(ext_txn_id),0) INTO varLastTxnId from txn_id_map;\n" +
+            "               UPDATE txn_id_map set ext_txn_id = varLastTxnId + 1 where txn_id = NEW.txnlog_trans_id; \n" +
+            "               RETURN NEW;\n" +
+            "           EXCEPTION\n" +
+            "               WHEN OTHERS THEN\n" +
+            "                   END; \n" +
+            "       END LOOP;\n" +
+            "   END;\n" +
+            "$BODY$\n"  +
+            "LANGUAGE 'plpgsql'";
+
+    public static final String ATTACH_TRIGG_TRANS_HEADER_TABLE = "CREATE TRIGGER generate_txn_id \n" +
+            " AFTER INSERT \n" +
+            " ON tdms_trans_header_primary \n" +
+            " FOR EACH ROW \n" +
+            "   EXECUTE PROCEDURE generate_txn_id()";
+
     public static final String CREATE_RECORD_INDEX_BY_TYPEID_NAME = "create unique index object_typeid_name on objects(typeId, nameLower)";
     public static final String CREATE_RECORD_INDEX_BY_LOWER_NAME = "create unique index object_lower_name on objects(nameLower)";
     public static final String CREATE_RECORD_INDEX_BY_NAME = "create unique index object_name on objects(name)";
