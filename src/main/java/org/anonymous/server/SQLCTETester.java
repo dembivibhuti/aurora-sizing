@@ -2,10 +2,16 @@ package org.anonymous.server;
 
 import org.anonymous.connection.ConnectionProviderHolder;
 import org.anonymous.connection.HikariCPConnectionProvider;
-import org.anonymous.domain.ObjectDTO;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.*;
 import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.anonymous.sql.Store.*;
 
@@ -13,22 +19,20 @@ public class SQLCTETester {
 
     private static final ConnectionProviderHolder connectionProviderHolder = HikariCPConnectionProvider.create();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         wipe();
         runnDDL();
-
-        ObjRecord insertObj = new ObjRecord();
-        insertObj.name = "NAME";
-        insertObj.typeId = 1;
-        insertObj.updateCount = 1;
-        insertObj.dateCreated = 1;
-        insertObj.dbIdUpdated = 1;
-        insertObj.versionInfo = 1;
-        insertObj.timeUpdated = new Timestamp(new Date().getTime());
-        insertObj.mem = new byte[]{0, 0};
-        opCTE(insertObj);
-        opCTE(insertObj);
+        doCTEOps();
         connectionProviderHolder.close();
+    }
+
+    private static void doCTEOps() throws InterruptedException {
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        for ( int i = 0; i < 2000; i ++ ) {
+            executorService.execute(() -> opCTE(createObject()));
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(1, TimeUnit.HOURS);
     }
 
     private static void runnDDL() {
@@ -59,7 +63,7 @@ public class SQLCTETester {
         try (Connection connection = connectionProviderHolder.rwConnectionProvider.getConnection()) {
             PreparedStatement insertRec = connection
                     .prepareStatement("WITH gen_txn_id AS ( INSERT INTO txn_id_map ( txn_id ) VALUES ( DEFAULT ) RETURNING txn_id ), " +
-                            "              ins_obj_batch AS ( insert into objects_2 values (?, ?, ( Select txn_id from gen_txn_id ), ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING RETURNING name ), " +
+                            "              ins_obj_batch AS ( insert into objects_2 values (?, ?, ( Select txn_id from gen_txn_id ), ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING RETURNING name ), " +
                             "              ins_trans_header_2 AS ( INSERT INTO tdms_trans_header_primary_2 VALUES (( Select txn_id from gen_txn_id ), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?))" +
                             "              SELECT name, 'INSERT' as ops, (SELECT name from objects_2 where name = insert_tab.name) as oldName, -1 as txn_id, (SELECT updateCount from objects_2 where name = insert_tab.name) as updateCount, (SELECT dbIdUpdated from objects_2 where name = insert_tab.name) as dbIdUpdated from  ( values  (?) ) as insert_tab(name) where name NOT IN ( Select name from ins_obj_batch )");
 
@@ -93,7 +97,7 @@ public class SQLCTETester {
             insertRec.setTimestamp(26, new Timestamp(System.currentTimeMillis()));
             insertRec.setBytes(27, new byte[0]);
 
-            insertRec.setString(28, "NAME");
+            insertRec.setString(28, insertObj.name);
                 
             ResultSet rs = insertRec.executeQuery();
             getFailures(rs);
@@ -144,6 +148,41 @@ public class SQLCTETester {
         public Timestamp timeUpdated;
         public byte[] mem;
         public String nameLower;
+    }
 
+    @NotNull
+    private static ObjRecord createObject() {
+        ObjRecord insertObj = new ObjRecord();
+        insertObj.name = UUID.randomUUID().toString();
+        insertObj.typeId = 1;
+        insertObj.updateCount = 1;
+        insertObj.dateCreated = 1;
+        insertObj.dbIdUpdated = 1;
+        insertObj.versionInfo = 1;
+        insertObj.timeUpdated = new Timestamp(new Date().getTime());
+        insertObj.mem = new byte[]{0, 0};
+        return insertObj;
+    }
+
+    @NotNull
+    private static ObjRecord createObject(int dbUpdated, long updateCount) {
+        ObjRecord insertObj = createObject();
+        insertObj.updateCount = updateCount;
+        insertObj.dbIdUpdated = dbUpdated;
+        return insertObj;
+    }
+
+    @NotNull
+    private static ObjRecord createObject(String name) {
+        ObjRecord insertObj = new ObjRecord();
+        insertObj.name = name;
+        insertObj.typeId = 1;
+        insertObj.updateCount = 1;
+        insertObj.dateCreated = 1;
+        insertObj.dbIdUpdated = 1;
+        insertObj.versionInfo = 1;
+        insertObj.timeUpdated = new Timestamp(new Date().getTime());
+        insertObj.mem = new byte[]{0, 0};
+        return insertObj;
     }
 }
