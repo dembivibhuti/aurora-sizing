@@ -10,11 +10,11 @@ public class Store {
             + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL, \n"
             + "nameLower varchar NOT NULL )";
 
-    public static final String CREATE_TABLE_2 = "create table objects_2 ( \n" + "name varchar NOT NULL, \n"
+    public static final String CREATE_TABLE_2 = "create table objects_2 ( \n" + "name varchar NOT NULL UNIQUE, \n"
             + "typeId integer NOT NULL, \n" + "lastTransaction bigint NOT NULL, \n"
             + "timeUpdated timestamp NOT NULL, \n" + "updateCount bigint NOT NULL, \n"
             + "dateCreated integer NOT NULL, \n" + "dbIdUpdated integer NOT NULL, \n"
-            + "versionInfo integer NOT NULL, \n" + "sdbDiskMem bytea NOT NULL, \n" + "mem bytea NOT NULL, \n"
+            + "versionInfo integer NOT NULL, \n"  + "mem bytea NOT NULL, \n"
             + "nameLower varchar NOT NULL,  \n" +
               " CONSTRAINT fk_lastTransaction \n" +
               " FOREIGN KEY( lastTransaction ) \n" +
@@ -24,11 +24,11 @@ public class Store {
             " txn_id BIGSERIAL, " +
             " ext_txn_id BIGINT UNIQUE, " +
             " created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, " +
-            " PRIMARY_KEY(txn_id)" +
+            " PRIMARY KEY(txn_id)" +
             ")";
 
     public static final String POPULATE_EXT_TXN_ID_FUNC = "CREATE OR REPLACE FUNCTION &&%.generate_txn_id () RETURNS trigger AS \n" +
-            "$BODY\n" +
+            "$BODY$\n" +
             "   DECLARE\n" +
             "       varLastTxnId txn_id_map.ext_txn_id%type;\n" +
             "   BEGIN\n" +
@@ -47,7 +47,7 @@ public class Store {
 
     public static final String ATTACH_TRIGG_TRANS_HEADER_TABLE = "CREATE TRIGGER generate_txn_id \n" +
             " AFTER INSERT \n" +
-            " ON tdms_trans_header_primary \n" +
+            " ON tdms_trans_header_primary_2 \n" +
             " FOR EACH ROW \n" +
             "   EXECUTE PROCEDURE generate_txn_id()";
 
@@ -56,6 +56,7 @@ public class Store {
     public static final String CREATE_RECORD_INDEX_BY_NAME = "create unique index object_name on objects(name)";
 
     public static final String INSERT_RECORDS = "insert into objects values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
 
     public static final String UPDATE_RECORDS =
             "UPDATE objects SET \n" +
@@ -127,6 +128,31 @@ public class Store {
             "   db_actual_timestamp_utc timestamp NOT NULL,\n" +
             "   mem bytea NOT NULL,\n" +
             "   PRIMARY KEY (txnlog_trans_id)\n" +
+            ")";
+
+    public static final String CREATE_TRANS_HEADER_TABLE_2 = "CREATE TABLE tdms_trans_header_primary_2 (\n" +
+            "   txnlog_trans_id bigint NOT NULL,\n" +
+            "   source_db_id int,\n" +
+            "   source_trans_id bigint,\n" +
+            "   trans_type_id integer NOT NULL,\n" +
+            "   trans_timestamp_utc timestamp NOT NULL,\n" +
+            "   trans_name varchar(32) NOT NULL,\n" +
+            "   object_type_id integer NOT NULL,\n" +
+            "   application_name_short varchar(64) NOT NULL,\n" +
+            "   application_name_long varchar(256) NOT NULL,\n" +
+            "   user_name varchar(64) NOT NULL,\n" +
+            "   login_id varchar(32) NOT NULL,\n" +
+            "   user_id varchar(32) NOT NULL,\n" +
+            "   network_address bigint NOT NULL,\n" +
+            "   network_address_long char(15) NOT NULL,\n" +
+            "   trans_flags integer NOT NULL,\n" +
+            "   detail_parts integer NOT NULL,\n" +
+            "   detail_bytes integer NOT NULL,\n" +
+            "   db_actual_timestamp_utc timestamp NOT NULL,\n" +
+            "   mem bytea NOT NULL,\n" +
+            "   CONSTRAINT fk_txnlog_trans_id \n" +
+            "   FOREIGN KEY (txnlog_trans_id)\n" +
+            "   REFERENCES txn_id_map(txn_id)" +
             ")";
 
     public static final String INSERT_TRANS_HEADER = "INSERT INTO tdms_trans_header_primary VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
